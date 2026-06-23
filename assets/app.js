@@ -109,7 +109,7 @@
     (next.settings || {}).autoBackup = next.settings?.autoBackup || false;
     (next.settings || {}).reportSchedule = next.settings?.reportSchedule || null;
     (next.settings || {}).themeColor = next.settings?.themeColor || '#131921';
-    (next.purchaseOrders || []).forEach(o => { if (o.status2 === undefined) o.status2 = 'pending'; });
+    (next.purchaseOrders || []).forEach(o => { if (o.status2 === undefined) o.status2 = 'pending'; if (o.expectedDelivery === undefined) o.expectedDelivery = ''; });
     delete next.promos;
     (next.settings || {}).dashWidgets = next.settings?.dashWidgets || ['ca','marge','stock','credits'];
     (next.settings || {}).autoBackup = next.settings?.autoBackup || false;
@@ -176,6 +176,16 @@
       const debtors30 = state.clients.filter(c => c.balance > 0 && c.balance > 10000);
       if (debtors30.length) {
         addNotification('Relance dette', `${debtors30.length} clients ont des dettes > 10 000 FCFA.`);
+        save();
+      }
+    }
+    // Verifier commandes fournisseurs en retard
+    const overduePOs = state.purchaseOrders.filter(o => o.expectedDelivery && o.status2 !== 'received' && o.status2 !== 'cancelled' && new Date(o.expectedDelivery) < new Date());
+    if (overduePOs.length > 0) {
+      const lastNotif = (state.notifications||[]).find(n => n.title === 'Commandes fournisseurs en retard');
+      if (!lastNotif || (Date.now() - new Date(lastNotif.at).getTime() > 86400000)) {
+        const msg = overduePOs.length === 1 ? `${overduePOs[0].supplier}: ${overduePOs[0].items} en retard` : `${overduePOs.length} commandes en retard chez les fournisseurs`;
+        addNotification('Commandes fournisseurs en retard', msg);
         save();
       }
     }
@@ -652,7 +662,7 @@ function notifyCount() {
       <div class="charts-row"><div class="panel chart-panel"><h2><i class="fa-solid fa-ranking-star"></i> Top produits vendus</h2><canvas id="topProductsChart"></canvas></div><div class="panel chart-panel"><h2><i class="fa-solid fa-chart-simple"></i> Ventes par categorie</h2><canvas id="categoryChart"></canvas></div></div>
       <div class="charts-row"><div class="panel chart-panel"><h2><i class="fa-solid fa-chart-line"></i> Evolution par categorie (30 jours)</h2><canvas id="categoryTrendChart"></canvas></div></div>
       <div class="grid two"><section class="panel"><h2><i class="fa-solid fa-clock-rotate-left"></i> Ventes recentes</h2>${paginate(state.sales, 6).map((s) => `<div class="row"><b style="flex:1">${esc(s.clientName)}</b><span>${money(s.total)}</span><button class="btn-icon-sm" data-action="return-sale" data-sale-id="${esc(s.id)}" title="Retour"><i class="fa-solid fa-arrow-left" style="color:var(--bad)"></i></button></div>`).join("") || empty("Aucune vente")}</section>
-      <section class="panel"><h2><i class="fa-solid fa-triangle-exclamation"></i> Alertes stock (${low.length})</h2>${low.length ? low.map((p) => `<div class="row alert-row"><b>${esc(p.name)}</b><span class="badge-warn">${p.qty} unites</span><small style="color:var(--muted)">Réappro: +${Math.max(state.settings.lowStock*2 - p.qty, 1)}</small></div>`).join('') : empty("Aucune alerte")}</section></div>`;
+      <section class="panel"><h2><i class="fa-solid fa-triangle-exclamation"></i> Alertes (${(() => { const ops = state.purchaseOrders.filter(o => o.expectedDelivery && o.status2 !== 'received' && o.status2 !== 'cancelled' && new Date(o.expectedDelivery) < new Date()); return ops.length + low.length; })()})</h2>${(() => { const ops = state.purchaseOrders.filter(o => o.expectedDelivery && o.status2 !== 'received' && o.status2 !== 'cancelled' && new Date(o.expectedDelivery) < new Date()); return ops.map(o => `<div class="row alert-row" style="border-left:3px solid var(--bad)"><b><i class="fa-solid fa-truck"></i> ${esc(o.supplier)}</b><span class="badge-warn" style="background:#fef2f2;color:var(--bad);font-weight:700">${esc(o.items)}</span><small style="color:var(--bad);font-weight:700">Retard: ${Math.floor((Date.now()-new Date(o.expectedDelivery).getTime())/86400000)}j</small></div>`).join(''); })()}${low.length ? low.map((p) => `<div class="row alert-row"><b>${esc(p.name)}</b><span class="badge-warn">${p.qty} unites</span><small style="color:var(--muted)">Réappro: +${Math.max(state.settings.lowStock*2 - p.qty, 1)}</small></div>`).join('') : !state.purchaseOrders.some(o => o.expectedDelivery && o.status2 !== 'received' && o.status2 !== 'cancelled' && new Date(o.expectedDelivery) < new Date()) ? empty("Aucune alerte") : ''}</section></div>`;
   }
   function metric(label, value, sub) { return `<article class="metric"><span>${label}</span><strong>${value}</strong>${sub ? `<small class="metric-sub">${sub}</small>` : ''}</article>`; }
 
@@ -1105,10 +1115,10 @@ function notifyCount() {
   function suppliersView() {
     const filteredSuppliers = state.suppliers.filter(s => (s.name + (s.contact||'') + (s.city||'') + (s.products||'')).toLowerCase().includes(supplierFilter.toLowerCase()));
     return `<div class="grid two"><section class="panel"><h2><i class="fa-solid fa-truck"></i> Fournisseurs</h2><input placeholder="Rechercher fournisseur..." value="${esc(supplierFilter)}" data-supplier-filter style="width:100%;margin-bottom:8px"><form id="supplierForm" class="grid two" style="margin-bottom:12px"><input name="name" placeholder="Nom fournisseur" required><input name="contact" placeholder="Contact telephone"><input name="city" placeholder="Ville"><input name="products" placeholder="Produits fournis"><button class="btn primary">Ajouter fournisseur</button></form><div class="table">${filteredSuppliers.map(s => `<div class="tr" data-supp-id="${esc(s.id)}"><b>${esc(s.name)}</b><span>${esc(s.contact)}</span><span>${esc(s.city)}</span><span style="grid-column:span 2">${esc(s.products)}</span><div class="actions-row"><button class="btn-icon-sm" data-edit-supp="${esc(s.id)}" title="Modifier"><i class="fa-solid fa-pen-to-square" style="color:var(--accent)"></i></button><button class="btn-icon-sm" data-del-supp="${esc(s.id)}" title="Supprimer"><i class="fa-solid fa-trash-can" style="color:var(--bad)"></i></button></div></div>`).join('')}</div></section>
-    <section class="panel"><h2><i class="fa-solid fa-cart-plus"></i> Nouvelle commande</h2><form id="orderForm" class="grid two"><select name="sname" required>${state.suppliers.map(s => `<option>${esc(s.name)}</option>`).join('')}</select><input name="items" placeholder="Articles commandes" required><input name="total" type="number" placeholder="Montant FCFA" required><input name="status" placeholder="Statut (ex: En cours)" value="En cours"><button class="btn primary">Enregistrer commande</button></form><h2 style="margin-top:16px"><i class="fa-solid fa-clock-rotate-left"></i> Historique commandes</h2><div class="table">${(state.purchaseOrders || []).map(o => {
+    <section class="panel"><h2><i class="fa-solid fa-cart-plus"></i> Nouvelle commande</h2><form id="orderForm" class="grid two"><select name="sname" required>${state.suppliers.map(s => `<option>${esc(s.name)}</option>`).join('')}</select><input name="items" placeholder="Articles commandes" required><input name="total" type="number" placeholder="Montant FCFA" required><label style="font-size:12px;font-weight:700;text-transform:uppercase;color:var(--muted);grid-column:span 2">Delai livraison <input name="expectedDelivery" type="date" style="width:auto;min-height:36px;padding:4px 8px" required></label><input name="status" type="hidden" value="En cours"><button class="btn primary" style="grid-column:span 2">Enregistrer commande</button></form><div class="section-title" style="margin-top:16px"><h2><i class="fa-solid fa-clock-rotate-left"></i> Historique commandes</h2>${(() => { const n = state.purchaseOrders.filter(o => o.expectedDelivery && o.status2 !== 'received' && o.status2 !== 'cancelled' && new Date(o.expectedDelivery) < new Date()).length; return n ? `<span style="font-size:13px;font-weight:700;color:var(--bad)"><i class="fa-solid fa-clock"></i> ${n} en retard</span>` : `<span style="font-size:12px;color:var(--good);font-weight:600"><i class="fa-solid fa-check-circle"></i> Aucun retard</span>`; })()}</div><div class="table">${(state.purchaseOrders || []).map(o => {
       const status = SUPPLIER_STATUS[o.status2] || o.status || 'En attente';
       const color = SUPPLIER_COLORS[o.status2] || '#F59E0B';
-      return `<div class="tr" data-po-id="${esc(o.id)}"><b>${esc(o.supplier)}</b><span>${esc(o.items)}</span><span>${money(o.total)}</span><span class="order-status" style="background:${color}20;color:${color};border:1px solid ${color}">${status}</span><small>${new Date(o.at).toLocaleDateString('fr-FR')}</small>
+      return `<div class="tr" data-po-id="${esc(o.id)}"><b>${esc(o.supplier)}</b><span>${esc(o.items)}</span><span>${money(o.total)}</span><span class="order-status" style="background:${color}20;color:${color};border:1px solid ${color}">${status}</span><small>${new Date(o.at).toLocaleDateString('fr-FR')}</small>${o.expectedDelivery && o.status2 !== 'received' && o.status2 !== 'cancelled' && new Date(o.expectedDelivery) < new Date() ? `<span class="badge-warn" style="background:#fef2f2;color:#dc2626;font-weight:700;font-size:10px;margin-left:4px"><i class="fa-solid fa-clock"></i> Retard ${Math.floor((Date.now()-new Date(o.expectedDelivery).getTime())/86400000)}j</span>` : o.expectedDelivery ? `<small style="color:var(--muted);font-size:10px;margin-left:4px">Prev: ${new Date(o.expectedDelivery).toLocaleDateString('fr-FR')}</small>` : ''}
       <div class="actions-row">
         ${o.status2 === 'pending' ? `<button class="btn-icon-sm" data-po-action="ordered" title="Commander"><i class="fa-solid fa-truck-fast" style="color:${SUPPLIER_COLORS.ordered}"></i></button><button class="btn-icon-sm" data-po-action="cancelled" title="Annuler"><i class="fa-solid fa-xmark" style="color:${SUPPLIER_COLORS.cancelled}"></i></button>` : ''}
         ${o.status2 === 'ordered' ? `<button class="btn-icon-sm" data-po-action="shipped" title="Envoyee"><i class="fa-solid fa-ship" style="color:${SUPPLIER_COLORS.shipped}"></i></button><button class="btn-icon-sm" data-po-action="cancelled" title="Annuler"><i class="fa-solid fa-xmark" style="color:${SUPPLIER_COLORS.cancelled}"></i></button>` : ''}
@@ -1128,7 +1138,7 @@ function notifyCount() {
     document.getElementById('orderForm')?.addEventListener('submit', e => {
       e.preventDefault();
       const d = Object.fromEntries(new FormData(e.currentTarget));
-      state.purchaseOrders.unshift({ id: uid('po'), at: new Date().toISOString(), supplier: d.sname, items: d.items, total: Number(d.total), status: d.status, status2: 'pending' });
+      state.purchaseOrders.unshift({ id: uid('po'), at: new Date().toISOString(), supplier: d.sname, items: d.items, total: Number(d.total), status: d.status, status2: 'pending', expectedDelivery: d.expectedDelivery || '' });
       addNotification('Commande fournisseur', `Nouvelle commande chez ${d.sname}: ${d.items}`);
       save('Commande enregistree'); render();
     });
