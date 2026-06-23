@@ -7,6 +7,10 @@
     if (!state) return ["Ma boutique"];
     return state.settings?.shops?.length ? state.settings.shops : ["Ma boutique"];
   }
+  function getCategories() {
+    if (!state) return ["Meshes", "Accessoires", "Packaging"];
+    return state.settings?.categories?.length ? state.settings.categories : ["Meshes", "Accessoires", "Packaging"];
+  }
   const ROLE_LABELS = { super: "Super User", owner: "Proprietaire", manager: "Gerante", cashier: "Caissiere" };
   const ACCESS = {
     super: ["dashboard", "pos", "operations", "stock", "suppliers", "clients", "reports", "settings", "ai", "orders", "expenses", "promotions", "users"],
@@ -47,7 +51,8 @@
   const seed = {
     auth: null,
     theme: "light",
-    settings: { boutique: "Origin Retail OS", gmail: "boutique@example.com", users: USERS, lowStock: 5, shops: ["Meshes et Accessoires", "Packaging et Accessoires Cosmetiques"] },
+    settings: { boutique: "Origin Retail OS", gmail: "boutique@example.com", users: USERS, lowStock: 5, shops: ["Meshes et Accessoires", "Packaging et Accessoires Cosmetiques"],
+      categories: ["Meshes", "Accessoires cheveux", "Accessoires cosmetiques", "Packaging cosmetique"] },
     products: [
       { id: "p1", sku: "MSH-PER-001", name: "Perruque lace premium", category: "Meshes", shop: "Meshes et Accessoires", qty: 16, cost: 11500, price: 22000, photo: "" },
       { id: "p2", sku: "MSH-BON-002", name: "Bonnet wig cap", category: "Accessoires cheveux", shop: "Meshes et Accessoires", qty: 42, cost: 600, price: 1500, photo: "" },
@@ -140,6 +145,7 @@
     (next.settings || {}).logoText = next.settings?.logoText || 'OR';
     (next.settings || {}).boutique = next.settings?.boutique || 'Origin Retail OS';
     (next.settings || {}).shops = next.settings?.shops?.length ? next.settings.shops : ["Meshes et Accessoires", "Packaging et Accessoires Cosmetiques"];
+    (next.settings || {}).categories = next.settings?.categories?.length ? next.settings.categories : ["Meshes", "Accessoires", "Packaging"];
     (next.clients || []).forEach(c => { if (c.points === undefined) c.points = 0; });
     return next;
     }
@@ -470,6 +476,7 @@ function showForgotPassword() {
   
   window.showForgotPassword = showForgotPassword;
   window.showShopManager = showShopManager;
+  window.showCategoryManager = showCategoryManager;
   window.saveLoginTheme = saveLoginTheme;
   window.saveSmtpConfig = saveSmtpConfig;
 function notifyCount() {
@@ -778,7 +785,7 @@ function notifyCount() {
     document.getElementById("productForm")?.addEventListener("submit", (e) => {
       e.preventDefault();
       const d = Object.fromEntries(new FormData(e.currentTarget));
-      state.products.unshift({ id: uid("p"), sku: d.sku, name: d.name, category: "Ajout manuel", shop: d.shop, qty: Number(d.qty), cost: Number(d.cost), price: Number(d.price), promoPrice: 0, photo: d.photo || "" });
+      state.products.unshift({ id: uid("p"), sku: d.sku, name: d.name, category: getCategories()[0], shop: d.shop, qty: Number(d.qty), cost: Number(d.cost), price: Number(d.price), promoPrice: 0, photo: d.photo || "" });
       save("Produit ajoute"); render();
     });
     /* Feature 3+14: CRUD produits */
@@ -948,7 +955,8 @@ function notifyCount() {
       <h2 style="margin-top:16px"><i class="fa-solid fa-arrows-left-right"></i> Transferts recents</h2>${(state.transferHistory||[]).slice(0, 10).map(t => `<div class="row"><span>${esc(t.product)} x${t.qty}</span><span>${esc(t.from)} <i class="fa-solid fa-arrow-right"></i> ${esc(t.to)}</span><small>${new Date(t.at).toLocaleDateString('fr-FR')}</small></div>`).join('') || empty('Aucun transfert')}</section></div>`;
   }
   function settingsView() {
-    return `<div class="grid two"><section class="panel"><h2><i class="fa-solid fa-gear"></i> Parametres</h2><p>Comptes, roles, boutiques et preferences.</p><button class="btn primary sm" onclick="showShopManager();return false" style="margin:8px 0 12px"><i class="fa-solid fa-store"></i> Gérer mes boutiques (${getShops().length})</button><div class="table">${state.settings.users.map((u) => `<div class="tr"><b>${esc(u.name)}</b><span>${esc(ROLE_LABELS[u.role])}</span><span>${esc(u.shop)}</span>${canSeeCodes() ? `<strong>${esc(u.code)}</strong>` : `<strong style="color:var(--muted);letter-spacing:2px">••••</strong>`}</div>`).join("")}</div></section><section class="panel">
+    return `<div class="grid two"><section class="panel"><h2><i class="fa-solid fa-gear"></i> Parametres</h2><p>Comptes, roles, boutiques et preferences.</p><button class="btn primary sm" onclick="showShopManager();return false" style="margin:8px 0 12px"><i class="fa-solid fa-store"></i> Gérer mes boutiques (${getShops().length})</button>
+      <button class="btn primary sm" onclick="showCategoryManager();return false" style="margin:0 0 12px"><i class="fa-solid fa-tags"></i> Gérer mes catégories (${getCategories().length})</button><div class="table">${state.settings.users.map((u) => `<div class="tr"><b>${esc(u.name)}</b><span>${esc(ROLE_LABELS[u.role])}</span><span>${esc(u.shop)}</span>${canSeeCodes() ? `<strong>${esc(u.code)}</strong>` : `<strong style="color:var(--muted);letter-spacing:2px">••••</strong>`}</div>`).join("")}</div></section><section class="panel">
       <h2><i class="fa-solid fa-palette"></i> Theme personnalisable</h2>
       <div class="theme-switch">
         <span><i class="fa-solid ${state.theme === 'dark' ? 'fa-moon' : 'fa-sun'}"></i> ${state.theme === 'dark' ? 'Sombre' : 'Clair'}</span>
@@ -1940,6 +1948,13 @@ function addNotification(title, message) {
       '<label>Nom de la boutique<input name="shopName" placeholder="Ex: Meshes et Accessoires" required autofocus></label>' +
       '<div id="wizardExtraShops"></div>' +
       '<input type="hidden" name="shopCount" value="1">' +
+      '<h3 style="margin-top:20px"><i class="fa-solid fa-tags"></i> Categories de produits</h3>' +
+      '<p style="margin:4px 0 8px;font-size:14px;color:var(--text2)">Ajoutez vos categories de produits (ex: Perruques, Accessoires, Cosmetiques)</p>' +
+      '<div style="display:flex;gap:8px">' +
+      '<input id="wizardCategoryInput" placeholder="Nouvelle categorie" style="flex:1">' +
+      '<button class="btn" id="wizardAddCatBtn" type="button"><i class="fa-solid fa-plus"></i></button>' +
+      '</div>' +
+      '<div id="wizardExtraCats"></div>' +
       '<div style="margin-top:12px"><button class="btn primary full"><i class="fa-solid fa-check"></i> Commencer avec cette boutique</button></div>' +
       '</form>' +
       '<button type="button" class="btn sm full" id="wizardAddBtn" style="margin-top:8px"><i class="fa-solid fa-plus"></i> Ajouter une autre boutique</button>' +
@@ -1949,6 +1964,21 @@ function addNotification(title, message) {
   function bindWizard() {
     var form = document.getElementById('wizardForm');
     var container = document.getElementById('wizardExtraShops');
+    document.getElementById('wizardAddCatBtn')?.addEventListener('click', function() {
+      var inp = document.getElementById('wizardCategoryInput');
+      var name = inp.value.trim();
+      if (!name) return;
+      var container = document.getElementById('wizardExtraCats');
+      var div = document.createElement('div');
+      div.style.cssText = 'display:flex;align-items:center;gap:6px;padding:4px 0';
+      div.innerHTML = '<span>' + name + '</span> <button type="button" class="btn sm" onclick="this.parentElement.remove()" style="color:var(--bad)"><i class="fa-solid fa-xmark"></i></button>';
+      container.appendChild(div);
+      inp.value = '';
+      inp.focus();
+    });
+    document.getElementById('wizardCategoryInput')?.addEventListener('keydown', function(e) {
+      if (e.key === 'Enter') { e.preventDefault(); document.getElementById('wizardAddCatBtn')?.click(); }
+    });
     var addBtn = document.getElementById('wizardAddBtn');
     var counter = 1;
     function refresh() {
@@ -1976,6 +2006,11 @@ function addNotification(title, message) {
       }
       if (!state.settings) state.settings = {};
       state.settings.shops = shops;
+      var catEls = document.querySelectorAll('#wizardExtraCats span');
+      var cats = [];
+      catEls.forEach(function(el) { var t = el.textContent.trim(); if (t) cats.push(t); });
+      if (cats.length === 0) cats = ['Meshes', 'Accessoires', 'Packaging'];
+      state.settings.categories = cats;
       save('Boutique(s) configurée(s) avec succès');
       render();
     });
@@ -2045,4 +2080,63 @@ function addNotification(title, message) {
       });
     });
   }
+  function showCategoryManager() {
+    var p = document.getElementById('panelOverlay');
+    if (!p) { render(); p = document.getElementById('panelOverlay'); }
+    if (!p) return toast('Erreur: panelOverlay introuvable');
+    function renderCatList() {
+      var cats = getCategories();
+      p.innerHTML = '<div class="panel"><div class="section-title"><h2><i class="fa-solid fa-tags"></i> Gerer les categories</h2><button class="btn" onclick="panelOverlay.innerHTML=\'\';return false"><i class="fa-solid fa-xmark"></i></button></div>' +
+        '<p style="margin:8px 0;color:var(--text2)">Ajoutez, renommez ou supprimez des categories de produits. Les produits lies seront automatiquement mis a jour.</p>' +
+        '<div id="catList">' + cats.map(function(s, i) {
+          return '<div style="display:flex;align-items:center;gap:8px;margin:6px 0;padding:6px 8px;background:var(--bg);border-radius:6px">' +
+            '<span style="flex:1;font-weight:600">' + esc(s) + '</span>' +
+            '<button class="btn sm" data-ce="' + i + '"><i class="fa-solid fa-pen"></i></button>' +
+            (cats.length > 1 ? '<button class="btn sm" data-cd="' + i + '" style="color:var(--bad)"><i class="fa-solid fa-trash-can"></i></button>' : '<span style="font-size:11px;color:var(--muted)">Min. 1</span>') +
+            '</div>';
+        }).join('') +
+        '<div style="display:flex;gap:8px;margin-top:12px"><input id="catNewName" placeholder="Nouvelle categorie" style="flex:1"><button class="btn primary" id="catAddBtn"><i class="fa-solid fa-plus"></i> Ajouter</button></div>' +
+        '<p style="margin-top:8px;font-size:12px;color:var(--text2)"><i class="fa-solid fa-info-circle"></i> Les produits lies sont automatiquement reassignes.</p></div>';
+      p.querySelectorAll('[data-ce]').forEach(function(btn) {
+        btn.onclick = function() {
+          var idx = Number(this.dataset.ce);
+          var cats = getCategories();
+          var newName = prompt('Nouveau nom pour "' + cats[idx] + '":', cats[idx]);
+          if (!newName || newName.trim() === '' || newName.trim() === cats[idx]) return;
+          var oldName = cats[idx];
+          state.settings.categories[idx] = newName.trim();
+          state.products.forEach(function(pr) { if (pr.category === oldName) pr.category = newName.trim(); });
+          save();
+          renderCatList();
+        };
+      });
+      p.querySelectorAll('[data-cd]').forEach(function(btn) {
+        btn.onclick = function() {
+          var idx = Number(this.dataset.cd);
+          var cats = getCategories();
+          if (cats.length <= 1) { toast('Il faut au moins une categorie'); return; }
+          if (!confirm('Supprimer "' + cats[idx] + '" ? Les produits seront reassignes a la premiere categorie.')) return;
+          var oldName = cats[idx];
+          state.settings.categories.splice(idx, 1);
+          state.products.forEach(function(pr) { if (pr.category === oldName) pr.category = state.settings.categories[0]; });
+          save();
+          renderCatList();
+        };
+      });
+      document.getElementById('catAddBtn').onclick = function() {
+        var inp = document.getElementById('catNewName');
+        var name = inp.value.trim();
+        if (!name) { toast('Entrez un nom de categorie'); return; }
+        state.settings.categories.push(name);
+        inp.value = '';
+        save();
+        renderCatList();
+      };
+      document.getElementById('catNewName').onkeydown = function(e) {
+        if (e.key === 'Enter') document.getElementById('catAddBtn').click();
+      };
+    }
+    renderCatList();
+  }
+
 })();
