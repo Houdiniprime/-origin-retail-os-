@@ -53,41 +53,16 @@
     theme: "light",
     settings: { boutique: "Origin Retail OS", gmail: "boutique@example.com", users: USERS, lowStock: 5, shops: ["Meshes et Accessoires", "Packaging et Accessoires Cosmetiques"],
       categories: ["Meshes", "Accessoires cheveux", "Accessoires cosmetiques", "Packaging cosmetique"] },
-    products: [
-      { id: "p1", sku: "MSH-PER-001", name: "Perruque lace premium", category: "Meshes", shop: "Meshes et Accessoires", qty: 16, cost: 11500, price: 22000, photo: "" },
-      { id: "p2", sku: "MSH-BON-002", name: "Bonnet wig cap", category: "Accessoires cheveux", shop: "Meshes et Accessoires", qty: 42, cost: 600, price: 1500, photo: "" },
-      { id: "p3", sku: "MSH-COL-003", name: "Colle lace forte", category: "Accessoires cheveux", shop: "Meshes et Accessoires", qty: 23, cost: 1800, price: 3500, photo: "" },
-      { id: "p4", sku: "MSH-BAN-004", name: "Bande elastique pose", category: "Accessoires cheveux", shop: "Meshes et Accessoires", qty: 7, cost: 900, price: 2500, photo: "" },
-      { id: "p5", sku: "PKG-POT-011", name: "Pot creme 100 ml", category: "Packaging cosmetique", shop: "Packaging et Accessoires Cosmetiques", qty: 110, cost: 220, price: 550, photo: "" },
-      { id: "p6", sku: "PKG-FLC-012", name: "Flacon serum 30 ml", category: "Packaging cosmetique", shop: "Packaging et Accessoires Cosmetiques", qty: 85, cost: 260, price: 650, photo: "" },
-      { id: "p7", sku: "PKG-ETQ-013", name: "Etiquettes waterproof", category: "Packaging cosmetique", shop: "Packaging et Accessoires Cosmetiques", qty: 240, cost: 35, price: 120, photo: "" },
-      { id: "p8", sku: "PKG-SPA-014", name: "Spatule cosmetique", category: "Accessoires cosmetiques", shop: "Packaging et Accessoires Cosmetiques", qty: 32, cost: 90, price: 250, photo: "" }
-    ],
-    clients: [
-      { id: "c1", name: "Marie Ngo", phone: "+237699112233", balance: 42000, points: 150 },
-      { id: "c2", name: "Arnaud Talla", phone: "+237677445566", balance: 18000, points: 45 }
-    ],
+    products: [],
+    clients: [],
     loyaltyTiers: ["Bronze", "Argent", "Or", "Platine"],
     loyaltyPoints: 0,
     transferHistory: [],
     reportSchedule: null,
-    orders: [
-      { id: "ord_demo_1", at: new Date(Date.now()-86400000*2).toISOString(), clientId: "c1", clientName: "Marie Ngo", phone: "+237699112233", items: "2x Perruque lace premium", total: 44000, deposit: 10000, status: "confirmed", notes: "Livraison en boutique" },
-      { id: "ord_demo_2", at: new Date(Date.now()-86400000).toISOString(), clientId: "c2", clientName: "Arnaud Talla", phone: "+237677445566", items: "5x Pot creme 100 ml", total: 2750, deposit: 0, status: "pending", notes: "Urgent" }
-    ],
-    suppliers: [
-      { id: "s1", name: "DistriCos SARL", contact: "+237699000011", city: "Douala", products: "Meshes, coles, accessoires" },
-      { id: "s2", name: "PackPlus Cameroun", contact: "+237677000022", city: "Yaounde", products: "Pots, flacons, etiquettes" }
-    ],
-    purchaseOrders: [
-      { id: "po_demo_1", at: new Date(Date.now()-86400000*5).toISOString(), supplier: "DistriCos SARL", items: "Colle lace x20, Bonnets x30", total: 78000, status: "Recue", status2: "received" },
-      { id: "po_demo_2", at: new Date(Date.now()-86400000*2).toISOString(), supplier: "PackPlus Cameroun", items: "Pots creme 100ml x100", total: 22000, status: "Envoyee", status2: "shipped" }
-    ],
-    expenses: [
-      { id: "exp_demo_1", at: new Date(Date.now()-86400000*3).toISOString(), category: "Loyer", amount: 150000, note: "Loyer mensuel boutique Meshes", user: "Proprietaire" },
-      { id: "exp_demo_2", at: new Date(Date.now()-86400000).toISOString(), category: "Electricite", amount: 25000, note: "Facture ENEO", user: "Proprietaire" },
-      { id: "exp_demo_3", at: new Date(Date.now()-86400000*4).toISOString(), category: "Transport", amount: 8500, note: "Livraison fournisseur", user: "Gerante Meshes" }
-    ],
+    orders: [],
+    suppliers: [],
+    purchaseOrders: [],
+    expenses: [],
     shifts: [],
     closures: [],
     sales: [],
