@@ -4,8 +4,7 @@
   const STORE_KEY = "origin_retail_os_state_v3";
   const FCFA = new Intl.NumberFormat("fr-FR", { style: "currency", currency: "XAF", maximumFractionDigits: 0 });
   function getShops() {
-    if (!state) return ["Ma boutique"];
-    return state.settings?.shops?.length ? state.settings.shops : ["Ma boutique"];
+    return [state.settings?.boutique || "Ma boutique"];
   }
   function getCategories() {
     if (!state) return ["Meshes", "Accessoires", "Packaging"];
@@ -21,12 +20,11 @@
   const USERS = [
     { id: "super", name: "Super User", role: "super", code: "0000", shop: "all", email: "super@originretail.com", phone: "+237600000000" },
     { id: "owner", name: "Proprietaire", role: "owner", code: "9000", shop: "all", email: "proprietaire@originretail.com", phone: "+237600000001" },
-    { id: "gm", name: "Gerante Meshes", role: "manager", code: "2201", shop: "Meshes et Accessoires", email: "gerante.meshes@originretail.com", phone: "+237600000002" },
-    { id: "gp", name: "Gerante Packaging", role: "manager", code: "2202", shop: "Packaging et Accessoires Cosmetiques", email: "gerante.packaging@originretail.com", phone: "+237600000003" },
-    { id: "cm1", name: "Caissiere Meshes 1", role: "cashier", code: "1101", shop: "Meshes et Accessoires", phone: "+237600000004" },
-    { id: "cm2", name: "Caissiere Meshes 2", role: "cashier", code: "1102", shop: "Meshes et Accessoires", phone: "+237600000005" },
-    { id: "cp1", name: "Caissiere Packaging 1", role: "cashier", code: "1201", shop: "Packaging et Accessoires Cosmetiques", phone: "+237600000006" },
-    { id: "cp2", name: "Caissiere Packaging 2", role: "cashier", code: "1202", shop: "Packaging et Accessoires Cosmetiques", phone: "+237600000007" }
+    { id: "gm", name: "Gerante", role: "manager", code: "2201", shop: "all", email: "gerante@originretail.com", phone: "+237600000002" },
+    { id: "cm1", name: "Caissiere 1", role: "cashier", code: "1101", shop: "all", phone: "+237600000004" },
+    { id: "cm2", name: "Caissiere 2", role: "cashier", code: "1102", shop: "all", phone: "+237600000005" },
+    { id: "cp1", name: "Caissiere 3", role: "cashier", code: "1201", shop: "all", phone: "+237600000006" },
+    { id: "cp2", name: "Caissiere 4", role: "cashier", code: "1202", shop: "all", phone: "+237600000007" }
   ];
   const ICONS = {
     dashboard: "fa-gauge-high", pos: "fa-cash-register", operations: "fa-arrows-rotate",
@@ -51,8 +49,8 @@
   const seed = {
     auth: null,
     theme: "light",
-    settings: { boutique: "Origin Retail OS", gmail: "boutique@example.com", users: USERS, lowStock: 5, shops: ["Meshes et Accessoires", "Packaging et Accessoires Cosmetiques"],
-      categories: ["Meshes", "Accessoires cheveux", "Accessoires cosmetiques", "Packaging cosmetique"] },
+    settings: { boutique: "Origin Retail", gmail: "boutique@example.com", users: USERS, lowStock: 5, shops: ["Origin Retail"],
+      categories: ["Meshes", "Accessoires cheveux", "Accessoires cosmetiques", "Packaging", "Bijoux", "Soins visage", "Parfums"] },
     products: [],
     clients: [],
     loyaltyTiers: ["Bronze", "Argent", "Or", "Platine"],
@@ -74,7 +72,7 @@
   let state = load();
   let active = state.auth?.role === "cashier" ? "pos" : "dashboard";
   let filter = "";
-  let shopFilter = "all";
+  let shopFilter = "all"; // conservé pour compatibilité
   let orderFilter = "all";
   let clientFilter = "";
   let supplierFilter = "";
@@ -119,30 +117,49 @@
     (next.settings || {}).themeColor = next.settings?.themeColor || '#131921';
     (next.settings || {}).logoText = next.settings?.logoText || 'OR';
     (next.settings || {}).boutique = next.settings?.boutique || 'Origin Retail OS';
-    (next.settings || {}).shops = next.settings?.shops?.length ? next.settings.shops : ["Meshes et Accessoires", "Packaging et Accessoires Cosmetiques"];
+    (next.settings || {}).shops = next.settings?.shops?.length ? next.settings.shops : ["Origin Retail"];
     (next.settings || {}).categories = next.settings?.categories?.length ? next.settings.categories : ["Meshes", "Accessoires", "Packaging"];
     (next.clients || []).forEach(c => { if (c.points === undefined) c.points = 0; });
     return next;
     }
   /* ─────────── P7.1: Sync serveur pour persistance ─────────── */
-  function syncFromServer(force) {
+  function syncFromServer(force, silent) {
     fetch('/api/state').then(r=>r.json()).then(data => {
-      if (data.ok && data.state) {
-        const srv = data.state;
-        state.settings.lastSync = Date.now();
-        state.settings.serverSyncedAt = srv.serverSyncedAt || null;
-        if (!localStorage.getItem(STORE_KEY) && (srv.sales?.length || srv.clients?.length || srv.products?.length)) {
-          localStorage.setItem(STORE_KEY, JSON.stringify(srv));
-          Object.assign(state, migrate(srv));
+      if (!data.ok || !data.state) return;
+      const srv = data.state;
+      state.settings.lastSync = Date.now();
+      state.settings.serverSyncedAt = srv.serverSyncedAt || null;
+      // Préserver la session active et le panier (propres à chaque téléphone)
+      const currentAuth = state.auth;
+      const currentCart = state.cart;
+      // Toujours fusionner les données du serveur (produits, clients, ventes)
+      // pour que tous les téléphones soient synchronisés
+      const hasServerData = srv.products?.length || srv.clients?.length || srv.sales?.length;
+      if (force || hasServerData) {
+        const merged = {
+          products: srv.products || state.products,
+          clients: srv.clients || state.clients,
+          sales: srv.sales || state.sales,
+          suppliers: srv.suppliers || state.suppliers,
+          purchaseOrders: srv.purchaseOrders || state.purchaseOrders,
+          orders: srv.orders || state.orders,
+          expenses: srv.expenses || state.expenses,
+          closures: srv.closures || state.closures,
+          shifts: srv.shifts || state.shifts,
+          audit: srv.audit || state.audit,
+          transferHistory: srv.transferHistory || state.transferHistory,
+          notifications: srv.notifications || state.notifications
+        };
+        Object.assign(state, migrate({ ...srv, ...merged }));
+        // Restaurer session et panier (propres à ce téléphone)
+        state.auth = currentAuth;
+        state.cart = currentCart || [];
+        localStorage.setItem(STORE_KEY, JSON.stringify(state));
+        if (!silent) {
+          const hasData = srv.products?.length || srv.clients?.length || srv.sales?.length;
+          if (hasData) toast('Donnees synchronisees');
           render();
-          toast('Donnees restaurees depuis le serveur');
-        } else if (force && srv.serverSyncedAt) {
-          localStorage.setItem(STORE_KEY, JSON.stringify(srv));
-          Object.assign(state, migrate(srv));
-          render();
-          toast('Sync reussi depuis le serveur');
         }
-        if (state.auth) save();
       }
     }).catch(() => {});
   }
@@ -162,9 +179,15 @@
       }
     }
   }
+  let _savePending = false;
   function save(message) {
     localStorage.setItem(STORE_KEY, JSON.stringify(state));
-    fetch("/api/state", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(state) }).catch(() => {});
+    if (!_savePending) {
+      _savePending = true;
+      fetch("/api/state", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(state) })
+        .then(() => { _savePending = false; })
+        .catch(() => { _savePending = false; });
+    }
     if (message) toast(message);
   }
   function toast(message) {
@@ -180,7 +203,7 @@
     state.audit = state.audit.slice(0, 120);
   }
   function can(screen) { return ACCESS[state.auth?.role || "owner"].includes(screen); }
-  function scopedProducts() { return state.products.filter((p) => (shopFilter === "all" || p.shop === shopFilter) && (p.name + p.sku + p.category).toLowerCase().includes(filter.toLowerCase())); }
+  function scopedProducts() { return state.products.filter((p) => (p.name + p.sku + p.category).toLowerCase().includes(filter.toLowerCase())); }
   function metrics() {
     const salesTotal = state.sales.reduce((s, v) => s + v.total, 0);
     const margin = state.sales.reduce((s, sale) => s + sale.items.reduce((x, i) => x + (i.price - i.cost) * i.qty, 0), 0);
@@ -208,7 +231,9 @@
     bindScreen();
     if (!_startupDone) {
       _startupDone = true;
-      setTimeout(() => { syncFromServer(); checkDailyReminders(); }, 800);
+      setTimeout(() => { syncFromServer(true); checkDailyReminders(); }, 200);
+      // Sync automatique toutes les 15 secondes pour multi-smartphone
+      setInterval(() => { if (state.auth) syncFromServer(false, true); }, 15000);
     }
   }
 
@@ -243,9 +268,6 @@
             var k = kv[0], v = kv[1];
             return '<option value="' + esc(k) + '">' + esc(v) + '</option>';
           }).join('') +
-        '</select></label>' +
-        '<label class="register-shop-field" style="display:' + (state._registerRole === 'cashier' ? 'none' : 'block') + '">Boutique<select name="shop"><option value="all">Toutes boutiques</option>' +
-          getShops().map(function(s) { return '<option value="' + esc(s) + '">' + esc(s) + '</option>'; }).join('') +
         '</select></label>' +
         '<div class="grid two"><label>Mot de passe<input name="password" type="password" placeholder="Minimum 4 caracteres" required minlength="4"></label><label>Confirmer<input name="confirm" type="password" placeholder="Confirmer le mot de passe" required minlength="4"></label></div>' +
         '<button class="btn primary full"><i class="fa-solid fa-user-plus"></i> Creer mon compte</button>' +
@@ -320,7 +342,7 @@
         state._loginAttempts = 0;
         state._loginLockedUntil = null;
         state.auth = { ...user, at: new Date().toISOString() };
-        shopFilter = user.shop === 'all' ? 'all' : user.shop;
+        shopFilter = 'all';
         active = user.role === 'cashier' ? 'pos' : 'dashboard';
         audit('Connexion', user.name);
         save();
@@ -353,7 +375,7 @@
           name: data.name,
           role: data.role || 'cashier',
           code: Math.floor(1000 + Math.random()*9000).toString(),
-          shop: data.role === 'cashier' ? 'all' : (data.shop || 'all'),
+          shop: 'all',
           email: data.email || '',
           phone: data.phone || '',
           password: btoa(data.password),
@@ -465,10 +487,12 @@ function notifyCount() {
     return `<i class="fa-solid ${ago < 5 ? 'fa-cloud-check' : 'fa-cloud'}" style="color:${ago < 5 ? 'var(--good)' : 'var(--accent)'};margin-right:4px" title="Sync il y a ${ago} min"></i>`;
   }
   function shell() {
+    const mainNav = nav.filter(([k]) => can(k));
+    const mobileItems = ['pos','dashboard','stock','clients','settings'].filter(k => can(k));
     return `<div class="app-shell" data-theme="${state.theme || 'light'}">
       <aside class="sidebar">
         <div class="brand"><div class="brand-mark">OR</div><div><strong>Origin Retail OS</strong><span>${esc(state.auth.name)} / ${esc(ROLE_LABELS[state.auth.role])}</span></div></div>
-        <nav>${nav.filter(([k]) => can(k)).map(([k, label]) => `<button class="nav-item ${active === k ? "active" : ""}" data-nav="${k}"><i class="fa-solid ${ICONS[k]}"></i><span>${esc(label)}</span></button>`).join("")}</nav>
+        <nav>${mainNav.map(([k, label]) => `<button class="nav-item ${active === k ? "active" : ""}" data-nav="${k}"><i class="fa-solid ${ICONS[k]}"></i><span>${esc(label)}</span></button>`).join("")}</nav>
         <div class="sidebar-footer">
           <button class="nav-item" data-action="theme-toggle"><i class="fa-solid ${state.theme === 'dark' ? 'fa-sun' : 'fa-moon'}"></i><span>${state.theme === 'dark' ? 'Mode clair' : 'Mode sombre'}</span></button>
         </div>
@@ -476,18 +500,22 @@ function notifyCount() {
       <main>
         <header class="topbar"><div><h1>${title()}</h1><p>${subtitle()}</p></div><div class="actions">
           <button class="btn-icon notif-btn" data-action="notifications" title="Notifications"><i class="fa-solid fa-bell"></i>${notifyCount()}</button>
-          <select data-shop>${["all", ...getShops()].filter((s) => state.auth.shop === "all" || s === state.auth.shop).map((s) => `<option ${shopFilter === s ? "selected" : ""} value="${esc(s)}">${s === "all" ? "Toutes boutiques" : esc(s)}</option>`).join("")}</select>
           <button class="btn sm" data-action="sync-now">${syncIcon()} Sync</button>
-          <button class="btn" data-action="backup"><i class="fa-solid fa-download"></i> Backup</button>
+          <button class="btn sm" data-action="backup"><i class="fa-solid fa-download"></i> Backup</button>
           <button class="btn bad" data-action="logout"><i class="fa-solid fa-right-from-bracket"></i> Quitter</button>
         </div></header>
         <section class="content">${screen()}</section>
       </main>
+      <nav class="mobile-bottom-nav">${mobileItems.map(k => {
+        const label = nav.find(([id]) => id === k)?.[1] || k;
+        const icon = ICONS[k] || 'fa-circle';
+        return `<button class="nav-item ${active === k ? 'active' : ''}" data-nav="${k}"><i class="fa-solid ${icon}"></i><span>${esc(label)}</span></button>`;
+      }).join('')}</nav>
     </div>`;
   }
   function title() { return nav.find(([k]) => k === active)?.[1] || "Dashboard"; }
   function subtitle() {
-    return { dashboard: "Pilotage boutiques", pos: "Vente cash, mobile money, credit, prix special et mix", operations: "Ouverture et cloture caisse", stock: "Inventaire et photos produit", suppliers: "Fournisseurs et commandes", clients: "Dettes et relances", reports: "Exports et audit", ai: "Assistant intelligent pour votre boutique",    orders: "Precommandes et reservations clients",
+    return { dashboard: "Pilotage boutique", pos: "Vente cash, mobile money, credit, prix special", operations: "Ouverture et cloture caisse", stock: "Inventaire et photos produit", suppliers: "Fournisseurs et commandes", clients: "Dettes et relances", reports: "Exports et audit", ai: "Assistant intelligent pour votre boutique",    orders: "Precommandes et reservations clients",
     expenses: "Saisie et suivi des depenses",
     promotions: "Soldes, prix promo et offres",
     users: "Gestion des utilisateurs et acces",
@@ -498,7 +526,6 @@ function notifyCount() {
   }
   function bindGlobal() {
     document.querySelectorAll("[data-nav]").forEach((b) => b.addEventListener("click", () => { active = b.dataset.nav; render(); }));
-    document.querySelector("[data-shop]")?.addEventListener("change", (e) => { shopFilter = e.target.value; render(); });
     document.querySelectorAll("[data-action]").forEach((b) => b.addEventListener("click", () => handleAction(b.dataset.action)));
   }
   function handleAction(action) {
@@ -527,7 +554,6 @@ function notifyCount() {
       render();
     }
     if (action === "print-receipt") printReceipt();
-    if (action === "transfer-stock") transferStockAdvanced();
     if (action === "export-debts") download("debiteurs.csv", csv([["nom","telephone","solde"], ...state.clients.filter(c=>c.balance>0).map(c=>[c.name,c.phone,c.balance])]), "text/csv");
     if (action === "report-day") generateReport('jour');
     if (action === "report-week") generateReport('semaine');
@@ -577,7 +603,7 @@ function notifyCount() {
         return `<div class="stat-evo ${pct >= 0 ? 'evo-up' : 'evo-down'}"><b>${k === 'ca' ? 'CA' : k === 'marge' ? 'Marge' : k === 'stock' ? 'Stock' : 'Credits'}</b><span>${pct >= 0 ? '▲' : '▼'} ${Math.abs(pct)}%</span></div>`;
       }).join('')}</div>
       <div class="charts-row"><div class="panel chart-panel"><h2><i class="fa-solid fa-chart-line"></i> Evolution ventes (30 jours)</h2><canvas id="salesChart"></canvas></div><div class="panel chart-panel"><h2><i class="fa-solid fa-chart-pie"></i> Par methode de paiement</h2><canvas id="methodChart"></canvas></div></div>
-      <div class="charts-row"><div class="panel chart-panel"><h2><i class="fa-solid fa-ranking-star"></i> Top produits vendus</h2><canvas id="topProductsChart"></canvas></div><div class="panel chart-panel"><h2><i class="fa-solid fa-store"></i> CA par boutique</h2><canvas id="shopChart"></canvas></div></div>
+      <div class="charts-row"><div class="panel chart-panel"><h2><i class="fa-solid fa-ranking-star"></i> Top produits vendus</h2><canvas id="topProductsChart"></canvas></div><div class="panel chart-panel"><h2><i class="fa-solid fa-chart-simple"></i> Ventes par categorie</h2><canvas id="categoryChart"></canvas></div></div>
       <div class="grid two"><section class="panel"><h2><i class="fa-solid fa-clock-rotate-left"></i> Ventes recentes</h2>${paginate(state.sales, 6).map((s) => `<div class="row"><b>${esc(s.clientName)}</b><span>${money(s.total)}</span></div>`).join("") || empty("Aucune vente")}</section>
       <section class="panel"><h2><i class="fa-solid fa-triangle-exclamation"></i> Alertes stock (${low.length})</h2>${low.map((p) => `<div class="row alert-row"><b>${esc(p.name)}</b><span class="badge-warn">${p.qty} unites</span></div>`).join("") || empty("Aucune alerte")}</section></div>`;
   }
@@ -596,7 +622,7 @@ function notifyCount() {
   }
   function productCard(p) {
     const img = p.photo ? `<img src="${esc(p.photo)}" alt="${esc(p.name)}" class="product-img">` : `<div class="photo">${esc(p.name.split(/\s+/).map((w) => w[0]).slice(0, 2).join(""))}</div>`;
-    return `<button class="product" data-add="${esc(p.id)}" ${p.qty <= 0 ? "disabled" : ""}>${img}<strong>${esc(p.name)}</strong><small>${esc(p.sku)} / ${esc(p.shop)}</small><b>${money(p.price)}</b><small>Stock: ${p.qty}</small></button>`;
+    return `<button class="product" data-add="${esc(p.id)}" ${p.qty <= 0 ? "disabled" : ""}>${img}<strong>${esc(p.name)}</strong><small>${esc(p.sku)}</small><b>${money(p.price)}</b><small>Stock: ${p.qty}</small></button>`;
   }
   function cartKey(i) { if (!i.key) i.key = uid("cart"); return i.key; }
   function cartLine(i, options) {
@@ -751,7 +777,7 @@ function notifyCount() {
     });
   }
   function stockView() {
-    return `<section class="panel"><div class="section-title"><h2><i class="fa-solid fa-boxes-stacked"></i> Stocks</h2><input placeholder="Recherche" value="${esc(filter)}" data-filter><button class="btn sm" data-action="transfer-stock"><i class="fa-solid fa-arrows-left-right"></i> Transferer</button></div><form id="productForm" class="grid four"><input name="sku" placeholder="SKU" required><input name="name" placeholder="Produit" required><select name="shop">${getShops().map((s) => `<option>${esc(s)}</option>`)}</select><input name="qty" type="number" placeholder="Stock" required><input name="cost" type="number" placeholder="Cout" required><input name="price" type="number" placeholder="Prix" required><input name="photo" placeholder="URL photo (optionnel)"><button class="btn primary">Ajouter</button></form><div class="table">${state.products.map((p) => `<div class="tr" data-prod-id="${esc(p.id)}"><div class="stock-photo-thumb">${p.photo ? `<img src="${esc(p.photo)}">` : '<i class="fa-solid fa-image"></i>'}</div><b>${esc(p.name)}</b><span>${esc(p.sku)}</span><span>${esc(p.shop)}</span><span>${p.qty}</span><span>${money(p.price)}</span><div class="actions-row">
+    return `<section class="panel"><div class="section-title"><h2><i class="fa-solid fa-boxes-stacked"></i> Stocks</h2><input placeholder="Recherche produit..." value="${esc(filter)}" data-filter></div><form id="productForm" class="grid three"><input name="sku" placeholder="SKU" required><input name="name" placeholder="Produit" required><input name="qty" type="number" placeholder="Stock" required><input name="cost" type="number" placeholder="Cout" required><input name="price" type="number" placeholder="Prix" required><input name="photo" placeholder="URL photo"><button class="btn primary">Ajouter</button></form><div class="table">${state.products.map((p) => `<div class="tr" data-prod-id="${esc(p.id)}"><div class="stock-photo-thumb">${p.photo ? `<img src="${esc(p.photo)}">` : '<i class="fa-solid fa-image"></i>'}</div><b>${esc(p.name)}</b><span>${esc(p.sku)}</span><span>${p.qty}</span><span>${money(p.price)}</span><div class="actions-row">
         <button class="btn-icon-sm" data-edit-prod="${esc(p.id)}" title="Modifier"><i class="fa-solid fa-pen-to-square" style="color:var(--accent)"></i></button>
         <button class="btn-icon-sm" data-del-prod="${esc(p.id)}" title="Supprimer"><i class="fa-solid fa-trash-can" style="color:var(--bad)"></i></button>
       </div></div>`).join("")}</div></section>`;
@@ -760,7 +786,7 @@ function notifyCount() {
     document.getElementById("productForm")?.addEventListener("submit", (e) => {
       e.preventDefault();
       const d = Object.fromEntries(new FormData(e.currentTarget));
-      state.products.unshift({ id: uid("p"), sku: d.sku, name: d.name, category: getCategories()[0], shop: d.shop, qty: Number(d.qty), cost: Number(d.cost), price: Number(d.price), promoPrice: 0, photo: d.photo || "" });
+      state.products.unshift({ id: uid("p"), sku: d.sku, name: d.name, category: getCategories()[0], shop: getShops()[0], qty: Number(d.qty), cost: Number(d.cost), price: Number(d.price), promoPrice: 0, photo: d.photo || "" });
       save("Produit ajoute"); render();
     });
     /* Feature 3+14: CRUD produits */
@@ -791,7 +817,6 @@ function notifyCount() {
           <label>SKU<input name="sku" value="${esc(p.sku)}" required></label>
         </div>
         <div class="grid two">
-          <label>Boutique<select name="shop">${getShops().map(s => `<option ${p.shop === s ? 'selected' : ''}>${esc(s)}</option>`).join('')}</select></label>
           <label>Quantite<input name="qty" type="number" value="${p.qty}" required></label>
         </div>
         <div class="grid two">
@@ -811,7 +836,7 @@ function notifyCount() {
     panel.querySelector('#editProdForm').addEventListener('submit', e => {
       e.preventDefault();
       const d = Object.fromEntries(new FormData(e.currentTarget));
-      p.name = d.name; p.sku = d.sku; p.shop = d.shop; p.qty = Number(d.qty);
+      p.name = d.name; p.sku = d.sku; p.qty = Number(d.qty);
       p.cost = Number(d.cost); p.price = Number(d.price); p.photo = d.photo || p.photo;
       audit('Produit modifie', p.name);
       save('Produit modifie'); panel.remove(); render();
@@ -929,9 +954,8 @@ function notifyCount() {
     ${state.audit.length > auditLimit ? `<button class="btn sm full" data-action="voir-plus-audit" style="margin-top:8px">Voir plus (${state.audit.length - auditLimit} cachees)</button>` : ''}
       <h2 style="margin-top:16px"><i class="fa-solid fa-arrows-left-right"></i> Transferts recents</h2>${(state.transferHistory||[]).slice(0, 10).map(t => `<div class="row"><span>${esc(t.product)} x${t.qty}</span><span>${esc(t.from)} <i class="fa-solid fa-arrow-right"></i> ${esc(t.to)}</span><small>${new Date(t.at).toLocaleDateString('fr-FR')}</small></div>`).join('') || empty('Aucun transfert')}</section></div>`;
   }
-  function settingsView() {
-    return `<div class="grid two"><section class="panel"><h2><i class="fa-solid fa-gear"></i> Parametres</h2><p>Comptes, roles, boutiques et preferences.</p><button class="btn primary sm" onclick="showShopManager();return false" style="margin:8px 0 12px"><i class="fa-solid fa-store"></i> Gérer mes boutiques (${getShops().length})</button>
-      <button class="btn primary sm" onclick="showCategoryManager();return false" style="margin:0 0 12px"><i class="fa-solid fa-tags"></i> Gérer mes catégories (${getCategories().length})</button><div class="table">${state.settings.users.map((u) => `<div class="tr"><b>${esc(u.name)}</b><span>${esc(ROLE_LABELS[u.role])}</span><span>${esc(u.shop)}</span>${canSeeCodes() ? `<strong>${esc(u.code)}</strong>` : `<strong style="color:var(--muted);letter-spacing:2px">••••</strong>`}</div>`).join("")}</div></section><section class="panel">
+  function settingsView() {      return `<div class="grid two"><section class="panel"><h2><i class="fa-solid fa-gear"></i> Parametres</h2><p>Comptes, roles et preferences.</p>
+      <button class="btn primary sm" onclick="showCategoryManager();return false" style="margin:0 0 12px"><i class="fa-solid fa-tags"></i> Gérer mes catégories (${getCategories().length})</button><div class="table">${state.settings.users.map((u) => `<div class="tr"><b>${esc(u.name)}</b><span>${esc(ROLE_LABELS[u.role])}</span>${canSeeCodes() ? `<strong>${esc(u.code)}</strong>` : `<strong style="color:var(--muted);letter-spacing:2px">••••</strong>`}</div>`).join("")}</div></section><section class="panel">
       <h2><i class="fa-solid fa-palette"></i> Theme personnalisable</h2>
       <div class="theme-switch">
         <span><i class="fa-solid ${state.theme === 'dark' ? 'fa-moon' : 'fa-sun'}"></i> ${state.theme === 'dark' ? 'Sombre' : 'Clair'}</span>
@@ -953,12 +977,13 @@ function notifyCount() {
       <p style="color:var(--muted);font-size:13px">${state.settings.lastSync ? 'Derniere sync: ' + new Date(state.settings.lastSync).toLocaleString('fr-FR') : 'Jamais synchronise'}</p>
       <p style="color:var(--muted);font-size:13px">${state.settings.serverSyncedAt ? 'Donnees serveur: ' + new Date(state.settings.serverSyncedAt).toLocaleString('fr-FR') : 'Serveur: aucune donnee'}</p>
       <button class="btn" data-action="sync-now"><i class="fa-solid fa-arrows-rotate"></i> Sync maintenant</button>
-      <h2 style="margin-top:20px"><i class="fa-solid fa-wifi"></i> Acces distant</h2>
-      <p style="color:var(--muted);font-size:13px">Pour acceder depuis un autre appareil:</p>
+      <h2 style="margin-top:20px"><i class="fa-solid fa-wifi"></i> Acces depuis smartphone</h2>
+      <p style="color:var(--muted);font-size:13px">Les serveuses peuvent acceder depuis leur telephone:</p>
       <ol style="font-size:13px;color:var(--muted);margin:8px 0">
-        <li>Lancer le serveur avec <code style="background:var(--bg);padding:2px 6px;border-radius:4px">npm run remote</code></li>
+        <li>Le patron lance le serveur avec <code style="background:var(--bg);padding:2px 6px;border-radius:4px">npm run remote</code></li>
         <li>Un lien securise <code style="background:var(--bg);padding:2px 6px;border-radius:4px">*.trycloudflare.com</code> sera cree</li>
-        <li>Ouvrir ce lien sur telephone ou tablette</li>
+        <li>Chaque serveuse ouvre ce lien sur son telephone</li>
+        <li>Elle se connecte avec son code personnel (1101, 1102...)</li>
       </ol>
       <button class="btn" onclick="if(location.hostname.includes('github.io')){alert('Serveur local requis. Lancez le serveur avec: node server.js puis ouvrez http://localhost:8080/app.html');return false}else{window.open('/api/access','_blank')};return false"><i class="fa-solid fa-qrcode"></i> Voir les acces reseau</button>
       <h2 style="margin-top:20px"><i class="fa-solid fa-paint-roller"></i> Page de connexion</h2>
@@ -1137,7 +1162,7 @@ function notifyCount() {
         'Verifiez les stocks critiques chaque matin avant douvrir la caisse.',
         'Exportez vos rapports chaque mois pour suivre votre progression.',
         'Formez vos caissieres a utiliser le mix de produits pour augmenter le panier moyen.',
-        'Comparez les performances de vos deux boutiques regulierement.'
+        'Utilisez les rapports pour suivre les performances de votre boutique chaque mois.'
       ];
       reply = `💡 <b>Conseil du jour</b><br>${tips[Math.floor(Math.random()*tips.length)]}`;
     } else if (q.includes('credit') || q.includes('dette') || q.includes('debiteur')) {
@@ -1391,7 +1416,7 @@ function notifyCount() {
         </div>
         <div class="grid two">
           <label>Role<select name="role" required>${Object.entries(ROLE_LABELS).filter(([k]) => state.auth.role === 'super' || k !== 'super').map(([k,v]) => `<option value="${esc(k)}" ${existing?.role === k ? 'selected' : ''}>${esc(v)}</option>`).join('')}</select></label>
-          <label>Boutique<select name="shop"><option value="all" ${existing?.shop === 'all' ? 'selected' : ''}>Toutes</option>${getShops().map(s => `<option value="${esc(s)}" ${existing?.shop === s ? 'selected' : ''}>${esc(s)}</option>`).join('')}</select></label>
+
         </div>
         <label>Code d'acces (4 chiffres)<input name="code" type="password" value="${esc(existing?.code||'')}" required minlength="4" maxlength="4" pattern="[0-9]{4}"></label>
         <div style="display:flex;gap:8px;margin-top:12px">

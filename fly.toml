@@ -1,5 +1,5 @@
 # fly.toml — Origin Retail OS
-# Déploiement gratuit Fly.io (pas de CB, 3 VMs partagées)
+# Déploiement gratuit Fly.io — accès en ligne 24/7 sans ordinateur local
 
 app = "origin-retail-os"
 primary_region = "cdg"
@@ -11,6 +11,10 @@ primary_region = "cdg"
   PORT = "8080"
   NODE_ENV = "production"
   WHATSAPP_ENABLED = "false"
+
+[mounts]
+  source = "erp_data"
+  destination = "/data"
 
 [[services]]
   protocol = "tcp"

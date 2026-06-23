@@ -2,6 +2,7 @@ const http = require("http");
 const fs = require("fs");
 const os = require("os");
 const path = require("path");
+const zlib = require("zlib");
 
 const root = __dirname;
 const port = Number(process.env.PORT || 8080);
@@ -160,12 +161,24 @@ const server = http.createServer((req, res) => {
     filePath = path.join(root, "app.html");
   }
   const ext = path.extname(filePath).toLowerCase();
-  res.writeHead(200, {
+  const acceptEncoding = (req.headers["accept-encoding"] || "");
+  const useGzip = acceptEncoding.includes("gzip") && ext !== ".html";
+  const headers = {
     "Content-Type": types[ext] || "application/octet-stream",
-    "Cache-Control": ext === ".html" ? "no-store" : "public, max-age=3600",
+    "Cache-Control": ext === ".html" ? "no-store, must-revalidate" : "public, max-age=86400",
     "X-Content-Type-Options": "nosniff"
-  });
-  fs.createReadStream(filePath).pipe(res);
+  };
+  if (useGzip && ext !== ".png" && ext !== ".jpg" && ext !== ".jpeg" && ext !== ".ico" && ext !== ".woff" && ext !== ".woff2") {
+    headers["Content-Encoding"] = "gzip";
+    res.writeHead(200, headers);
+    const stream = fs.createReadStream(filePath);
+    const gzip = zlib.createGzip({ level: 6 });
+    stream.pipe(gzip).pipe(res);
+    stream.on("error", () => { res.writeHead(500); res.end(); });
+  } else {
+    res.writeHead(200, headers);
+    fs.createReadStream(filePath).pipe(res);
+  }
 });
 
 if (require.main === module) {
