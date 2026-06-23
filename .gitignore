@@ -47,6 +47,9 @@ desktop.ini
 .env.local
 .env.*.local
 
+# === Cloudflare ===
+.wrangler/
+
 # === Build ===
 dist/
 build/

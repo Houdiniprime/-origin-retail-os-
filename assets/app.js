@@ -977,15 +977,13 @@ function notifyCount() {
       <p style="color:var(--muted);font-size:13px">${state.settings.lastSync ? 'Derniere sync: ' + new Date(state.settings.lastSync).toLocaleString('fr-FR') : 'Jamais synchronise'}</p>
       <p style="color:var(--muted);font-size:13px">${state.settings.serverSyncedAt ? 'Donnees serveur: ' + new Date(state.settings.serverSyncedAt).toLocaleString('fr-FR') : 'Serveur: aucune donnee'}</p>
       <button class="btn" data-action="sync-now"><i class="fa-solid fa-arrows-rotate"></i> Sync maintenant</button>
-      <h2 style="margin-top:20px"><i class="fa-solid fa-wifi"></i> Acces depuis smartphone</h2>
-      <p style="color:var(--muted);font-size:13px">Les serveuses peuvent acceder depuis leur telephone:</p>
-      <ol style="font-size:13px;color:var(--muted);margin:8px 0">
-        <li>Le patron lance le serveur avec <code style="background:var(--bg);padding:2px 6px;border-radius:4px">npm run remote</code></li>
-        <li>Un lien securise <code style="background:var(--bg);padding:2px 6px;border-radius:4px">*.trycloudflare.com</code> sera cree</li>
-        <li>Chaque serveuse ouvre ce lien sur son telephone</li>
-        <li>Elle se connecte avec son code personnel (1101, 1102...)</li>
-      </ol>
-      <button class="btn" onclick="if(location.hostname.includes('github.io')){alert('Serveur local requis. Lancez le serveur avec: node server.js puis ouvrez http://localhost:8080/app.html');return false}else{window.open('/api/access','_blank')};return false"><i class="fa-solid fa-qrcode"></i> Voir les acces reseau</button>
+      <h2 style="margin-top:20px"><i class="fa-solid fa-cloud"></i> Application en ligne</h2>
+      <p style="color:var(--muted);font-size:13px">Votre ERP est accessible depuis n'importe quel appareil connecté à Internet :</p>
+      <ul style="font-size:13px;color:var(--muted);margin:8px 0;padding-left:16px">
+        <li>Les serveuses ouvrent simplement l'URL sur leur téléphone</li>
+        <li>Elles se connectent avec leur code personnel <strong>1101</strong>, <strong>1102</strong>, <strong>1201</strong>, <strong>1202</strong></li>
+        <li>Les données sont synchronisées en temps réel entre tous les appareils</li>
+      </ul>
       <h2 style="margin-top:20px"><i class="fa-solid fa-paint-roller"></i> Page de connexion</h2>
       <label>Couleur du fond<select id="loginBgStyle" onchange="saveLoginTheme()">
         <option value="dark">Fonce classique</option>
