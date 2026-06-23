@@ -3,10 +3,7 @@
 
   const STORE_KEY = "origin_retail_os_state_v3";
   const FCFA = new Intl.NumberFormat("fr-FR", { style: "currency", currency: "XAF", maximumFractionDigits: 0 });
-  function getShops() {
-    if (!state) return ["Ma boutique"];
-    return state.settings?.shops?.length ? state.settings.shops : ["Ma boutique"];
-  }
+  const SHOPS = ["Meshes et Accessoires", "Packaging et Accessoires Cosmetiques"];
   const ROLE_LABELS = { super: "Super User", owner: "Proprietaire", manager: "Gerante", cashier: "Caissiere" };
   const ACCESS = {
     super: ["dashboard", "pos", "operations", "stock", "suppliers", "clients", "reports", "settings", "ai", "orders", "expenses", "promotions", "users"],
@@ -17,12 +14,12 @@
   const USERS = [
     { id: "super", name: "Super User", role: "super", code: "0000", shop: "all", email: "super@originretail.com", phone: "+237600000000" },
     { id: "owner", name: "Proprietaire", role: "owner", code: "9000", shop: "all", email: "proprietaire@originretail.com", phone: "+237600000001" },
-    { id: "gm", name: "Gerante Meshes", role: "manager", code: "2201", shop: "Meshes et Accessoires", email: "gerante.meshes@originretail.com", phone: "+237600000002" },
-    { id: "gp", name: "Gerante Packaging", role: "manager", code: "2202", shop: "Packaging et Accessoires Cosmetiques", email: "gerante.packaging@originretail.com", phone: "+237600000003" },
-    { id: "cm1", name: "Caissiere Meshes 1", role: "cashier", code: "1101", shop: "Meshes et Accessoires", phone: "+237600000004" },
-    { id: "cm2", name: "Caissiere Meshes 2", role: "cashier", code: "1102", shop: "Meshes et Accessoires", phone: "+237600000005" },
-    { id: "cp1", name: "Caissiere Packaging 1", role: "cashier", code: "1201", shop: "Packaging et Accessoires Cosmetiques", phone: "+237600000006" },
-    { id: "cp2", name: "Caissiere Packaging 2", role: "cashier", code: "1202", shop: "Packaging et Accessoires Cosmetiques", phone: "+237600000007" }
+    { id: "gm", name: "Gerante Meshes", role: "manager", code: "2201", shop: SHOPS[0], email: "gerante.meshes@originretail.com", phone: "+237600000002" },
+    { id: "gp", name: "Gerante Packaging", role: "manager", code: "2202", shop: SHOPS[1], email: "gerante.packaging@originretail.com", phone: "+237600000003" },
+    { id: "cm1", name: "Caissiere Meshes 1", role: "cashier", code: "1101", shop: SHOPS[0], phone: "+237600000004" },
+    { id: "cm2", name: "Caissiere Meshes 2", role: "cashier", code: "1102", shop: SHOPS[0], phone: "+237600000005" },
+    { id: "cp1", name: "Caissiere Packaging 1", role: "cashier", code: "1201", shop: SHOPS[1], phone: "+237600000006" },
+    { id: "cp2", name: "Caissiere Packaging 2", role: "cashier", code: "1202", shop: SHOPS[1], phone: "+237600000007" }
   ];
   const ICONS = {
     dashboard: "fa-gauge-high", pos: "fa-cash-register", operations: "fa-arrows-rotate",
@@ -47,16 +44,16 @@
   const seed = {
     auth: null,
     theme: "light",
-    settings: { boutique: "Origin Retail OS", gmail: "boutique@example.com", users: USERS, lowStock: 5, shops: ["Meshes et Accessoires", "Packaging et Accessoires Cosmetiques"] },
+    settings: { boutique: "Origin Retail OS", gmail: "boutique@example.com", users: USERS, lowStock: 5 },
     products: [
-      { id: "p1", sku: "MSH-PER-001", name: "Perruque lace premium", category: "Meshes", shop: "Meshes et Accessoires", qty: 16, cost: 11500, price: 22000, photo: "" },
-      { id: "p2", sku: "MSH-BON-002", name: "Bonnet wig cap", category: "Accessoires cheveux", shop: "Meshes et Accessoires", qty: 42, cost: 600, price: 1500, photo: "" },
-      { id: "p3", sku: "MSH-COL-003", name: "Colle lace forte", category: "Accessoires cheveux", shop: "Meshes et Accessoires", qty: 23, cost: 1800, price: 3500, photo: "" },
-      { id: "p4", sku: "MSH-BAN-004", name: "Bande elastique pose", category: "Accessoires cheveux", shop: "Meshes et Accessoires", qty: 7, cost: 900, price: 2500, photo: "" },
-      { id: "p5", sku: "PKG-POT-011", name: "Pot creme 100 ml", category: "Packaging cosmetique", shop: "Packaging et Accessoires Cosmetiques", qty: 110, cost: 220, price: 550, photo: "" },
-      { id: "p6", sku: "PKG-FLC-012", name: "Flacon serum 30 ml", category: "Packaging cosmetique", shop: "Packaging et Accessoires Cosmetiques", qty: 85, cost: 260, price: 650, photo: "" },
-      { id: "p7", sku: "PKG-ETQ-013", name: "Etiquettes waterproof", category: "Packaging cosmetique", shop: "Packaging et Accessoires Cosmetiques", qty: 240, cost: 35, price: 120, photo: "" },
-      { id: "p8", sku: "PKG-SPA-014", name: "Spatule cosmetique", category: "Accessoires cosmetiques", shop: "Packaging et Accessoires Cosmetiques", qty: 32, cost: 90, price: 250, photo: "" }
+      { id: "p1", sku: "MSH-PER-001", name: "Perruque lace premium", category: "Meshes", shop: SHOPS[0], qty: 16, cost: 11500, price: 22000, photo: "" },
+      { id: "p2", sku: "MSH-BON-002", name: "Bonnet wig cap", category: "Accessoires cheveux", shop: SHOPS[0], qty: 42, cost: 600, price: 1500, photo: "" },
+      { id: "p3", sku: "MSH-COL-003", name: "Colle lace forte", category: "Accessoires cheveux", shop: SHOPS[0], qty: 23, cost: 1800, price: 3500, photo: "" },
+      { id: "p4", sku: "MSH-BAN-004", name: "Bande elastique pose", category: "Accessoires cheveux", shop: SHOPS[0], qty: 7, cost: 900, price: 2500, photo: "" },
+      { id: "p5", sku: "PKG-POT-011", name: "Pot creme 100 ml", category: "Packaging cosmetique", shop: SHOPS[1], qty: 110, cost: 220, price: 550, photo: "" },
+      { id: "p6", sku: "PKG-FLC-012", name: "Flacon serum 30 ml", category: "Packaging cosmetique", shop: SHOPS[1], qty: 85, cost: 260, price: 650, photo: "" },
+      { id: "p7", sku: "PKG-ETQ-013", name: "Etiquettes waterproof", category: "Packaging cosmetique", shop: SHOPS[1], qty: 240, cost: 35, price: 120, photo: "" },
+      { id: "p8", sku: "PKG-SPA-014", name: "Spatule cosmetique", category: "Accessoires cosmetiques", shop: SHOPS[1], qty: 32, cost: 90, price: 250, photo: "" }
     ],
     clients: [
       { id: "c1", name: "Marie Ngo", phone: "+237699112233", balance: 42000, points: 150 },
@@ -139,7 +136,6 @@
     (next.settings || {}).themeColor = next.settings?.themeColor || '#131921';
     (next.settings || {}).logoText = next.settings?.logoText || 'OR';
     (next.settings || {}).boutique = next.settings?.boutique || 'Origin Retail OS';
-    (next.settings || {}).shops = next.settings?.shops?.length ? next.settings.shops : ["Meshes et Accessoires", "Packaging et Accessoires Cosmetiques"];
     (next.clients || []).forEach(c => { if (c.points === undefined) c.points = 0; });
     return next;
     }
@@ -216,11 +212,6 @@
       bindLogin();
       return;
     }
-    if (!getShops().length) {
-      app.innerHTML = wizardView();
-      bindWizard();
-      return;
-    }
     if (!can(active)) active = ACCESS[state.auth.role][0];
     app.innerHTML = shell();
     bindGlobal();
@@ -264,7 +255,7 @@
           }).join('') +
         '</select></label>' +
         '<label class="register-shop-field" style="display:' + (state._registerRole === 'cashier' ? 'none' : 'block') + '">Boutique<select name="shop"><option value="all">Toutes boutiques</option>' +
-          getShops().map(function(s) { return '<option value="' + esc(s) + '">' + esc(s) + '</option>'; }).join('') +
+          SHOPS.map(function(s) { return '<option value="' + esc(s) + '">' + esc(s) + '</option>'; }).join('') +
         '</select></label>' +
         '<div class="grid two"><label>Mot de passe<input name="password" type="password" placeholder="Minimum 4 caracteres" required minlength="4"></label><label>Confirmer<input name="confirm" type="password" placeholder="Confirmer le mot de passe" required minlength="4"></label></div>' +
         '<button class="btn primary full"><i class="fa-solid fa-user-plus"></i> Creer mon compte</button>' +
@@ -469,7 +460,6 @@ function showForgotPassword() {
 
   
   window.showForgotPassword = showForgotPassword;
-  window.showShopManager = showShopManager;
   window.saveLoginTheme = saveLoginTheme;
   window.saveSmtpConfig = saveSmtpConfig;
 function notifyCount() {
@@ -494,7 +484,7 @@ function notifyCount() {
       <main>
         <header class="topbar"><div><h1>${title()}</h1><p>${subtitle()}</p></div><div class="actions">
           <button class="btn-icon notif-btn" data-action="notifications" title="Notifications"><i class="fa-solid fa-bell"></i>${notifyCount()}</button>
-          <select data-shop>${["all", ...getShops()].filter((s) => state.auth.shop === "all" || s === state.auth.shop).map((s) => `<option ${shopFilter === s ? "selected" : ""} value="${esc(s)}">${s === "all" ? "Toutes boutiques" : esc(s)}</option>`).join("")}</select>
+          <select data-shop>${["all", ...SHOPS].filter((s) => state.auth.shop === "all" || s === state.auth.shop).map((s) => `<option ${shopFilter === s ? "selected" : ""} value="${esc(s)}">${s === "all" ? "Toutes boutiques" : esc(s)}</option>`).join("")}</select>
           <button class="btn sm" data-action="sync-now">${syncIcon()} Sync</button>
           <button class="btn" data-action="backup"><i class="fa-solid fa-download"></i> Backup</button>
           <button class="btn bad" data-action="logout"><i class="fa-solid fa-right-from-bracket"></i> Quitter</button>
@@ -769,7 +759,7 @@ function notifyCount() {
     });
   }
   function stockView() {
-    return `<section class="panel"><div class="section-title"><h2><i class="fa-solid fa-boxes-stacked"></i> Stocks</h2><input placeholder="Recherche" value="${esc(filter)}" data-filter><button class="btn sm" data-action="transfer-stock"><i class="fa-solid fa-arrows-left-right"></i> Transferer</button></div><form id="productForm" class="grid four"><input name="sku" placeholder="SKU" required><input name="name" placeholder="Produit" required><select name="shop">${getShops().map((s) => `<option>${esc(s)}</option>`)}</select><input name="qty" type="number" placeholder="Stock" required><input name="cost" type="number" placeholder="Cout" required><input name="price" type="number" placeholder="Prix" required><input name="photo" placeholder="URL photo (optionnel)"><button class="btn primary">Ajouter</button></form><div class="table">${state.products.map((p) => `<div class="tr" data-prod-id="${esc(p.id)}"><div class="stock-photo-thumb">${p.photo ? `<img src="${esc(p.photo)}">` : '<i class="fa-solid fa-image"></i>'}</div><b>${esc(p.name)}</b><span>${esc(p.sku)}</span><span>${esc(p.shop)}</span><span>${p.qty}</span><span>${money(p.price)}</span><div class="actions-row">
+    return `<section class="panel"><div class="section-title"><h2><i class="fa-solid fa-boxes-stacked"></i> Stocks</h2><input placeholder="Recherche" value="${esc(filter)}" data-filter><button class="btn sm" data-action="transfer-stock"><i class="fa-solid fa-arrows-left-right"></i> Transferer</button></div><form id="productForm" class="grid four"><input name="sku" placeholder="SKU" required><input name="name" placeholder="Produit" required><select name="shop">${SHOPS.map((s) => `<option>${esc(s)}</option>`)}</select><input name="qty" type="number" placeholder="Stock" required><input name="cost" type="number" placeholder="Cout" required><input name="price" type="number" placeholder="Prix" required><input name="photo" placeholder="URL photo (optionnel)"><button class="btn primary">Ajouter</button></form><div class="table">${state.products.map((p) => `<div class="tr" data-prod-id="${esc(p.id)}"><div class="stock-photo-thumb">${p.photo ? `<img src="${esc(p.photo)}">` : '<i class="fa-solid fa-image"></i>'}</div><b>${esc(p.name)}</b><span>${esc(p.sku)}</span><span>${esc(p.shop)}</span><span>${p.qty}</span><span>${money(p.price)}</span><div class="actions-row">
         <button class="btn-icon-sm" data-edit-prod="${esc(p.id)}" title="Modifier"><i class="fa-solid fa-pen-to-square" style="color:var(--accent)"></i></button>
         <button class="btn-icon-sm" data-del-prod="${esc(p.id)}" title="Supprimer"><i class="fa-solid fa-trash-can" style="color:var(--bad)"></i></button>
       </div></div>`).join("")}</div></section>`;
@@ -809,7 +799,7 @@ function notifyCount() {
           <label>SKU<input name="sku" value="${esc(p.sku)}" required></label>
         </div>
         <div class="grid two">
-          <label>Boutique<select name="shop">${getShops().map(s => `<option ${p.shop === s ? 'selected' : ''}>${esc(s)}</option>`).join('')}</select></label>
+          <label>Boutique<select name="shop">${SHOPS.map(s => `<option ${p.shop === s ? 'selected' : ''}>${esc(s)}</option>`).join('')}</select></label>
           <label>Quantite<input name="qty" type="number" value="${p.qty}" required></label>
         </div>
         <div class="grid two">
@@ -948,7 +938,7 @@ function notifyCount() {
       <h2 style="margin-top:16px"><i class="fa-solid fa-arrows-left-right"></i> Transferts recents</h2>${(state.transferHistory||[]).slice(0, 10).map(t => `<div class="row"><span>${esc(t.product)} x${t.qty}</span><span>${esc(t.from)} <i class="fa-solid fa-arrow-right"></i> ${esc(t.to)}</span><small>${new Date(t.at).toLocaleDateString('fr-FR')}</small></div>`).join('') || empty('Aucun transfert')}</section></div>`;
   }
   function settingsView() {
-    return `<div class="grid two"><section class="panel"><h2><i class="fa-solid fa-gear"></i> Parametres</h2><p>Comptes, roles, boutiques et preferences.</p><button class="btn primary sm" onclick="showShopManager();return false" style="margin:8px 0 12px"><i class="fa-solid fa-store"></i> Gérer mes boutiques (${getShops().length})</button><div class="table">${state.settings.users.map((u) => `<div class="tr"><b>${esc(u.name)}</b><span>${esc(ROLE_LABELS[u.role])}</span><span>${esc(u.shop)}</span>${canSeeCodes() ? `<strong>${esc(u.code)}</strong>` : `<strong style="color:var(--muted);letter-spacing:2px">••••</strong>`}</div>`).join("")}</div></section><section class="panel">
+    return `<div class="grid two"><section class="panel"><h2><i class="fa-solid fa-gear"></i> Parametres</h2><p>Comptes, roles, boutiques et preferences.</p><div class="table">${state.settings.users.map((u) => `<div class="tr"><b>${esc(u.name)}</b><span>${esc(ROLE_LABELS[u.role])}</span><span>${esc(u.shop)}</span>${canSeeCodes() ? `<strong>${esc(u.code)}</strong>` : `<strong style="color:var(--muted);letter-spacing:2px">••••</strong>`}</div>`).join("")}</div></section><section class="panel">
       <h2><i class="fa-solid fa-palette"></i> Theme personnalisable</h2>
       <div class="theme-switch">
         <span><i class="fa-solid ${state.theme === 'dark' ? 'fa-moon' : 'fa-sun'}"></i> ${state.theme === 'dark' ? 'Sombre' : 'Clair'}</span>
@@ -1408,7 +1398,7 @@ function notifyCount() {
         </div>
         <div class="grid two">
           <label>Role<select name="role" required>${Object.entries(ROLE_LABELS).filter(([k]) => state.auth.role === 'super' || k !== 'super').map(([k,v]) => `<option value="${esc(k)}" ${existing?.role === k ? 'selected' : ''}>${esc(v)}</option>`).join('')}</select></label>
-          <label>Boutique<select name="shop"><option value="all" ${existing?.shop === 'all' ? 'selected' : ''}>Toutes</option>${getShops().map(s => `<option value="${esc(s)}" ${existing?.shop === s ? 'selected' : ''}>${esc(s)}</option>`).join('')}</select></label>
+          <label>Boutique<select name="shop"><option value="all" ${existing?.shop === 'all' ? 'selected' : ''}>Toutes</option>${SHOPS.map(s => `<option value="${esc(s)}" ${existing?.shop === s ? 'selected' : ''}>${esc(s)}</option>`).join('')}</select></label>
         </div>
         <label>Code d'acces (4 chiffres)<input name="code" type="password" value="${esc(existing?.code||'')}" required minlength="4" maxlength="4" pattern="[0-9]{4}"></label>
         <div style="display:flex;gap:8px;margin-top:12px">
@@ -1838,8 +1828,8 @@ function addNotification(title, message) {
       </div>
       <button type="button" class="btn sm" id="addTransferItem" style="margin:8px 0"><i class="fa-solid fa-plus"></i> Ajouter un produit</button>
       <div class="grid two" style="margin-top:8px">
-        <select id="transferFrom" required><option value="">De (boutique source)</option>${getShops().map(s => `<option>${esc(s)}</option>`).join('')}</select>
-        <select id="transferTo" required><option value="">Vers (boutique destination)</option>${getShops().map(s => `<option>${esc(s)}</option>`).join('')}</select>
+        <select id="transferFrom" required><option value="">De (boutique source)</option>${SHOPS.map(s => `<option>${esc(s)}</option>`).join('')}</select>
+        <select id="transferTo" required><option value="">Vers (boutique destination)</option>${SHOPS.map(s => `<option>${esc(s)}</option>`).join('')}</select>
       </div>
       <button class="btn primary full" id="executeTransfer" style="margin-top:12px"><i class="fa-solid fa-check"></i> Effectuer le transfert</button>
     </div>`;
@@ -1928,121 +1918,4 @@ function addNotification(title, message) {
 
     render();
   setTimeout(initAutoBackup, 1000);
-
-
-  /* ─────────── Wizard 1ère configuration ─────────── */
-  function wizardView() {
-    return '<main class="login-page"><section class="login-card" style="max-width:520px">' +
-      '<div class="login-brand"><div class="login-mark">OR</div><div><strong>Origin Retail OS</strong><span>Configuration initiale</span></div></div>' +
-      '<h2 style="text-align:center;margin:16px 0 4px"><i class="fa-solid fa-store"></i> Créez votre première boutique</h2>' +
-      '<p style="text-align:center;color:var(--muted);font-size:13px;margin:0 0 16px">Vous pourrez ajouter, renommer ou supprimer des boutiques à tout moment dans les Paramètres.</p>' +
-      '<form id="wizardForm">' +
-      '<label>Nom de la boutique<input name="shopName" placeholder="Ex: Meshes et Accessoires" required autofocus></label>' +
-      '<div id="wizardExtraShops"></div>' +
-      '<input type="hidden" name="shopCount" value="1">' +
-      '<div style="margin-top:12px"><button class="btn primary full"><i class="fa-solid fa-check"></i> Commencer avec cette boutique</button></div>' +
-      '</form>' +
-      '<button type="button" class="btn sm full" id="wizardAddBtn" style="margin-top:8px"><i class="fa-solid fa-plus"></i> Ajouter une autre boutique</button>' +
-    '</section></main>';
-  }
-
-  function bindWizard() {
-    var form = document.getElementById('wizardForm');
-    var container = document.getElementById('wizardExtraShops');
-    var addBtn = document.getElementById('wizardAddBtn');
-    var counter = 1;
-    function refresh() {
-      var h = '';
-      for (var i = 2; i <= counter; i++) {
-        h += '<label style="margin-top:8px">Boutique ' + i + '<input name="shopName' + i + '" placeholder="Ex: Packaging et Accessoires"></label>';
-      }
-      if (container) container.innerHTML = h;
-      var ci = form && form.querySelector('[name="shopCount"]');
-      if (ci) ci.value = counter;
-    }
-    if (addBtn) addBtn.addEventListener('click', function() {
-      counter++;
-      refresh();
-      if (counter >= 10 && addBtn) addBtn.style.display = 'none';
-    });
-    if (form) form.addEventListener('submit', function(e) {
-      e.preventDefault();
-      var d = Object.fromEntries(new FormData(e.currentTarget));
-      var shops = [];
-      if (d.shopName && d.shopName.trim()) shops.push(d.shopName.trim());
-      for (var i = 2; i <= 10; i++) {
-        var name = d['shopName' + i];
-        if (name && name.trim()) shops.push(name.trim());
-      }
-      if (!state.settings) state.settings = {};
-      state.settings.shops = shops;
-      save('Boutique(s) configurée(s) avec succès');
-      render();
-    });
-  }
-
-  /* ─────────── Gestion boutiques (modal) ─────────── */
-  function showShopManager() {
-    var shops = getShops();
-    var panel = document.createElement('div');
-    panel.className = 'modal-overlay';
-    panel.innerHTML = '<div class="modal-box" style="max-width:520px">' +
-      '<h2><i class="fa-solid fa-store"></i> Gérer mes boutiques (' + shops.length + ')</h2>' +
-      '<p style="color:var(--muted);font-size:13px;margin-bottom:12px">Ajoutez, renommez ou supprimez vos boutiques. Les produits et utilisateurs liés seront automatiquement mis à jour.</p>' +
-      '<div id="shopList">' + shops.map(function(s, i) {
-        return '<div class="shop-edit-row" style="display:flex;align-items:center;gap:8px;padding:8px 0;border-bottom:1px solid var(--border)">' +
-          '<input value="' + esc(s) + '" data-se="' + i + '" style="flex:1;min-height:36px;font-weight:700">' +
-          '<button class="btn-icon-sm" data-sr="' + i + '" title="Renommer"><i class="fa-solid fa-check" style="color:var(--good)"></i></button>' +
-          (shops.length > 1 ? '<button class="btn-icon-sm" data-sd="' + i + '" title="Supprimer"><i class="fa-solid fa-trash-can" style="color:var(--bad)"></i></button>' : '<span style="font-size:11px;color:var(--muted)">Min. 1</span>') +
-        '</div>';
-      }).join('') + '</div>' +
-      '<div style="display:flex;gap:8px;margin-top:12px">' +
-      '<input id="newShopInput" placeholder="Nouvelle boutique..." style="flex:1;min-height:36px">' +
-      '<button class="btn sm" id="shopAddBtn"><i class="fa-solid fa-plus"></i> Ajouter</button>' +
-      '</div>' +
-      '<button class="btn full" data-close style="margin-top:12px">Fermer</button>' +
-    '</div>';
-    document.body.appendChild(panel);
-    panel.querySelector('[data-close]')?.addEventListener('click', function() { panel.remove(); });
-    panel.addEventListener('click', function(e) { if (e.target === panel) panel.remove(); });
-    panel.querySelector('#shopAddBtn')?.addEventListener('click', function() {
-      var name = (panel.querySelector('#newShopInput')?.value || '').trim();
-      if (!name) return;
-      if (getShops().indexOf(name) >= 0) return toast('Cette boutique existe déjà');
-      state.settings.shops.push(name);
-      save('Boutique ajoutée');
-      panel.remove();
-      showShopManager();
-    });
-    panel.querySelectorAll('[data-sr]').forEach(function(btn) {
-      btn.addEventListener('click', function() {
-        var i = Number(btn.dataset.sr);
-        var oldName = getShops()[i];
-        var newName = (panel.querySelector('[data-se="' + i + '"]')?.value || '').trim();
-        if (!newName || newName === oldName) return;
-        if (getShops().some(function(s, j) { return j !== i && s === newName; })) return toast('Ce nom existe déjà');
-        state.settings.shops[i] = newName;
-        state.products.forEach(function(p) { if (p.shop === oldName) p.shop = newName; });
-        (state.settings.users || []).forEach(function(u) { if (u.shop === oldName) u.shop = newName; });
-        save('Boutique renommée');
-        panel.remove();
-        showShopManager();
-      });
-    });
-    panel.querySelectorAll('[data-sd]').forEach(function(btn) {
-      btn.addEventListener('click', function() {
-        var i = Number(btn.dataset.sd);
-        var name = getShops()[i];
-        if (getShops().length <= 1) return toast('Au moins une boutique requise');
-        var fallback = getShops()[0] === name ? getShops()[1] : getShops()[0];
-        if (!confirm('Supprimer "' + name + '" ?\nLes produits et utilisateurs seront réassignés à "' + fallback + '".')) return;
-        state.products.forEach(function(p) { if (p.shop === name) p.shop = fallback; });
-        (state.settings.users || []).forEach(function(u) { if (u.shop === name) u.shop = fallback; });
-        state.settings.shops = state.settings.shops.filter(function(_, j) { return j !== i; });
-        save('Boutique supprimée');
-        panel.remove();
-        showShopManager();
-      });
-    });
-  }
 })();
