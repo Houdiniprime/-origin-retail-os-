@@ -967,7 +967,7 @@ function notifyCount() {
         <li>Un lien securise <code style="background:var(--bg);padding:2px 6px;border-radius:4px">*.trycloudflare.com</code> sera cree</li>
         <li>Ouvrir ce lien sur telephone ou tablette</li>
       </ol>
-      <button class="btn" onclick="window.open('/api/access','_blank');return false"><i class="fa-solid fa-qrcode"></i> Voir les acces reseau</button>
+      <button class="btn" onclick="if(location.hostname.includes('github.io')){alert('Serveur local requis. Lancez le serveur avec: node server.js puis ouvrez http://localhost:8080/app.html');return false}else{window.open('/api/access','_blank')};return false"><i class="fa-solid fa-qrcode"></i> Voir les acces reseau</button>
       <h2 style="margin-top:20px"><i class="fa-solid fa-paint-roller"></i> Page de connexion</h2>
       <label>Couleur du fond<select id="loginBgStyle" onchange="saveLoginTheme()">
         <option value="dark">Fonce classique</option>
