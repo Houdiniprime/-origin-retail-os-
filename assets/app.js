@@ -2040,7 +2040,7 @@ function addNotification(title, message) {
     }
   }
 
-  function generateReport(period) {
+    function generateReport(period) {
     const m = metrics();
     const now = new Date();
     const filter = period === 'jour' ? d => d.toDateString() === now.toDateString() :
@@ -2048,39 +2048,143 @@ function addNotification(title, message) {
       d => { const mo = new Date(); mo.setMonth(mo.getMonth()-1); return d >= mo; };
     const filtered = state.sales.filter(s => filter(new Date(s.at)));
     const total = filtered.reduce((s,v) => s+v.total, 0);
+    const margin = filtered.reduce((s, sale) => s + sale.items.reduce((x, i) => x + (i.price - i.cost) * i.qty, 0), 0);
     const byMethod = {};
     filtered.forEach(s => { byMethod[s.method] = (byMethod[s.method]||0) + s.total; });
     const low = state.products.filter(p => p.qty <= state.settings.lowStock);
     const debtors = state.clients.filter(c => c.balance > 0);
-    const todaySales = period === 'jour' ? filtered : [];
     const top = [...state.clients].sort((a,b) => (b.points||0)-(a.points||0)).slice(0,3);
+    // Top products
+    const pc = {};
+    filtered.forEach(s => (s.items||[]).forEach(item => { pc[item.name] = (pc[item.name]||0) + item.qty; }));
+    const topProducts = Object.entries(pc).sort((a,b) => b[1]-a[1]).slice(0,8);
+    // Category sales
+    const catSales = {};
+    filtered.forEach(s => (s.items||[]).forEach(item => {
+      const p = state.products.find(x => x.id === item.id);
+      const cat = p ? (p.category||'Autre') : 'Autre';
+      catSales[cat] = (catSales[cat]||0) + item.price * item.qty;
+    }));
+    const periodLabel = { jour: 'Journalier', semaine: 'Hebdomadaire', mois: 'Mensuel' }[period] || period;
+    const dateStr = now.toLocaleDateString('fr-FR', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' });
 
-    let report = `📊 RAPPORT ${period.toUpperCase()} — ${esc(state.settings.boutique)}\n\n`;
-    report += `📅 ${now.toLocaleDateString('fr-FR')}\n`;
-    report += `👤 ${esc(state.auth.name)}\n\n`;
-    report += `💰 CA: ${money(total)} (${filtered.length} ventes)\n`;
-    report += `📈 Marge: ${money(m.margin)}\n`;
-    report += `🏪 Stock: ${state.products.reduce((s,p) => s+p.qty,0)} unites\n`;
-    if (Object.keys(byMethod).length) {
-      report += `\n💳 Par methode:\n${Object.entries(byMethod).map(([k,v]) => `  ${k}: ${money(v)}`).join('\n')}\n`;
-    }
-    report += `\n⚠️ Alertes stock: ${low.length}\n`;
-    report += `📋 Credits: ${money(m.debt)} (${debtors.length} clients)\n`;
-    if (top.length) {
-      report += `\n🏆 Top fidelite:\n${top.map((c,i) => `  ${i+1}. ${c.name}: ${c.points||0} pts`).join('\n')}\n`;
-    }
-    report += `\n--- Origin Retail OS ---`;
+    const html = `<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Rapport ${periodLabel} — ${esc(state.settings.boutique)}</title>
+<style>
+  @page { margin: 15mm 10mm; }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: 'Segoe UI', Arial, sans-serif; color: #1a1a2e; background: #fff; padding: 20px; font-size: 13px; line-height: 1.5; }
+  .report-header { text-align: center; border-bottom: 3px solid #ff9900; padding-bottom: 16px; margin-bottom: 20px; }
+  .report-header h1 { font-size: 24px; color: #131921; margin-bottom: 4px; }
+  .report-header .brand { font-size: 12px; color: #888; }
+  .report-meta { display: flex; justify-content: space-between; color: #666; font-size: 12px; margin-bottom: 16px; }
+  .kpi-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; margin-bottom: 20px; }
+  .kpi-card { background: #f8f9fa; border: 1px solid #e9ecef; border-radius: 8px; padding: 12px; text-align: center; }
+  .kpi-card .label { font-size: 10px; text-transform: uppercase; color: #888; font-weight: 700; letter-spacing: 0.5px; }
+  .kpi-card .value { font-size: 20px; font-weight: 900; color: #131921; margin-top: 4px; }
+  .kpi-card .value.good { color: #007600; }
+  .kpi-card .value.bad { color: #b12704; }
+  .section { margin-bottom: 20px; }
+  .section h2 { font-size: 15px; color: #131921; border-left: 4px solid #ff9900; padding-left: 10px; margin-bottom: 10px; }
+  table { width: 100%; border-collapse: collapse; font-size: 12px; }
+  th { background: #131921; color: #fff; padding: 8px 10px; text-align: left; font-size: 11px; text-transform: uppercase; letter-spacing: 0.5px; }
+  td { padding: 7px 10px; border-bottom: 1px solid #e9ecef; }
+  tr:nth-child(even) td { background: #f8f9fa; }
+  .bar-cell { display: flex; align-items: center; gap: 8px; }
+  .bar { height: 14px; border-radius: 3px; background: #ff9900; min-width: 4px; }
+  .footer { margin-top: 24px; padding-top: 12px; border-top: 2px solid #131921; text-align: center; font-size: 11px; color: #888; }
+  .btn-row { text-align: center; margin-bottom: 20px; }
+  .btn-row button { background: #ff9900; border: 0; color: #111; padding: 10px 24px; border-radius: 6px; font-weight: 700; font-size: 14px; cursor: pointer; margin: 0 6px; }
+  .btn-row button.wa { background: #25D366; color: #fff; }
+  .btn-row button:hover { opacity: 0.9; }
+  .badge { display: inline-block; padding: 2px 8px; border-radius: 999px; font-size: 10px; font-weight: 700; }
+  .badge-warn { background: #fef3c7; color: #92400e; }
+  .badge-good { background: #d1fae5; color: #065f46; }
+  .badge-bad { background: #fee2e2; color: #991b1b; }
+  @media print {
+    .btn-row { display: none; }
+    body { padding: 0; font-size: 11px; }
+    .kpi-grid { grid-template-columns: repeat(4, 1fr); gap: 6px; }
+    .kpi-card { padding: 8px; }
+    .kpi-card .value { font-size: 16px; }
+    .section h2 { font-size: 13px; }
+    th { padding: 5px 8px; font-size: 10px; }
+    td { padding: 5px 8px; font-size: 11px; }
+    @page { margin: 10mm 8mm; }
+  }
+</style>
+</head>
+<body>
+  <div class="report-header">
+    <h1>${esc(state.settings.boutique)}</h1>
+    <div class="brand">Origin Retail OS — Rapport ${periodLabel}</div>
+  </div>
+  <div class="report-meta">
+    <span>📅 ${dateStr}</span>
+    <span>👤 ${esc(state.auth.name)}</span>
+    <span>🆔 Rapport #${uid('R').toUpperCase()}</span>
+  </div>
+
+  <div class="kpi-grid">
+    <div class="kpi-card"><div class="label">Chiffre d'affaires</div><div class="value good">${money(total)}</div><div style="font-size:11px;color:#888;margin-top:2px">${filtered.length} ventes</div></div>
+    <div class="kpi-card"><div class="label">Marge brute</div><div class="value good">${money(margin)}</div><div style="font-size:11px;color:#888;margin-top:2px">${total ? Math.round(margin/total*100) : 0}% de marge</div></div>
+    <div class="kpi-card"><div class="label">Stock valorise</div><div class="value">${money(m.stockValue)}</div><div style="font-size:11px;color:#888;margin-top:2px">${state.products.reduce((s,p) => s+p.qty,0)} unites</div></div>
+    <div class="kpi-card"><div class="label">Credits clients</div><div class="value bad">${money(m.debt)}</div><div style="font-size:11px;color:#888;margin-top:2px">${debtors.length} debiteurs</div></div>
+  </div>
+
+  <div class="section">
+    <h2>Ventes par methode de paiement</h2>
+    <table>${Object.keys(byMethod).length ? `
+      <tr><th>Methode</th><th>Montant</th><th>Part</th></tr>
+      ${Object.entries(byMethod).map(([k,v]) => `<tr><td>${esc(k)}</td><td>${money(v)}</td><td><div class="bar-cell"><div class="bar" style="width:${Math.round(v/total*100)}%"></div>${Math.round(v/total*100)}%</div></td></tr>`).join('')}` : '<tr><td style="text-align:center;color:#888">Aucune vente</td></tr>'}</table>
+  </div>
+
+  ${topProducts.length ? `<div class="section">
+    <h2>Top produits vendus</h2>
+    <table><tr><th>#</th><th>Produit</th><th>Quantite</th><th>%</th></tr>
+    ${topProducts.map(([name,qty], i) => `<tr><td>${i+1}</td><td>${esc(name)}</td><td>${qty}</td><td><div class="bar-cell"><div class="bar" style="width:${Math.round(qty/topProducts[0][1]*100)}%"></div>${Math.round(qty/topProducts[0][1]*100)}%</div></td></tr>`).join('')}</table>
+  </div>` : ''}
+
+  ${Object.keys(catSales).length ? `<div class="section">
+    <h2>Ventes par categorie</h2>
+    <table><tr><th>Categorie</th><th>Chiffre d'affaires</th><th>Part</th></tr>
+    ${Object.entries(catSales).sort((a,b) => b[1]-a[1]).map(([cat,v]) => `<tr><td>${esc(cat)}</td><td>${money(v)}</td><td><div class="bar-cell"><div class="bar" style="width:${Math.round(v/total*100)}%"></div>${Math.round(v/total*100)}%</div></td></tr>`).join('')}</table>
+  </div>` : ''}
+
+  <div class="section">
+    <h2>Resume</h2>
+    <table>
+      ${low.length ? `<tr><td>⚠️ Alertes stock</td><td><span class="badge badge-warn">${low.length} produits</span></td></tr>` : '<tr><td>✅ Stock</td><td><span class="badge badge-good">Aucune alerte</span></td></tr>'}
+      <tr><td>👥 Debiteurs</td><td><span class="badge ${debtors.length ? 'badge-bad' : 'badge-good'}">${debtors.length} clients (${money(m.debt)})</span></td></tr>
+      <tr><td>💰 Depenses periode</td><td>${state.expenses.filter(e => filter(new Date(e.at))).reduce((s,e) => s+e.amount, 0) > 0 ? money(state.expenses.filter(e => filter(new Date(e.at))).reduce((s,e) => s+e.amount, 0)) : 'Aucune depense'}</td></tr>
+      ${top.length ? `<tr><td>🏆 Top client</td><td>${esc(top[0].name)} — ${top[0].points||0} pts</td></tr>` : ''}
+      <tr><td>📦 Produits en stock</td><td>${state.products.length} produits (${state.products.reduce((s,p) => s+p.qty,0)} unites)</td></tr>
+    </table>
+  </div>
+
+  <div class="footer">
+    <p>Origin Retail OS — Rapport genere le ${dateStr}</p>
+    <p style="margin-top:4px;font-size:10px">Ce rapport est horodate et certifie par le systeme d'audit</p>
+  </div>
+
+  <div class="btn-row">
+    <button onclick="window.print()"><i class="fa-solid fa-file-pdf"></i> 📄 Exporter en PDF</button>
+    <button class="wa" onclick="window.open('https://wa.me/?text=${encodeURIComponent('Rapport ' + periodLabel + ' — ' + esc(state.settings.boutique) + ': CA ' + money(total) + ', ' + filtered.length + ' ventes')}')"><i class="fa-brands fa-whatsapp"></i> 📤 Partager WhatsApp</button>
+  </div>
+</body>
+</html>`;
 
     addNotification('Rapport', `Rapport ${period} genere avec succes`);
     audit('Rapport', `Rapport ${period} genere`);
-
-    const msg = encodeURIComponent(report);
-    const w = window.open('', '_blank', 'width=500,height=600');
-    w.document.write(`<html><head><title>Rapport ${period}</title><style>body{font-family:monospace;padding:20px;white-space:pre-wrap;max-width:600px;margin:auto}</style></head><body><h1>Rapport ${period}</h1><pre>${esc(report)}</pre><hr><p><a href="https://wa.me/?text=${msg}" target="_blank">📤 Envoyer par WhatsApp</a></p><button onclick="window.print()">🖨️ Imprimer</button></body></html>`);
+    const w = window.open('', '_blank', 'width=800,height=700');
+    w.document.write(html);
     w.document.close();
     toast(`Rapport ${period} genere`);
   }
-
   function remindDebt(client) {
     const msg = encodeURIComponent(`Bonjour ${client.name}, Origin Retail OS vous rappelle votre solde de ${money(client.balance)}. Merci de regulariser au plus tot.`);
     if (client.phone) window.open(`https://wa.me/${client.phone.replace(/[^0-9]/g,'')}?text=${msg}`, '_blank');
