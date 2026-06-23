@@ -4,9 +4,6 @@
 name = "origin-retail-os"
 pages_build_output_dir = "."
 
-# KV namespace for persistent state storage
-# À créer dans le dashboard: https://dash.cloudflare.com/ → Workers & Pages → KV
-[[kv_namespaces]]
-binding = "ERP_STATE"
-id = "erp_state"
-preview_id = "erp_state"
+# Le binding KV est configuré dans le dashboard Cloudflare Pages :
+# Settings → Functions → KV namespace bindings → Ajouter ERP_STATE
+# (ne pas mettre dans wrangler.toml pour Pages)
