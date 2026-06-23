@@ -1,0 +1,616 @@
+<!DOCTYPE html>
+
+<html class="light" lang="fr"><head>
+    <script>
+        // Toast Notification System
+        window.showToast = function(msg) {
+            const old = document.querySelector('.custom-toast');
+            if (old) old.remove();
+            const t = document.createElement('div');
+            t.className = 'custom-toast fixed bottom-6 right-6 bg-slate-900 text-white px-6 py-3 rounded-xl shadow-lg z-[99999] font-bold text-sm transition-all animate-bounce';
+            t.textContent = msg;
+            document.body.appendChild(t);
+            setTimeout(() => t.remove(), 2500);
+        };
+
+        // Hard-Lock Security Script
+        (function() {
+            const isAuthenticated = sessionStorage.getItem('erp_authenticated');
+            const isSuperUser = sessionStorage.getItem('erp_superuser');
+            const role = sessionStorage.getItem('erp_role');
+            
+            // If not authenticated and not in auth/login.html, redirect to login
+            if (!isAuthenticated && !isSuperUser && !window.location.href.includes('login.html')) {
+                window.location.href = '../auth/login.html';
+                return;
+            }
+            
+            // Restrict access for Caissier
+            if (role === 'caissier') {
+                document.addEventListener('DOMContentLoaded', () => {
+                    if (window.showToast) {
+                        window.showToast('Accès refusé : Ce module est réservé aux gérants et administrateurs.');
+                    } else {
+                        alert('Accès refusé : Ce module est réservé aux gérants et administrateurs.');
+                    }
+                    setTimeout(() => { window.location.href = '../index.html'; }, 2000);
+                });
+            }
+        })();
+    </script>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>ERP Core Shell - Sauvegarde &amp; Récupération</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Hanken+Grotesk:wght@400;500;600;700;800&amp;family=JetBrains+Mono:wght@400;500&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    "colors": {
+                        "secondary-fixed": "#d8e2ff",
+                        "secondary-fixed-dim": "#adc6ff",
+                        "surface-container": "#eceef0",
+                        "on-surface-variant": "#45474c",
+                        "on-tertiary-fixed-variant": "#38485d",
+                        "surface-container-lowest": "#ffffff",
+                        "on-primary-container": "#8590a6",
+                        "inverse-on-surface": "#eff1f3",
+                        "surface-dim": "#d8dadc",
+                        "surface-tint": "#545f73",
+                        "surface-container-low": "#f2f4f6",
+                        "surface-container-high": "#e6e8ea",
+                        "inverse-surface": "#2d3133",
+                        "tertiary-fixed": "#d3e4fe",
+                        "surface": "#f7f9fb",
+                        "on-tertiary": "#ffffff",
+                        "on-error-container": "#93000a",
+                        "error-container": "#ffdad6",
+                        "background": "#f7f9fb",
+                        "on-secondary-container": "#fefcff",
+                        "error": "#ba1a1a",
+                        "tertiary": "#041528",
+                        "secondary-container": "#2170e4",
+                        "tertiary-container": "#1a2a3e",
+                        "on-background": "#191c1e",
+                        "on-secondary": "#ffffff",
+                        "surface-container-highest": "#e0e3e5",
+                        "surface-bright": "#f7f9fb",
+                        "inverse-primary": "#bcc7de",
+                        "on-primary-fixed": "#111c2d",
+                        "secondary": "#0058be",
+                        "primary-fixed-dim": "#bcc7de",
+                        "primary": "#091426",
+                        "on-tertiary-container": "#8191a9",
+                        "on-surface": "#191c1e",
+                        "on-secondary-fixed-variant": "#004395",
+                        "primary-fixed": "#d8e3fb",
+                        "on-primary": "#ffffff",
+                        "on-error": "#ffffff",
+                        "on-tertiary-fixed": "#0b1c30",
+                        "on-primary-fixed-variant": "#3c475a",
+                        "outline": "#75777d",
+                        "tertiary-fixed-dim": "#b7c8e1",
+                        "surface-variant": "#e0e3e5",
+                        "outline-variant": "#c5c6cd",
+                        "on-secondary-fixed": "#001a42",
+                        "primary-container": "#1e293b"
+                    },
+                    "borderRadius": {
+                        "DEFAULT": "0.125rem",
+                        "lg": "0.25rem",
+                        "xl": "0.5rem",
+                        "full": "0.75rem"
+                    },
+                    "spacing": {
+                        "base": "4px",
+                        "xl": "32px",
+                        "md": "16px",
+                        "lg": "24px",
+                        "sidebar-width": "240px",
+                        "sm": "8px",
+                        "gutter": "16px",
+                        "filter-panel-width": "280px",
+                        "xs": "4px"
+                    },
+                    "fontFamily": {
+                        "label-sm": ["JetBrains Mono"],
+                        "body-md": ["Hanken Grotesk"],
+                        "display-sm": ["Hanken Grotesk"],
+                        "label-md": ["JetBrains Mono"],
+                        "body-sm": ["Hanken Grotesk"],
+                        "headline-lg": ["Hanken Grotesk"],
+                        "body-lg": ["Hanken Grotesk"],
+                        "headline-md": ["Hanken Grotesk"]
+                    },
+                    "fontSize": {
+                        "label-sm": ["10px", {"lineHeight": "14px", "fontWeight": "500"}],
+                        "body-md": ["14px", {"lineHeight": "20px", "fontWeight": "400"}],
+                        "display-sm": ["30px", {"lineHeight": "36px", "letterSpacing": "-0.02em", "fontWeight": "700"}],
+                        "label-md": ["12px", {"lineHeight": "16px", "fontWeight": "500"}],
+                        "body-sm": ["13px", {"lineHeight": "18px", "fontWeight": "400"}],
+                        "headline-lg": ["24px", {"lineHeight": "32px", "fontWeight": "600"}],
+                        "body-lg": ["16px", {"lineHeight": "24px", "fontWeight": "400"}],
+                        "headline-md": ["20px", {"lineHeight": "28px", "fontWeight": "600"}]
+                    }
+                }
+            }
+        }
+    </script>
+<style>
+        body { font-family: 'Hanken Grotesk', sans-serif; }
+        .material-symbols-outlined { font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24; }
+        .table-fixed-head { position: sticky; top: 0; z-index: 10; }
+        ::-webkit-scrollbar { width: 6px; }
+        ::-webkit-scrollbar-track { background: transparent; }
+        ::-webkit-scrollbar-thumb { background: #c5c6cd; border-radius: 10px; }
+    </style>
+</head>
+<body class="bg-background text-on-surface">
+<div class="fixed top-4 right-4 z-[9999]">
+    <a href="../index.html" class="flex items-center gap-2 bg-white/90 backdrop-blur shadow-lg border border-slate-200 px-4 py-2 rounded-full text-slate-700 hover:bg-white hover:scale-105 transition-all font-bold text-sm">
+        <span class="material-symbols-outlined text-[20px]">grid_view</span>
+        Menu Principal
+    </a>
+</div>
+<!-- TopAppBar Shell -->
+<header class="fixed top-0 left-0 w-full z-50 bg-surface border-b border-outline-variant flex justify-between items-center px-md h-16">
+<div class="flex items-center gap-md">
+<h1 class="font-headline-lg text-headline-lg font-bold text-primary">ERP Core Shell</h1>
+</div>
+<div class="flex items-center gap-md">
+<div class="relative">
+<span class="material-symbols-outlined text-on-surface-variant cursor-pointer hover:bg-surface-container-low transition-colors p-sm rounded-full">notifications</span>
+<span class="absolute top-1 right-1 w-2 h-2 bg-error rounded-full"></span>
+</div>
+<span class="material-symbols-outlined text-on-surface-variant cursor-pointer hover:bg-surface-container-low transition-colors p-sm rounded-full">settings</span>
+<span class="material-symbols-outlined text-on-surface-variant cursor-pointer hover:bg-surface-container-low transition-colors p-sm rounded-full">help</span>
+<div class="flex items-center gap-xs text-right mr-sm hidden sm:block">
+<div>
+<p id="headerUserName" class="font-label-md text-label-md text-primary leading-none">Admin</p>
+<p id="headerUserRole" class="text-[10px] text-on-surface-variant">Role</p>
+</div>
+</div>
+<div class="w-8 h-8 rounded-full overflow-hidden border border-outline-variant">
+<img alt="Administrator Profile" class="w-full h-full object-cover" data-alt="A professional headshot of a mature male IT administrator with a focused and serious expression. He is wearing a dark corporate suit in a clean, high-contrast office environment with neutral tones and soft, clinical lighting. The overall aesthetic is professional, sober, and authoritative, consistent with an ERP systems management context." src="https://lh3.googleusercontent.com/aida-public/AB6AXuCg9ezlkFotnmTSNBQ2_8_veUFEjFqzNFDFNHdphF0m3hptaCpuviFAGerOqfVU1EHx68xou8GtdzMCWvn6VzbPhX-G4sxdflO59oIbChIWY-O-uSEwmopEAz5MvBYWY49BE6KNW7apwsDlkyWW0OmolGc-tuSLqt7Q42qH5DfkWJR1O1YInChTa7_bJUY0yMnXqEKxqH3wI9k2Esf9o-wkDdH9l6TAK31l3QLI75W0pVJiGwwMvGNjFaD3EZtNCksre787fXBw14E"/>
+</div>
+</div>
+</header>
+<!-- SideNavBar Shell -->
+<aside class="fixed left-0 top-0 h-full w-sidebar-width bg-surface-container flex flex-col p-sm z-40 pt-20">
+<div class="mb-lg px-sm">
+<div class="flex items-center gap-sm">
+<div class="w-8 h-8 bg-primary rounded flex items-center justify-center text-on-primary">
+<span class="material-symbols-outlined text-[20px]" style="font-variation-settings: 'FILL' 1;">terminal</span>
+</div>
+<div>
+<h2 class="font-headline-md text-headline-md text-primary leading-tight">LocalRetail ERP</h2>
+<p class="font-label-sm text-label-sm text-on-surface-variant">v2.4.0-Stable</p>
+</div>
+</div>
+</div>
+<nav class="flex-1 space-y-1">
+<a class="flex items-center gap-md px-md py-sm text-on-surface-variant hover:bg-surface-container-high transition-all duration-150 rounded-lg group" href="#">
+<span class="material-symbols-outlined">dashboard</span>
+<span class="font-label-md text-label-md">Dashboard</span>
+</a>
+<a class="flex items-center gap-md px-md py-sm text-on-surface-variant hover:bg-surface-container-high transition-all duration-150 rounded-lg group" href="#">
+<span class="material-symbols-outlined">inventory_2</span>
+<span class="font-label-md text-label-md">Inventory</span>
+</a>
+<a class="flex items-center gap-md px-md py-sm text-on-surface-variant hover:bg-surface-container-high transition-all duration-150 rounded-lg group" href="#">
+<span class="material-symbols-outlined">payments</span>
+<span class="font-label-md text-label-md">Sales</span>
+</a>
+<a class="flex items-center gap-md px-md py-sm text-on-surface-variant hover:bg-surface-container-high transition-all duration-150 rounded-lg group" href="#">
+<span class="material-symbols-outlined">shopping_cart</span>
+<span class="font-label-md text-label-md">Procurement</span>
+</a>
+<a class="flex items-center gap-md px-md py-sm bg-secondary-container text-on-secondary-container rounded-lg group" href="#">
+<span class="material-symbols-outlined" style="font-variation-settings: 'FILL' 1;">settings_backup_restore</span>
+<span class="font-label-md text-label-md">Backups</span>
+</a>
+<a class="flex items-center gap-md px-md py-sm text-on-surface-variant hover:bg-surface-container-high transition-all duration-150 rounded-lg group" href="#">
+<span class="material-symbols-outlined">terminal</span>
+<span class="font-label-md text-label-md">System Logs</span>
+</a>
+</nav>
+<div class="mt-auto space-y-1">
+<button class="w-full mb-md py-sm bg-surface-container-highest border border-outline-variant font-label-md text-label-md text-primary rounded-lg hover:bg-surface-container-low transition-colors">
+                Check Disk Space
+            </button>
+<a class="flex items-center gap-md px-md py-sm text-on-surface-variant hover:bg-surface-container-high transition-all rounded-lg" href="#">
+<span class="material-symbols-outlined">support_agent</span>
+<span class="font-label-md text-label-md">Support</span>
+</a>
+<a class="flex items-center gap-md px-md py-sm text-on-surface-variant hover:bg-surface-container-high transition-all rounded-lg" href="#">
+<span class="material-symbols-outlined text-error">logout</span>
+<span class="font-label-md text-label-md">Logout</span>
+</a>
+</div>
+</aside>
+<!-- Main Content Area -->
+<main class="ml-sidebar-width pt-20 p-lg min-h-screen">
+<div class="max-w-[1200px] mx-auto space-y-lg">
+<!-- Header & Actions -->
+<div class="flex justify-between items-end">
+<div>
+<h2 class="font-headline-lg text-headline-lg text-primary">Sauvegarde &amp; Récupération</h2>
+<p class="font-body-md text-body-md text-on-surface-variant">Gestion de l'intégrité des données locales et archives distantes.</p>
+</div>
+<div class="flex gap-md">
+<button class="flex items-center gap-sm px-md py-sm border border-outline text-primary font-label-md text-label-md hover:bg-surface-container-low transition-colors">
+<span class="material-symbols-outlined text-[18px]">verified_user</span>
+                        Tester la Sauvegarde
+                    </button>
+<button class="flex items-center gap-sm px-md py-sm border border-outline text-primary font-label-md text-label-md hover:bg-surface-container-low transition-colors">
+<span class="material-symbols-outlined text-[18px]">hard_drive</span>
+                        Configurer Disque Externe
+                    </button>
+<button class="flex items-center gap-sm px-lg py-sm bg-primary text-on-primary font-label-md text-label-md hover:opacity-90 transition-opacity">
+<span class="material-symbols-outlined text-[18px]" style="font-variation-settings: 'FILL' 1;">play_arrow</span>
+                        Lancer Sauvegarde Maintenant
+                    </button>
+</div>
+</div>
+<!-- Alerts Section -->
+<div class="bg-error-container text-on-error-container p-md flex items-center gap-md border-l-4 border-error">
+<span class="material-symbols-outlined text-error">error</span>
+<div class="flex-1">
+<p class="font-headline-md text-headline-md font-bold">Alerte : Disque Externe Non Détecté</p>
+<p class="font-body-sm text-body-sm opacity-80">La sauvegarde planifiée de 02:00 AM a échoué. Veuillez vérifier la connexion physique du support 'EXT-STORAGE-01'.</p>
+</div>
+<button class="text-label-md font-label-md underline">Réessayer l'accès</button>
+</div>
+<!-- KPI Cards Bento Grid -->
+<div class="grid grid-cols-1 md:grid-cols-4 gap-md">
+<div class="bg-surface-container-lowest border border-outline-variant p-md">
+<p class="font-label-sm text-label-sm text-on-surface-variant uppercase tracking-wider mb-xs">Dernière Sauvegarde</p>
+<div class="flex items-baseline gap-sm">
+<p class="font-label-md text-[20px] font-bold text-primary">Aujourd'hui, 08:42</p>
+</div>
+<span class="inline-flex items-center gap-xs px-sm py-[2px] bg-secondary-fixed text-on-secondary-fixed-variant text-label-sm font-label-sm mt-sm">
+<span class="material-symbols-outlined text-[14px]" style="font-variation-settings: 'FILL' 1;">check_circle</span>
+                        SUCCESS
+                    </span>
+</div>
+<div class="bg-surface-container-lowest border border-outline-variant p-md">
+<p class="font-label-sm text-label-sm text-on-surface-variant uppercase tracking-wider mb-xs">Prochaine Planifiée</p>
+<p class="font-label-md text-[20px] font-bold text-primary">Dans 04:17:22</p>
+<p class="font-body-sm text-body-sm text-on-surface-variant mt-sm">Type : Incrémentale</p>
+</div>
+<div class="bg-surface-container-lowest border border-outline-variant p-md">
+<p class="font-label-sm text-label-sm text-on-surface-variant uppercase tracking-wider mb-xs">Emplacement &amp; Disque</p>
+<div class="flex items-center gap-sm">
+<span class="material-symbols-outlined text-on-surface-variant">folder</span>
+<p class="font-label-md text-label-md text-primary truncate">/mnt/ext_storage/backups</p>
+</div>
+<div class="mt-sm w-full bg-surface-container-high h-1 rounded-full overflow-hidden">
+<div class="bg-secondary h-full" style="width: 78%;"></div>
+</div>
+<p class="font-label-sm text-label-sm text-on-surface-variant mt-xs">78% de 2.0 TB utilisé</p>
+</div>
+<div class="bg-surface-container-lowest border border-outline-variant p-md">
+<p class="font-label-sm text-label-sm text-on-surface-variant uppercase tracking-wider mb-xs">Taille Totale Archive</p>
+<p class="font-label-md text-[24px] font-bold text-primary">1.42 TB</p>
+<p class="font-body-sm text-body-sm text-on-surface-variant mt-sm">128 fichiers d'archives</p>
+</div>
+</div>
+<!-- Main Table Section -->
+<div class="bg-surface-container-lowest border border-outline-variant">
+<div class="px-md py-sm border-b border-outline-variant flex justify-between items-center bg-surface-container-low">
+<h3 class="font-headline-md text-headline-md text-primary">Historique des Sauvegardes</h3>
+<div class="flex gap-sm">
+<div class="relative">
+<span class="material-symbols-outlined absolute left-sm top-1/2 -translate-y-1/2 text-on-surface-variant text-[18px]">search</span>
+<input class="pl-8 pr-md py-1 border border-outline-variant bg-surface text-body-sm focus:ring-0 focus:border-secondary outline-none w-64" placeholder="Filtrer par date..." type="text"/>
+</div>
+<button class="p-1 border border-outline-variant bg-surface hover:bg-surface-container-high transition-colors">
+<span class="material-symbols-outlined text-[20px]">filter_list</span>
+</button>
+</div>
+</div>
+<div class="overflow-x-auto">
+<table class="w-full text-left border-collapse">
+<thead>
+<tr class="bg-surface-container-high border-b border-outline-variant text-on-surface-variant">
+<th class="px-md py-sm font-label-md text-label-md uppercase tracking-wider">Date / Heure</th>
+<th class="px-md py-sm font-label-md text-label-md uppercase tracking-wider text-center">Type</th>
+<th class="px-md py-sm font-label-md text-label-md uppercase tracking-wider text-right">Taille</th>
+<th class="px-md py-sm font-label-md text-label-md uppercase tracking-wider">Emplacement</th>
+<th class="px-md py-sm font-label-md text-label-md uppercase tracking-wider">État</th>
+<th class="px-md py-sm font-label-md text-label-md uppercase tracking-wider text-right">Actions</th>
+</tr>
+</thead>
+<tbody class="divide-y divide-outline-variant">
+<!-- Row 1 -->
+<tr class="hover:bg-surface-container-low transition-colors group">
+<td class="px-md py-sm font-label-md text-label-md text-primary">24 Mai 2024 - 08:42:15</td>
+<td class="px-md py-sm text-center">
+<span class="px-sm py-[2px] bg-surface-container-highest text-on-surface-variant font-label-sm text-label-sm">Incrémentale</span>
+</td>
+<td class="px-md py-sm text-right font-label-md text-label-md text-primary">1.2 GB</td>
+<td class="px-md py-sm font-body-sm text-body-sm text-on-surface-variant">EXT-STORAGE-01</td>
+<td class="px-md py-sm">
+<span class="text-secondary font-label-sm text-label-sm flex items-center gap-xs">
+<span class="material-symbols-outlined text-[16px]" style="font-variation-settings: 'FILL' 1;">check_circle</span>
+                                        Vérifié
+                                    </span>
+</td>
+<td class="px-md py-sm text-right">
+<button class="px-sm py-1 bg-primary text-on-primary font-label-sm text-label-sm hover:bg-secondary transition-colors">
+                                        Restaurer
+                                    </button>
+</td>
+</tr>
+<!-- Row 2 -->
+<tr class="hover:bg-surface-container-low transition-colors group">
+<td class="px-md py-sm font-label-md text-label-md text-primary">23 Mai 2024 - 02:00:00</td>
+<td class="px-md py-sm text-center">
+<span class="px-sm py-[2px] bg-tertiary-container text-on-tertiary-container font-label-sm text-label-sm">Complète</span>
+</td>
+<td class="px-md py-sm text-right font-label-md text-label-md text-primary">84.5 GB</td>
+<td class="px-md py-sm font-body-sm text-body-sm text-on-surface-variant">EXT-STORAGE-01</td>
+<td class="px-md py-sm">
+<span class="text-secondary font-label-sm text-label-sm flex items-center gap-xs">
+<span class="material-symbols-outlined text-[16px]" style="font-variation-settings: 'FILL' 1;">check_circle</span>
+                                        Vérifié
+                                    </span>
+</td>
+<td class="px-md py-sm text-right">
+<button class="px-sm py-1 bg-primary text-on-primary font-label-sm text-label-sm hover:bg-secondary transition-colors">
+                                        Restaurer
+                                    </button>
+</td>
+</tr>
+<!-- Row 3 (Failed) -->
+<tr class="bg-error-container/10 hover:bg-error-container/20 transition-colors group">
+<td class="px-md py-sm font-label-md text-label-md text-error">22 Mai 2024 - 02:00:00</td>
+<td class="px-md py-sm text-center">
+<span class="px-sm py-[2px] bg-error text-on-error font-label-sm text-label-sm">Incrémentale</span>
+</td>
+<td class="px-md py-sm text-right font-label-md text-label-md text-error">0 B</td>
+<td class="px-md py-sm font-body-sm text-body-sm text-error">Echec connexion</td>
+<td class="px-md py-sm">
+<span class="text-error font-label-sm text-label-sm flex items-center gap-xs">
+<span class="material-symbols-outlined text-[16px]">cancel</span>
+                                        Échec
+                                    </span>
+</td>
+<td class="px-md py-sm text-right">
+<button class="px-sm py-1 border border-error text-error font-label-sm text-label-sm hover:bg-error hover:text-on-error transition-colors">
+                                        Détails
+                                    </button>
+</td>
+</tr>
+<!-- Row 4 -->
+<tr class="hover:bg-surface-container-low transition-colors group">
+<td class="px-md py-sm font-label-md text-label-md text-primary">21 Mai 2024 - 02:00:00</td>
+<td class="px-md py-sm text-center">
+<span class="px-sm py-[2px] bg-surface-container-highest text-on-surface-variant font-label-sm text-label-sm">Incrémentale</span>
+</td>
+<td class="px-md py-sm text-right font-label-md text-label-md text-primary">1.1 GB</td>
+<td class="px-md py-sm font-body-sm text-body-sm text-on-surface-variant">EXT-STORAGE-01</td>
+<td class="px-md py-sm">
+<span class="text-secondary font-label-sm text-label-sm flex items-center gap-xs">
+<span class="material-symbols-outlined text-[16px]" style="font-variation-settings: 'FILL' 1;">check_circle</span>
+                                        Vérifié
+                                    </span>
+</td>
+<td class="px-md py-sm text-right">
+<button class="px-sm py-1 bg-primary text-on-primary font-label-sm text-label-sm hover:bg-secondary transition-colors">
+                                        Restaurer
+                                    </button>
+</td>
+</tr>
+<!-- Row 5 -->
+<tr class="hover:bg-surface-container-low transition-colors group">
+<td class="px-md py-sm font-label-md text-label-md text-primary">20 Mai 2024 - 02:00:00</td>
+<td class="px-md py-sm text-center">
+<span class="px-sm py-[2px] bg-surface-container-highest text-on-surface-variant font-label-sm text-label-sm">Incrémentale</span>
+</td>
+<td class="px-md py-sm text-right font-label-md text-label-md text-primary">980 MB</td>
+<td class="px-md py-sm font-body-sm text-body-sm text-on-surface-variant">EXT-STORAGE-01</td>
+<td class="px-md py-sm">
+<span class="text-secondary font-label-sm text-label-sm flex items-center gap-xs">
+<span class="material-symbols-outlined text-[16px]" style="font-variation-settings: 'FILL' 1;">check_circle</span>
+                                        Vérifié
+                                    </span>
+</td>
+<td class="px-md py-sm text-right">
+<button class="px-sm py-1 bg-primary text-on-primary font-label-sm text-label-sm hover:bg-secondary transition-colors">
+                                        Restaurer
+                                    </button>
+</td>
+</tr>
+</tbody>
+</table>
+</div>
+<div class="px-md py-sm border-t border-outline-variant flex justify-between items-center bg-surface-container-low">
+<p class="font-body-sm text-body-sm text-on-surface-variant">Affichage de 5 sur 128 sauvegardes</p>
+<div class="flex items-center gap-sm">
+<button class="p-1 border border-outline-variant bg-surface opacity-50 cursor-not-allowed">
+<span class="material-symbols-outlined text-[20px]">chevron_left</span>
+</button>
+<span class="font-label-md text-label-md text-primary">Page 1 de 26</span>
+<button class="p-1 border border-outline-variant bg-surface hover:bg-surface-container-high transition-colors">
+<span class="material-symbols-outlined text-[20px]">chevron_right</span>
+</button>
+</div>
+</div>
+</div>
+<!-- Secondary Info Panel -->
+<div class="grid grid-cols-1 md:grid-cols-2 gap-lg">
+<div class="bg-surface-container-low border border-outline-variant p-md">
+<h4 class="font-headline-md text-headline-md text-primary mb-md flex items-center gap-sm">
+<span class="material-symbols-outlined">analytics</span>
+                        Statistiques de Compression
+                    </h4>
+<div class="space-y-md">
+<div class="flex justify-between items-end">
+<div>
+<p class="font-body-sm text-body-sm text-on-surface-variant">Ratio de déduplication</p>
+<p class="font-label-md text-headline-md font-bold text-primary">3.2:1</p>
+</div>
+<div class="text-right">
+<p class="font-body-sm text-body-sm text-on-surface-variant">Espace économisé</p>
+<p class="font-label-md text-headline-md font-bold text-secondary">2.84 TB</p>
+</div>
+</div>
+<div class="w-full bg-surface-container h-2 rounded-full overflow-hidden">
+<div class="bg-primary h-full" style="width: 65%;"></div>
+</div>
+</div>
+</div>
+<div class="bg-surface-container-low border border-outline-variant p-md">
+<h4 class="font-headline-md text-headline-md text-primary mb-md flex items-center gap-sm">
+<span class="material-symbols-outlined">cloud_sync</span>
+                        Mirroring Cloud (Optionnel)
+                    </h4>
+<div class="flex items-center justify-between p-sm border border-outline-variant bg-surface">
+<div class="flex items-center gap-md">
+<span class="material-symbols-outlined text-[32px] text-on-surface-variant">cloud_off</span>
+<div>
+<p class="font-label-md text-label-md text-primary">Cloud Sync non configuré</p>
+<p class="font-body-sm text-body-sm text-on-surface-variant">Activez la réplication hors-site.</p>
+</div>
+</div>
+<button class="font-label-md text-label-md text-secondary hover:underline">Configurer</button>
+</div>
+</div>
+</div>
+</div>
+</main>
+<script>
+        document.querySelectorAll('button').forEach(btn => {
+            btn.addEventListener('mousedown', () => {
+                btn.style.transform = 'scale(0.98)';
+            });
+            btn.addEventListener('mouseup', () => {
+                btn.style.transform = 'scale(1)';
+            });
+            btn.addEventListener('mouseleave', () => {
+                btn.style.transform = 'scale(1)';
+            });
+        });
+
+        const searchInput = document.querySelector('input[type="text"]');
+        document.querySelectorAll('button').forEach(btn => {
+            btn.addEventListener('mousedown', () => {
+                btn.style.transform = 'scale(0.98)';
+            });
+            btn.addEventListener('mouseup', () => {
+                btn.style.transform = 'scale(1)';
+            });
+            btn.addEventListener('mouseleave', () => {
+                btn.style.transform = 'scale(1)';
+            });
+        });
+
+        const searchInput = document.querySelector('input[type="text"]');
+        if (searchInput) {
+            searchInput.addEventListener('focus', function() {
+                this.classList.add('ring-2', 'ring-secondary');
+            });
+            searchInput.addEventListener('blur', function() {
+                this.classList.remove('ring-2', 'ring-secondary');
+            });
+        }
+
+        // Update user name and role dynamically
+        const headerUserName = document.getElementById('headerUserName');
+        const headerUserRole = document.getElementById('headerUserRole');
+        if (headerUserName && headerUserRole) {
+            const username = sessionStorage.getItem('erp_username') || 'Utilisateur';
+            const role = sessionStorage.getItem('erp_role') || 'admin';
+            headerUserName.textContent = username;
+            headerUserRole.textContent = role.charAt(0).toUpperCase() + role.slice(1);
+        }
+
+        const mainBtn = document.querySelector('button.bg-primary.text-on-primary');
+        if (mainBtn) {
+            mainBtn.addEventListener('click', function() {
+                const originalText = this.innerHTML;
+                this.innerHTML = '<span class="material-symbols-outlined animate-spin text-[18px]">sync</span> Initialisation...';
+                this.classList.add('opacity-80', 'cursor-wait');
+                
+                setTimeout(() => {
+                    this.innerHTML = originalText;
+                    this.classList.remove('opacity-80', 'cursor-wait');
+                    window.showToast('Initialisation du processus de sauvegarde en cours. Consultez les logs système pour plus de détails.');
+                }, 1500);
+            });
+        }
+
+        document.querySelectorAll('aside nav a').forEach(link => {
+            link.addEventListener('click', function(e) {
+                if (this.getAttribute('href') === '#') e.preventDefault();
+                document.querySelectorAll('aside nav a').forEach(l => {
+                    l.classList.remove('bg-secondary-container', 'text-on-secondary-container', 'rounded-lg');
+                });
+                this.classList.add('bg-secondary-container', 'text-on-secondary-container', 'rounded-lg');
+            });
+        });
+
+        document.querySelectorAll('header .material-symbols-outlined').forEach(icon => {
+            icon.addEventListener('click', function() {
+                const text = this.textContent.trim();
+                if (text.includes('notifications')) {
+                    window.showToast('Notifications: Aucune alerte de sauvegarde.');
+                } else if (text.includes('settings')) {
+                    window.showToast('Paramètres de sauvegarde et restauration.');
+                } else if (text.includes('help')) {
+                    window.showToast('Aide: Module Sauvegarde & Récupération.');
+                }
+            });
+        });
+
+        document.querySelectorAll('main button:not(.bg-primary.text-on-primary)').forEach(btn => {
+            btn.addEventListener('click', function(e) {
+                const text = this.textContent.trim().toLowerCase();
+                if (text.includes('tester') || text.includes('test')) {
+                    window.showToast('Test de l\'intégrité de la sauvegarde en cours...');
+                    setTimeout(() => window.showToast('Test terminé: Aucune corruption détectée.'), 1000);
+                } else if (text.includes('configurer') || text.includes('disque')) {
+                    window.showToast('Configuration du disque externe de sauvegarde.');
+                } else if (text.includes('réessayer')) {
+                    window.showToast('Nouvelle tentative de connexion au support de stockage...');
+                    setTimeout(() => window.showToast('Échec: Disque externe toujours non détecté.'), 1000);
+                } else if (text.includes('restaurer')) {
+                    if (confirm('Confirmer la restauration de cette sauvegarde ? Cette action remplacera les données actuelles.')) {
+                        window.showToast('Processus de restauration initié.');
+                    }
+                } else if (text.includes('détails')) {
+                    window.showToast('Affichage des détails de l\'échec de sauvegarde.');
+                } else if (text.includes('check disk') || text.includes('espace')) {
+                    window.showToast('Analyse de l\'espace disque en cours...');
+                } else if (text.includes('support')) {
+                    window.showToast('Support technique: Contactez l\'équipe infrastructure.');
+                } else if (text.includes('logout') || text.includes('déconnexion')) {
+                    window.showToast('Déconnexion en cours...');
+                } else if (this.querySelector('.material-symbols-outlined')?.textContent.includes('filter_list')) {
+                    window.showToast('Filtrage de l\'historique des sauvegardes.');
+                }
+            });
+        });
+
+        document.querySelectorAll('aside button').forEach(btn => {
+            btn.addEventListener('click', function() {
+                const text = this.textContent.trim();
+                if (text.toLowerCase().includes('check disk') || text.toLowerCase().includes('disk')) {
+                    window.showToast('Vérification de l\'espace disque en cours...');
+                } else {
+                    window.showToast(`Action: ${text}`);
+                }
+            });
+        });
+
+        document.querySelectorAll('select').forEach(sel => {
+            sel.addEventListener('change', function() {
+                console.log(`Filtre sauvegarde: ${this.options[this.selectedIndex]?.text}`);
+            });
+        });
+    </script>
+</body></html>

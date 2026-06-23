@@ -1,0 +1,56 @@
+/* Google Fonts Inter — Version OFFLINE */
+/* Fallback: utilise les polices système si Inter n'est pas disponible */
+/* Les polices système sont toujours disponibles sans Internet */
+
+@font-face {
+  font-family: 'Inter';
+  font-style: normal;
+  font-weight: 400;
+  font-display: swap;
+  src: local('Segoe UI'), local('Arial'), local('Helvetica Neue');
+}
+
+@font-face {
+  font-family: 'Inter';
+  font-style: normal;
+  font-weight: 500;
+  font-display: swap;
+  src: local('Segoe UI Semibold'), local('Arial'), local('Helvetica Neue');
+}
+
+@font-face {
+  font-family: 'Inter';
+  font-style: normal;
+  font-weight: 600;
+  font-display: swap;
+  src: local('Segoe UI Semibold'), local('Arial Bold'), local('Helvetica Neue Medium');
+}
+
+@font-face {
+  font-family: 'Inter';
+  font-style: normal;
+  font-weight: 700;
+  font-display: swap;
+  src: local('Segoe UI Bold'), local('Arial Bold'), local('Helvetica Neue Bold');
+}
+
+@font-face {
+  font-family: 'Inter';
+  font-style: normal;
+  font-weight: 800;
+  font-display: swap;
+  src: local('Segoe UI Black'), local('Arial Black'), local('Helvetica Neue Bold');
+}
+
+@font-face {
+  font-family: 'Inter';
+  font-style: normal;
+  font-weight: 900;
+  font-display: swap;
+  src: local('Segoe UI Black'), local('Arial Black'), local('Helvetica Neue Bold');
+}
+
+/* Fallback CSS variables */
+:root {
+  --font-sans: 'Inter', 'Segoe UI', Arial, sans-serif;
+}

@@ -1,0 +1,203 @@
+<!DOCTYPE html>
+<html class="light" lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="Pragmatic Local Intelligence – Dashboard analytique IA pour le réseau de boutiques Stitch Boutique Network."/>
+    <title>Intelligence Locale Pragmatique – ERP</title>
+    <script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Hanken+Grotesk:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap" rel="stylesheet"/>
+    <script>
+        // Toast Notification System (global)
+        window.showToast = function(msg) {
+            const old = document.querySelector('.custom-toast');
+            if (old) old.remove();
+            const t = document.createElement('div');
+            t.className = 'custom-toast fixed bottom-6 right-6 bg-slate-900 text-white px-6 py-3 rounded-xl shadow-lg z-[9999] font-bold text-sm transition-all animate-bounce';
+            t.textContent = msg;
+            document.body.appendChild(t);
+            setTimeout(() => t.remove(), 2500);
+        };
+        // Hard‑Lock Security Script – ensures only authenticated users can access
+        (function(){
+            const isAuth = sessionStorage.getItem('erp_authenticated');
+            const role = sessionStorage.getItem('erp_role') || 'owner';
+            if (!isAuth) {
+                window.location.href = '../auth/login.html';
+                return;
+            }
+        })();
+    </script>
+    <style>
+        body {font-family: 'Hanken Grotesk', sans-serif; background-color:#f7f9fb; color:#191c1e;}
+        .kpi-card {background: linear-gradient(135deg, #e0e7ff 0%, #c7d2fe 100%);}
+    </style>
+</head>
+<body class="font-body-md text-body-md overflow-x-hidden">
+    <!-- Header with dynamic user info -->
+    <div class="fixed top-4 right-4 z-[9999] flex items-center gap-3">
+        <span id="headerUserName" class="font-bold text-primary"></span>
+        <button onclick="sessionStorage.clear();window.location.href='../auth/login.html';" class="flex items-center gap-1 bg-rose-500 text-white py-1 px-3 rounded-full text-xs">
+            <span class="material-symbols-outlined">logout</span>Déconnexion
+        </button>
+    </div>
+
+    <header class="flex justify-between items-center px-8 py-4 bg-white shadow-sm border-b border-outline-variant">
+        <h1 class="text-2xl font-bold text-primary">Intelligence Locale Pragmatique</h1>
+        <div class="flex gap-4">
+            <span class="material-symbols-outlined text-primary">insights</span>
+        </div>
+    </header>
+
+    <main class="max-w-7xl mx-auto p-8 space-y-8">
+        <!-- KPI Row -->
+        <section class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+            <div class="kpi-card p-4 rounded-xl shadow-sm">
+                <div class="flex items-center justify-between">
+                    <span class="material-symbols-outlined text-xl text-secondary">trending_up</span>
+                    <span class="text-sm font-medium text-slate-600">Prévisions 7j</span>
+                </div>
+                <div class="mt-2 text-2xl font-bold text-primary" id="forecastKPI">0 FCFA</div>
+            </div>
+            <div class="kpi-card p-4 rounded-xl shadow-sm">
+                <div class="flex items-center justify-between">
+                    <span class="material-symbols-outlined text-xl text-secondary">warning</span>
+                    <span class="text-sm font-medium text-slate-600">Alertes critiques</span>
+                </div>
+                <div class="mt-2 text-2xl font-bold text-primary" id="alertKPI">0</div>
+            </div>
+            <div class="kpi-card p-4 rounded-xl shadow-sm">
+                <div class="flex items-center justify-between">
+                    <span class="material-symbols-outlined text-xl text-secondary">bar_chart</span>
+                    <span class="text-sm font-medium text-slate-600">Tendances boutique</span>
+                </div>
+                <div class="mt-2 text-2xl font-bold text-primary" id="trendKPI">0%</div>
+            </div>
+            <div class="kpi-card p-4 rounded-xl shadow-sm">
+                <div class="flex items-center justify-between">
+                    <span class="material-symbols-outlined text-xl text-secondary">recommend</span>
+                    <span class="text-sm font-medium text-slate-600">Recommandations IA</span>
+                </div>
+                <div class="mt-2 text-2xl font-bold text-primary" id="recKPI">0</div>
+            </div>
+        </section>
+
+        <!-- Sections -->
+        <section class="space-y-8">
+            <!-- Prédictions -->
+            <div class="bg-white p-6 rounded-xl shadow-sm border border-outline-variant">
+                <h2 class="text-xl font-bold mb-4 text-primary">Prédictions de ventes (7 prochains jours)</h2>
+                <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+                    <!-- Example card, repeat for each boutique -->
+                    <div class="p-4 border border-outline-variant rounded-lg bg-surface-container-lowest">
+                        <h3 class="font-medium text-sm text-slate-600 mb-2">Yaoundé – Bastos</h3>
+                        <div class="text-2xl font-bold text-primary">8 420 FCFA</div>
+                        <div class="text-sm text-slate-500">↑ 12.4% vs hier</div>
+                    </div>
+                    <div class="p-4 border border-outline-variant rounded-lg bg-surface-container-lowest">
+                        <h3 class="font-medium text-sm text-slate-600 mb-2">Lyon – Presqu'île</h3>
+                        <div class="text-2xl font-bold text-primary">5 210 FCFA</div>
+                        <div class="text-sm text-slate-500">↑ 8.1% vs hier</div>
+                    </div>
+                    <!-- Add more cards as needed -->
+                </div>
+            </div>
+
+            <!-- Alertes -->
+            <div class="bg-white p-6 rounded-xl shadow-sm border border-outline-variant">
+                <h2 class="text-xl font-bold mb-4 text-primary">Alertes intelligentes</h2>
+                <table class="w-full table-auto text-left">
+                    <thead class="bg-surface-container-lowest">
+                        <tr class="text-sm font-medium text-slate-600">
+                            <th class="px-4 py-2">Boutique</th>
+                            <th class="px-4 py-2">Produit</th>
+                            <th class="px-4 py-2">Type</th>
+                            <th class="px-4 py-2">Urgence</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr class="border-t border-outline-variant hover:bg-surface-container-lowest">
+                            <td class="px-4 py-2">Yaoundé – Bastos</td>
+                            <td class="px-4 py-2">Sneakers Tech Pro</td>
+                            <td class="px-4 py-2">Stock critique</td>
+                            <td class="px-4 py-2"><span class="px-2 py-0.5 bg-error-container text-on-error-container text-xs font-bold rounded">Urgent</span></td>
+                        </tr>
+                        <tr class="border-t border-outline-variant hover:bg-surface-container-lowest">
+                            <td class="px-4 py-2">Lyon – Presqu'île</td>
+                            <td class="px-4 py-2">Watch Series X</td>
+                            <td class="px-4 py-2">Vente stagnante</td>
+                            <td class="px-4 py-2"><span class="px-2 py-0.5 bg-warning-200 text-warning-900 text-xs font-bold rounded">Moyen</span></td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+
+            <!-- Tendances -->
+            <div class="bg-white p-6 rounded-xl shadow-sm border border-outline-variant">
+                <h2 class="text-xl font-bold mb-4 text-primary">Tendances par boutique</h2>
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div class="space-y-2">
+                        <div class="flex justify-between items-center">
+                            <span class="text-sm font-medium text-slate-600">Yaoundé – Bastos</span>
+                            <span class="text-sm font-medium text-primary">+15%</span>
+                        </div>
+                        <div class="w-full bg-surface-container-low rounded-full h-2">
+                            <div class="h-2 bg-primary rounded-full" style="width: 75%;"></div>
+                        </div>
+                    </div>
+                    <div class="space-y-2">
+                        <div class="flex justify-between items-center">
+                            <span class="text-sm font-medium text-slate-600">Lyon – Presqu'île</span>
+                            <span class="text-sm font-medium text-primary">+8%</span>
+                        </div>
+                        <div class="w-full bg-surface-container-low rounded-full h-2">
+                            <div class="h-2 bg-primary" style="width: 45%;"></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Recommandations -->
+            <div class="bg-white p-6 rounded-xl shadow-sm border border-outline-variant">
+                <h2 class="text-xl font-bold mb-4 text-primary">Recommandations IA</h2>
+                <ul class="space-y-3">
+                    <li class="flex items-center justify-between border-b pb-2 border-outline-variant">
+                        <span class="text-sm text-slate-700">Augmenter le stock de Sneakers Tech Pro à Yaoundé – Bastos.</span>
+                        <div class="flex gap-2">
+                            <button class="px-3 py-1 bg-primary text-white rounded text-xs" onclick="showToast('Action Approuvée')">Approuver</button>
+                            <button class="px-3 py-1 bg-slate-200 text-slate-800 rounded text-xs" onclick="showToast('Action Ignorée')">Ignorer</button>
+                        </div>
+                    </li>
+                    <li class="flex items-center justify-between border-b pb-2 border-outline-variant">
+                        <span class="text-sm text-slate-700">Lancer une promotion flash sur Watch Series X à Lyon – Presqu'île.</span>
+                        <div class="flex gap-2">
+                            <button class="px-3 py-1 bg-primary text-white rounded text-xs" onclick="showToast('Promotion lancée')">Approuver</button>
+                            <button class="px-3 py-1 bg-slate-200 text-slate-800 rounded text-xs" onclick="showToast('Promotion ignorée')">Ignorer</button>
+                        </div>
+                    </li>
+                </ul>
+            </div>
+        </section>
+    </main>
+
+    <script>
+        // Simulated real‑time KPI updates (demo purpose)
+        function randomInt(min, max) {return Math.floor(Math.random() * (max - min + 1)) + min;}
+        setInterval(()=>{
+            document.getElementById('forecastKPI').textContent = randomInt(5000,15000).toLocaleString() + ' FCFA';
+            document.getElementById('alertKPI').textContent = randomInt(0,5);
+            document.getElementById('trendKPI').textContent = randomInt(0,30) + '%';
+            document.getElementById('recKPI').textContent = randomInt(0,10);
+        }, 8000);
+        // Header dynamic user display
+        const headerUserName = document.getElementById('headerUserName');
+        if (headerUserName) {
+            const username = sessionStorage.getItem('erp_username') || 'Propriétaire';
+            const role = sessionStorage.getItem('erp_role') || 'owner';
+            headerUserName.textContent = `${username} (${role.charAt(0).toUpperCase()+role.slice(1)})`;
+        }
+    </script>
+</body>
+</html>

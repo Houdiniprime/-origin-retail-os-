@@ -1,0 +1,717 @@
+<!DOCTYPE html>
+
+<html class="light" lang="fr"><head>
+    <script>
+        // Hard-Lock Security Script - Owner Dashboard Restrictions
+        (function() {
+            const isAuthenticated = sessionStorage.getItem('erp_authenticated');
+            const isSuperUser = sessionStorage.getItem('erp_superuser');
+            const role = sessionStorage.getItem('erp_role');
+            
+            // Redirect if not authenticated
+            if (!isAuthenticated && !isSuperUser && !window.location.href.includes('login.html')) {
+                window.location.href = '../auth/login.html';
+                return;
+            }
+            
+            // Check for Owner/Superuser role
+            if (role !== 'proprietaire' && role !== 'admin' && isSuperUser !== 'true') {
+                document.addEventListener('DOMContentLoaded', () => {
+                    if(window.showToast) {
+                        window.showToast('Accès refusé : Ce tableau de bord est réservé aux Propriétaires.');
+                    } else {
+                        alert('Accès refusé : Ce tableau de bord est réservé aux Propriétaires.');
+                    }
+                    setTimeout(() => { window.location.href = '../index.html'; }, 2000);
+                });
+            }
+        })();
+    </script>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<meta name="description" content="ERP Retail Connect — Dashboard Propriétaire V2. Suivi des performances financières, ventes, anomalies de caisse et inventaire du réseau."/>
+<meta name="author" content="Stitch Boutique Network"/>
+<title>ERP Retail Connect - Dashboard Propriétaire</title>
+<link href="https://fonts.googleapis.com" rel="preconnect"/>
+<link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect"/>
+<link href="https://fonts.googleapis.com/css2?family=Hanken+Grotesk:wght@400;500;600;700;800;900&amp;family=JetBrains+Mono:wght@400;500;700&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<script id="tailwind-config">
+      tailwind.config = {
+        darkMode: "class",
+        theme: {
+          extend: {
+            "colors": {
+                    "on-secondary-fixed-variant": "#004395",
+                    "surface-dim": "#d8dadc",
+                    "tertiary-container": "#1a2a3e",
+                    "outline": "#75777d",
+                    "tertiary": "#041528",
+                    "on-background": "#191c1e",
+                    "inverse-on-surface": "#eff1f3",
+                    "primary": "#091426",
+                    "on-tertiary-container": "#8191a9",
+                    "surface-variant": "#e0e3e5",
+                    "on-surface-variant": "#45474c",
+                    "primary-fixed-dim": "#bcc7de",
+                    "on-error": "#ffffff",
+                    "on-primary-container": "#8590a6",
+                    "secondary-fixed": "#d8e2ff",
+                    "on-primary": "#ffffff",
+                    "inverse-primary": "#bcc7de",
+                    "surface-container-high": "#e6e8ea",
+                    "error-container": "#ffdad6",
+                    "secondary": "#0058be",
+                    "surface-container-highest": "#e0e3e5",
+                    "background": "#f7f9fb",
+                    "on-tertiary-fixed": "#0b1c30",
+                    "on-secondary": "#ffffff",
+                    "on-tertiary-fixed-variant": "#38485d",
+                    "surface-container": "#eceef0",
+                    "on-tertiary": "#ffffff",
+                    "tertiary-fixed-dim": "#b7c8e1",
+                    "surface-container-lowest": "#ffffff",
+                    "tertiary-fixed": "#d3e4fe",
+                    "on-surface": "#191c1e",
+                    "on-error-container": "#93000a",
+                    "secondary-container": "#2170e4",
+                    "surface-container-low": "#f2f4f6",
+                    "error": "#ba1a1a",
+                    "surface-tint": "#545f73",
+                    "on-primary-fixed": "#111c2d",
+                    "surface-bright": "#f7f9fb",
+                    "primary-container": "#1e293b",
+                    "surface": "#f7f9fb",
+                    "on-secondary-fixed": "#001a42",
+                    "on-secondary-container": "#fefcff",
+                    "inverse-surface": "#2d3133",
+                    "on-primary-fixed-variant": "#3c475a",
+                    "secondary-fixed-dim": "#adc6ff",
+                    "outline-variant": "#c5c6cd",
+                    "primary-fixed": "#d8e3fb"
+            },
+            "borderRadius": {
+                    "DEFAULT": "0.125rem",
+                    "lg": "0.25rem",
+                    "xl": "0.5rem",
+                    "full": "0.75rem"
+            },
+            "spacing": {
+                    "base": "4px",
+                    "gutter": "16px",
+                    "lg": "24px",
+                    "md": "16px",
+                    "xl": "32px",
+                    "xs": "4px",
+                    "sidebar-width": "240px",
+                    "filter-panel-width": "280px",
+                    "sm": "8px"
+            },
+            "fontFamily": {
+                    "headline-md": ["Hanken Grotesk"],
+                    "headline-lg": ["Hanken Grotesk"],
+                    "body-sm": ["Hanken Grotesk"],
+                    "body-md": ["Hanken Grotesk"],
+                    "body-lg": ["Hanken Grotesk"],
+                    "label-sm": ["JetBrains Mono"],
+                    "display-sm": ["Hanken Grotesk"],
+                    "label-md": ["JetBrains Mono"]
+            },
+            "fontSize": {
+                    "headline-md": ["20px", {"lineHeight": "28px", "fontWeight": "600"}],
+                    "headline-lg": ["24px", {"lineHeight": "32px", "fontWeight": "600"}],
+                    "body-sm": ["13px", {"lineHeight": "18px", "fontWeight": "400"}],
+                    "body-md": ["14px", {"lineHeight": "20px", "fontWeight": "400"}],
+                    "body-lg": ["16px", {"lineHeight": "24px", "fontWeight": "400"}],
+                    "label-sm": ["10px", {"lineHeight": "14px", "fontWeight": "500"}],
+                    "display-sm": ["30px", {"lineHeight": "36px", "letterSpacing": "-0.02em", "fontWeight": "700"}],
+                    "label-md": ["12px", {"lineHeight": "16px", "fontWeight": "500"}]
+            }
+          },
+        },
+      }
+    </script>
+<style>
+        body {
+            background-color: #f7f9fb;
+            color: #191c1e;
+        }
+        .material-symbols-outlined {
+            font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+        }
+        .sidebar-active {
+            background-color: #2170e4;
+            color: #fefcff;
+        }
+        .zebra-stripe:nth-child(even) {
+            background-color: #f2f4f6;
+        }
+        .no-scrollbar::-webkit-scrollbar { display: none; }
+        .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
+    </style>
+</head>
+<body class="font-body-md text-body-md overflow-x-hidden">
+<div class="fixed top-4 right-4 z-[9999]">
+    <a href="../index.html" class="flex items-center gap-2 bg-white/90 backdrop-blur shadow-lg border border-slate-200 px-4 py-2 rounded-full text-slate-700 hover:bg-white hover:scale-105 transition-all font-bold text-sm">
+        <span class="material-symbols-outlined text-[20px]">grid_view</span>
+        Menu Principal
+    </a>
+</div>
+<!-- TopNavBar -->
+<header class="flex justify-between items-center w-full px-md h-12 sticky top-0 z-50 bg-surface border-b border-outline-variant">
+<div class="flex items-center gap-md">
+<span class="text-headline-md font-headline-md font-bold text-primary">ERP Retail Connect</span>
+<div class="hidden md:flex ml-xl border-l border-outline-variant pl-xl gap-lg">
+<span class="text-secondary font-bold border-b-2 border-secondary cursor-pointer py-1">Dashboard</span>
+<span class="text-on-surface-variant hover:bg-surface-container-low transition-colors cursor-pointer py-1 px-2 rounded">Opérations</span>
+<span class="text-on-surface-variant hover:bg-surface-container-low transition-colors cursor-pointer py-1 px-2 rounded">Logistique</span>
+</div>
+</div>
+<div class="flex items-center gap-md">
+<div class="relative hidden sm:block">
+<span class="material-symbols-outlined absolute left-2 top-1/2 -translate-y-1/2 text-outline">search</span>
+<input class="pl-9 pr-4 py-1.5 bg-surface-container-low border border-outline-variant rounded-lg text-body-sm w-64 focus:outline-none focus:border-secondary" placeholder="Rechercher..." type="text"/>
+</div>
+<span class="material-symbols-outlined text-primary cursor-pointer active:opacity-80 p-1.5 hover:bg-surface-container-low rounded-full">notifications</span>
+<span class="material-symbols-outlined text-primary cursor-pointer active:opacity-80 p-1.5 hover:bg-surface-container-low rounded-full">settings</span>
+<div class="hidden sm:flex flex-col text-right ml-2 mr-2">
+    <span id="headerUserName" class="text-body-sm font-bold text-primary">Utilisateur</span>
+</div>
+<img alt="Avatar de l'administrateur" class="w-8 h-8 rounded-full border border-outline-variant" data-alt="A professional headshot of a corporate administrator in a modern office environment. The lighting is soft and even, typical of a high-end business setting, emphasizing a clean and professional aesthetic. The color palette is composed of soft neutrals and whites to match the UI's light mode. The person is smiling confidently, wearing business attire." src="https://lh3.googleusercontent.com/aida-public/AB6AXuDhYqabAumen4E27QNKkz5yP6kUbUcSptp5pbqIufNAR4OFY8u_hzf48r7V1sZOtBeEVS3cpor6uKeNUx0uu9sbui4GlEqh1FcZSz0-M_ed3y8vtf_j-sDoeGR9-Q5mOc-WuOGLb3Ijwc-TjcAlJZWqj6FlrIjk171eqGZmymaQBwuIN7Fco76LOuWN0TtWahcPN-zyTQN1PQBk_JgW0B-RHBRJaYAGt58rTmBXfJ95CCPsGjsvFQx_TsT_Pv5KXictaDkxhyylfJM"/>
+</div>
+</header>
+<div class="flex min-h-screen">
+<!-- SideNavBar -->
+<aside class="flex flex-col h-screen fixed left-0 top-0 pt-12 z-40 bg-surface-container-low border-r border-outline-variant w-sidebar-width hidden md:flex">
+<div class="p-md mb-md">
+<h2 class="font-headline-sm text-headline-sm font-black text-on-surface">Réseau Retail</h2>
+<p class="text-body-sm text-on-surface-variant opacity-70">Gestion Centrale</p>
+</div>
+<nav class="flex-grow px-sm space-y-1">
+<a class="flex items-center gap-sm px-md py-2.5 rounded-lg bg-secondary-container text-on-secondary-container font-bold cursor-pointer transition-all" href="#">
+<span class="material-symbols-outlined" style="font-variation-settings: 'FILL' 1;">dashboard</span>
+<span class="font-label-md text-label-md">Dashboard</span>
+</a>
+<a class="flex items-center gap-sm px-md py-2.5 rounded-lg text-on-surface-variant hover:bg-surface-container-high cursor-pointer transition-all" href="#">
+<span class="material-symbols-outlined">storefront</span>
+<span class="font-label-md text-label-md">Magasins</span>
+</a>
+<a class="flex items-center gap-sm px-md py-2.5 rounded-lg text-on-surface-variant hover:bg-surface-container-high cursor-pointer transition-all" href="#">
+<span class="material-symbols-outlined">inventory_2</span>
+<span class="font-label-md text-label-md">Inventaire</span>
+</a>
+<a class="flex items-center gap-sm px-md py-2.5 rounded-lg text-on-surface-variant hover:bg-surface-container-high cursor-pointer transition-all" href="#">
+<span class="material-symbols-outlined">payments</span>
+<span class="font-label-md text-label-md">Ventes</span>
+</a>
+<a class="flex items-center gap-sm px-md py-2.5 rounded-lg text-on-surface-variant hover:bg-surface-container-high cursor-pointer transition-all" href="#">
+<span class="material-symbols-outlined">badge</span>
+<span class="font-label-md text-label-md">Employés</span>
+</a>
+<a class="flex items-center gap-sm px-md py-2.5 rounded-lg text-on-surface-variant hover:bg-surface-container-high cursor-pointer transition-all" href="#">
+<span class="material-symbols-outlined">analytics</span>
+<span class="font-label-md text-label-md">Rapports</span>
+</a>
+</nav>
+<div class="mt-auto p-sm border-t border-outline-variant">
+<a class="flex items-center gap-sm px-md py-2 rounded-lg text-on-surface-variant hover:bg-surface-container-high cursor-pointer transition-all" href="#">
+<span class="material-symbols-outlined">help</span>
+<span class="font-label-md text-label-md">Aide</span>
+</a>
+<a class="flex items-center gap-sm px-md py-2 rounded-lg text-on-surface-variant hover:bg-surface-container-high cursor-pointer transition-all" href="#">
+<span class="material-symbols-outlined text-error">logout</span>
+<span class="font-label-md text-label-md text-error">Déconnexion</span>
+</a>
+</div>
+</aside>
+<!-- Main Content -->
+<main class="flex-grow ml-0 md:ml-sidebar-width p-gutter md:p-lg lg:p-xl space-y-lg">
+<!-- Filters Bar -->
+<section class="bg-surface-container-lowest p-md border border-outline-variant rounded flex flex-wrap items-center gap-lg">
+<div class="flex flex-col gap-xs">
+<label class="font-label-sm text-label-sm text-outline uppercase tracking-wider">Boutique</label>
+<select class="bg-surface border-outline-variant rounded-lg text-body-sm py-1.5 focus:ring-secondary focus:border-secondary">
+<option>Toutes les boutiques</option>
+<option>Yaoundé - Bastos</option>
+<option>Lyon - Presqu'île</option>
+<option>Bordeaux - Mvan</option>
+</select>
+</div>
+<div class="flex flex-col gap-xs">
+<label class="font-label-sm text-label-sm text-outline uppercase tracking-wider">Période</label>
+<div class="flex items-center bg-surface border border-outline-variant rounded-lg px-2">
+<span class="material-symbols-outlined text-outline text-sm mr-2">calendar_today</span>
+<input class="bg-transparent border-none py-1.5 text-body-sm focus:ring-0 w-48" type="text" value="01 Jan 2024 - 31 Jan 2024"/>
+</div>
+</div>
+<div class="flex flex-col gap-xs">
+<label class="font-label-sm text-label-sm text-outline uppercase tracking-wider">Vendeuse</label>
+<select class="bg-surface border-outline-variant rounded-lg text-body-sm py-1.5 focus:ring-secondary focus:border-secondary">
+<option>Toutes</option>
+<option>Sarah L.</option>
+<option>Marie D.</option>
+<option>Julie B.</option>
+</select>
+</div>
+<div class="flex flex-col gap-xs">
+<label class="font-label-sm text-label-sm text-outline uppercase tracking-wider">Paiement</label>
+<div class="flex gap-2">
+<button class="px-3 py-1.5 border border-secondary bg-secondary-fixed text-on-secondary-fixed-variant rounded text-body-sm font-medium">Tous</button>
+<button class="px-3 py-1.5 border border-outline-variant hover:bg-surface-container-low rounded text-body-sm">CB</button>
+<button class="px-3 py-1.5 border border-outline-variant hover:bg-surface-container-low rounded text-body-sm">Espèces</button>
+</div>
+</div>
+<button id="btnActualiser" class="ml-auto flex items-center gap-2 bg-primary text-on-primary px-lg py-2 rounded-lg hover:opacity-90 transition-opacity">
+<span class="material-symbols-outlined">refresh</span>
+<span class="font-label-md">Actualiser</span>
+</button>
+</section>
+<!-- KPI Cards Row -->
+<section class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6 gap-md">
+<!-- CA Jour -->
+<div class="bg-surface-container-lowest p-md border border-outline-variant rounded-xl shadow-sm">
+<div class="flex justify-between items-start mb-2">
+<span class="text-on-surface-variant text-body-sm">CA Jour</span>
+<span class="text-secondary material-symbols-outlined text-lg">trending_up</span>
+</div>
+<div class="font-label-md text-display-sm text-primary">8 420 FCFA</div>
+<div class="mt-2 flex items-center text-label-sm text-green-600">
+<span class="material-symbols-outlined text-xs mr-1">arrow_upward</span>
+                        +12.4% vs hier
+                    </div>
+</div>
+<!-- CA Mois -->
+<div class="bg-surface-container-lowest p-md border border-outline-variant rounded-xl shadow-sm">
+<div class="flex justify-between items-start mb-2">
+<span class="text-on-surface-variant text-body-sm">CA Mensuel</span>
+<span class="text-secondary material-symbols-outlined text-lg">payments</span>
+</div>
+<div class="font-label-md text-display-sm text-primary">242 150 FCFA</div>
+<div class="mt-2 flex items-center text-label-sm text-green-600">
+<span class="material-symbols-outlined text-xs mr-1">arrow_upward</span>
+                        +5.2% vs objectif
+                    </div>
+</div>
+<!-- Profit -->
+<div class="bg-surface-container-lowest p-md border border-outline-variant rounded-xl shadow-sm">
+<div class="flex justify-between items-start mb-2">
+<span class="text-on-surface-variant text-body-sm">Profit Estimé</span>
+<span class="text-secondary material-symbols-outlined text-lg">account_balance</span>
+</div>
+<div class="font-label-md text-display-sm text-primary">68 940 FCFA</div>
+<div class="mt-2 flex items-center text-label-sm text-on-surface-variant">
+                        Marge nette: 28.5%
+                    </div>
+</div>
+<!-- Ventes Totales -->
+<div class="bg-surface-container-lowest p-md border border-outline-variant rounded-xl shadow-sm">
+<div class="flex justify-between items-start mb-2">
+<span class="text-on-surface-variant text-body-sm">Ventes Totales</span>
+<span class="text-secondary material-symbols-outlined text-lg">shopping_cart</span>
+</div>
+<div class="font-label-md text-display-sm text-primary">1 245</div>
+<div class="mt-2 flex items-center text-label-sm text-on-surface-variant">
+                        Panier moy: 194.5 FCFA
+                    </div>
+</div>
+<!-- Stock Critique -->
+<div class="bg-error-container p-md border border-error/20 rounded-xl shadow-sm relative overflow-hidden">
+<div class="flex justify-between items-start mb-2">
+<span class="text-on-error-container text-body-sm font-bold">Stock Critique</span>
+<span class="text-error material-symbols-outlined text-lg">warning</span>
+</div>
+<div class="font-label-md text-display-sm text-error">14</div>
+<div class="mt-2 text-label-sm text-on-error-container">
+                        Ruptures imminentes
+                    </div>
+<div class="absolute -right-4 -bottom-4 opacity-10">
+<span class="material-symbols-outlined text-7xl">inventory</span>
+</div>
+</div>
+<!-- Alertes Sécurité -->
+<div class="bg-surface-container-highest p-md border border-outline-variant rounded-xl shadow-sm border-l-4 border-l-error">
+<div class="flex justify-between items-start mb-2">
+<span class="text-on-surface-variant text-body-sm">Anomalies Caisses</span>
+<span class="text-error material-symbols-outlined text-lg">security</span>
+</div>
+<div class="font-label-md text-display-sm text-primary">03</div>
+<div class="mt-2 text-label-sm text-error font-medium">
+                        Écart: -142.50 FCFA
+                    </div>
+</div>
+</section>
+<!-- Charts Grid Section -->
+<section class="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-4 gap-md">
+<!-- Evolution des ventes (Line) -->
+<div class="xl:col-span-2 bg-surface-container-lowest border border-outline-variant rounded-xl p-lg">
+<div class="flex justify-between items-center mb-xl">
+<h3 class="font-headline-md text-headline-md text-primary">Évolution des ventes</h3>
+<div class="flex gap-2">
+<span class="flex items-center gap-1 text-label-sm"><span class="w-3 h-3 rounded-full bg-secondary"></span> Réel</span>
+<span class="flex items-center gap-1 text-label-sm"><span class="w-3 h-3 rounded-full bg-outline-variant"></span> N-1</span>
+</div>
+</div>
+<div class="h-64 flex items-end gap-2 relative">
+<!-- Simplified Visual Representation of a Line Chart -->
+<div class="absolute inset-0 flex flex-col justify-between pointer-events-none opacity-20 border-b border-outline-variant">
+<div class="border-t border-outline-variant w-full h-0"></div>
+<div class="border-t border-outline-variant w-full h-0"></div>
+<div class="border-t border-outline-variant w-full h-0"></div>
+</div>
+<div class="flex-grow flex items-end justify-between px-2 h-full">
+<div class="w-2 bg-secondary opacity-30 h-[20%] rounded-t-sm"></div>
+<div class="w-2 bg-secondary opacity-40 h-[35%] rounded-t-sm"></div>
+<div class="w-2 bg-secondary opacity-50 h-[30%] rounded-t-sm"></div>
+<div class="w-2 bg-secondary opacity-60 h-[55%] rounded-t-sm"></div>
+<div class="w-2 bg-secondary opacity-70 h-[45%] rounded-t-sm"></div>
+<div class="w-2 bg-secondary opacity-80 h-[75%] rounded-t-sm"></div>
+<div class="w-2 bg-secondary opacity-90 h-[65%] rounded-t-sm"></div>
+<div class="w-2 bg-secondary opacity-100 h-[90%] rounded-t-sm"></div>
+<div class="w-2 bg-secondary opacity-80 h-[80%] rounded-t-sm"></div>
+<div class="w-2 bg-secondary opacity-60 h-[40%] rounded-t-sm"></div>
+<div class="w-2 bg-secondary opacity-50 h-[50%] rounded-t-sm"></div>
+<div class="w-2 bg-secondary opacity-40 h-[60%] rounded-t-sm"></div>
+</div>
+</div>
+<div class="mt-4 flex justify-between px-2 text-label-sm text-outline">
+<span>Lundi</span><span>Mardi</span><span>Mercredi</span><span>Jeudi</span><span>Vendredi</span><span>Samedi</span><span>Dimanche</span>
+</div>
+</div>
+<!-- Performance par boutique (Bar) -->
+<div class="bg-surface-container-lowest border border-outline-variant rounded-xl p-lg">
+<h3 class="font-headline-md text-headline-md text-primary mb-xl">Ventes par Boutique</h3>
+<div class="space-y-6">
+<div class="space-y-1">
+<div class="flex justify-between text-body-sm">
+<span class="font-medium">Yaoundé Bastos</span>
+<span class="text-outline">125k FCFA</span>
+</div>
+<div class="w-full h-2 bg-surface-container-low rounded-full overflow-hidden">
+<div class="h-full bg-secondary rounded-full" style="width: 85%;"></div>
+</div>
+</div>
+<div class="space-y-1">
+<div class="flex justify-between text-body-sm">
+<span class="font-medium">Lyon Presqu'île</span>
+<span class="text-outline">98k FCFA</span>
+</div>
+<div class="w-full h-2 bg-surface-container-low rounded-full overflow-hidden">
+<div class="h-full bg-secondary rounded-full" style="width: 65%;"></div>
+</div>
+</div>
+<div class="space-y-1">
+<div class="flex justify-between text-body-sm">
+<span class="font-medium">Bordeaux Mvan</span>
+<span class="text-outline">76k FCFA</span>
+</div>
+<div class="w-full h-2 bg-surface-container-low rounded-full overflow-hidden">
+<div class="h-full bg-secondary rounded-full" style="width: 50%;"></div>
+</div>
+</div>
+<div class="space-y-1">
+<div class="flex justify-between text-body-sm">
+<span class="font-medium">Nice Port</span>
+<span class="text-outline">42k FCFA</span>
+</div>
+<div class="w-full h-2 bg-surface-container-low rounded-full overflow-hidden">
+<div class="h-full bg-secondary rounded-full" style="width: 30%;"></div>
+</div>
+</div>
+</div>
+</div>
+<!-- Leaderboard Vendeuses -->
+<div class="bg-surface-container-lowest border border-outline-variant rounded-xl p-lg">
+<h3 class="font-headline-md text-headline-md text-primary mb-xl">Top Vendeuses</h3>
+<div class="space-y-4">
+<div class="flex items-center gap-md">
+<span class="w-6 h-6 flex items-center justify-center bg-secondary-container text-on-secondary-container rounded-full text-label-sm font-bold">1</span>
+<div class="flex-grow">
+<div class="font-medium text-body-sm">Sarah Lemoine</div>
+<div class="text-label-sm text-outline">Yaoundé Bastos</div>
+</div>
+<div class="text-right font-label-md text-secondary">42.5k FCFA</div>
+</div>
+<div class="flex items-center gap-md">
+<span class="w-6 h-6 flex items-center justify-center bg-surface-container-highest text-on-surface-variant rounded-full text-label-sm font-bold">2</span>
+<div class="flex-grow">
+<div class="font-medium text-body-sm">Marie Dupont</div>
+<div class="text-label-sm text-outline">Lyon Presqu'île</div>
+</div>
+<div class="text-right font-label-md text-on-surface">38.2k FCFA</div>
+</div>
+<div class="flex items-center gap-md">
+<span class="w-6 h-6 flex items-center justify-center bg-surface-container-highest text-on-surface-variant rounded-full text-label-sm font-bold">3</span>
+<div class="flex-grow">
+<div class="font-medium text-body-sm">Julie Bernard</div>
+<div class="text-label-sm text-outline">Yaoundé Bastos</div>
+</div>
+<div class="text-right font-label-md text-on-surface">35.9k FCFA</div>
+</div>
+<div class="flex items-center gap-md">
+<span class="w-6 h-6 flex items-center justify-center bg-surface-container-highest text-on-surface-variant rounded-full text-label-sm font-bold">4</span>
+<div class="flex-grow">
+<div class="font-medium text-body-sm">Clara Martin</div>
+<div class="text-label-sm text-outline">Bordeaux</div>
+</div>
+<div class="text-right font-label-md text-on-surface">31.0k FCFA</div>
+</div>
+</div>
+<button id="btnVoirClassement" class="w-full mt-gutter py-2 text-secondary font-label-md hover:bg-secondary/5 transition-colors border border-dashed border-secondary/20 rounded">Voir tout le classement</button>
+</div>
+</section>
+<!-- Anomalies & Analysis Table -->
+<section class="grid grid-cols-1 xl:grid-cols-3 gap-md">
+<!-- Alerts Table -->
+<div class="xl:col-span-2 bg-surface-container-lowest border border-outline-variant rounded-xl overflow-hidden flex flex-col">
+<div class="p-lg border-b border-outline-variant flex justify-between items-center">
+<div>
+<h3 class="font-headline-md text-headline-md text-primary">Alertes &amp; Anomalies</h3>
+<p class="text-body-sm text-outline">Vigilance opérationnelle (Dernières 24h)</p>
+</div>
+<span class="bg-error-container text-error text-label-sm px-2 py-1 rounded font-bold">Action requise</span>
+</div>
+<div class="overflow-x-auto">
+<table class="w-full text-left border-collapse">
+<thead>
+<tr class="bg-surface-container-low text-label-sm text-outline uppercase tracking-wider">
+<th class="px-lg py-3 font-medium">Type</th>
+<th class="px-lg py-3 font-medium">Magasin</th>
+<th class="px-lg py-3 font-medium">Utilisateur</th>
+<th class="px-lg py-3 font-medium">Détails</th>
+<th class="px-lg py-3 font-medium text-right">Valeur</th>
+<th class="px-lg py-3 font-medium">Status</th>
+</tr>
+</thead>
+<tbody>
+<tr class="zebra-stripe border-b border-outline-variant hover:bg-surface-container-high transition-colors">
+<td class="px-lg py-3">
+<div class="flex items-center gap-2">
+<span class="material-symbols-outlined text-error text-lg">no_sim</span>
+<span class="text-body-sm font-medium">Annulation</span>
+</div>
+</td>
+<td class="px-lg py-3 text-body-sm">Yaoundé Bastos</td>
+<td class="px-lg py-3 text-body-sm">Sarah L.</td>
+<td class="px-lg py-3 text-body-sm text-outline">Ticket #8452 - Post paiement</td>
+<td class="px-lg py-3 text-body-sm text-right font-label-md">245,00 FCFA</td>
+<td class="px-lg py-3">
+<span class="px-2 py-0.5 rounded-full bg-error-container text-on-error-container text-[10px] font-bold uppercase">Urgent</span>
+</td>
+</tr>
+<tr class="zebra-stripe border-b border-outline-variant hover:bg-surface-container-high transition-colors">
+<td class="px-lg py-3">
+<div class="flex items-center gap-2">
+<span class="material-symbols-outlined text-warning text-lg" style="color: #ca8a04;">percent</span>
+<span class="text-body-sm font-medium">Remise Exc.</span>
+</div>
+</td>
+<td class="px-lg py-3 text-body-sm">Lyon Presqu'île</td>
+<td class="px-lg py-3 text-body-sm">Marie D.</td>
+<td class="px-lg py-3 text-body-sm text-outline">-40% sur article hors soldes</td>
+<td class="px-lg py-3 text-body-sm text-right font-label-md">89,00 FCFA</td>
+<td class="px-lg py-3">
+<span class="px-2 py-0.5 rounded-full bg-yellow-100 text-yellow-800 text-[10px] font-bold uppercase">Examen</span>
+</td>
+</tr>
+<tr class="zebra-stripe border-b border-outline-variant hover:bg-surface-container-high transition-colors">
+<td class="px-lg py-3">
+<div class="flex items-center gap-2">
+<span class="material-symbols-outlined text-secondary text-lg">keyboard_return</span>
+<span class="text-body-sm font-medium">Retour</span>
+</div>
+</td>
+<td class="px-lg py-3 text-body-sm">Bordeaux</td>
+<td class="px-lg py-3 text-body-sm">Clara M.</td>
+<td class="px-lg py-3 text-body-sm text-outline">Avoir client émis</td>
+<td class="px-lg py-3 text-body-sm text-right font-label-md">112,50 FCFA</td>
+<td class="px-lg py-3">
+<span class="px-2 py-0.5 rounded-full bg-surface-container-highest text-on-surface-variant text-[10px] font-bold uppercase">Info</span>
+</td>
+</tr>
+<tr class="zebra-stripe border-b border-outline-variant hover:bg-surface-container-high transition-colors">
+<td class="px-lg py-3">
+<div class="flex items-center gap-2">
+<span class="material-symbols-outlined text-error text-lg">priority_high</span>
+<span class="text-body-sm font-medium">Écart Caisse</span>
+</div>
+</td>
+<td class="px-lg py-3 text-body-sm">Yaoundé Bastos</td>
+<td class="px-lg py-3 text-body-sm">Système</td>
+<td class="px-lg py-3 text-body-sm text-outline">Écart clôture J-1</td>
+<td class="px-lg py-3 text-body-sm text-right font-label-md">-12,40 FCFA</td>
+<td class="px-lg py-3">
+<span class="px-2 py-0.5 rounded-full bg-error-container text-on-error-container text-[10px] font-bold uppercase">Urgent</span>
+</td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
+<!-- Products Heatmap / Quick list -->
+<div class="bg-surface-container-lowest border border-outline-variant rounded-xl p-lg flex flex-col">
+<h3 class="font-headline-md text-headline-md text-primary mb-xl">Best-sellers (Qte)</h3>
+<div class="space-y-4 flex-grow">
+<div class="flex items-center gap-md">
+<div class="w-10 h-10 bg-surface-container rounded-lg overflow-hidden flex-shrink-0">
+<img alt="Produit 1" data-alt="A close-up, high-detail product photograph of a modern red sneaker against a clean, minimalist white background. The lighting is crisp and professional, accentuating the texture and craftsmanship of the footwear. The overall visual style is sleek and commercial, consistent with a high-end retail ERP dashboard." src="https://lh3.googleusercontent.com/aida-public/AB6AXuBj9Tg27tjZhk-fZWeDlVA3bu-Bmxp7-WsiHAl5f1qJG3_fkSCHndQy_2jpFnPlb4-aTSPY2kRrr_GY0BdP5KwjRzj508AiA3IIL1--0zcAbMkqUS6QmrmWevAReAZpATbr6S4qa-jy-Pov2TwoamVEMrtrXMQjnplbcJQcJqMzWBTXjQtZw_mTYD7Vmq5E9xRIlFau5YNxPFD0SPqm8gHe3vRO4N-7Tc-InV82hWeUG7o9hkMyer1XrZRo7ZBPUZHuI5-KBCLr9Mg"/>
+</div>
+<div class="flex-grow">
+<div class="font-medium text-body-sm truncate w-32">Sneakers Tech Pro</div>
+<div class="text-label-sm text-outline">SKU: 847291</div>
+</div>
+<div class="text-right">
+<div class="font-label-md text-primary">124 pcs</div>
+<div class="text-[10px] text-green-600 font-bold">+18%</div>
+</div>
+</div>
+<div class="flex items-center gap-md">
+<div class="w-10 h-10 bg-surface-container rounded-lg overflow-hidden flex-shrink-0">
+<img alt="Produit 2" data-alt="A minimalist professional product shot of a luxury smart watch featuring a simple white band and a sleek metal face. The watch is presented on a neutral gray surface under soft, diffused studio lighting, creating a high-end corporate aesthetic. The image focus is sharp, highlighting the premium design." src="https://lh3.googleusercontent.com/aida-public/AB6AXuATB9bn5UhSp962_q7gWRR_OkT4HvnBScoZ_g1269dSH28iLzZI6OWo9ghJiFOGFPJIzbhzs-2gTi-6UL6nMF_kkr8EwIuE0PKthEktgYxsVZzsshEa9IiG80CTyNdzxpLRiQtcSowiu4ByrKcMQ4tQyPW2khqTXbsbPMgJf_4nscmox-R-8fOkVVjr7431EotN-PsgfDyR1ybTFMI98-YQoRejZtNq63hXXY5zjpQOIv51Zv2gwAmZx0cgom1TtZ0-Gbz23pmRvbU"/>
+</div>
+<div class="flex-grow">
+<div class="font-medium text-body-sm truncate w-32">Watch Series X</div>
+<div class="text-label-sm text-outline">SKU: 902143</div>
+</div>
+<div class="text-right">
+<div class="font-label-md text-primary">89 pcs</div>
+<div class="text-[10px] text-green-600 font-bold">+4%</div>
+</div>
+</div>
+<div class="flex items-center gap-md">
+<div class="w-10 h-10 bg-surface-container rounded-lg overflow-hidden flex-shrink-0">
+<img alt="Produit 3" data-alt="A clean and modern product photograph of premium over-ear headphones in matte black. The headphones are shown in a three-quarter view on a pristine white background. The lighting is sophisticated, with subtle shadows that provide depth, fitting perfectly with the analytical and professional vibe of the dashboard." src="https://lh3.googleusercontent.com/aida-public/AB6AXuAT_VvaLzVx7R8bCNOJ7qypyH95I9xVP40oxbpU5Q2MZPrOoVqgJ5Mvg2ce25JWlzu7HCEzl0Se5ixskHxLC-IAjbofdiBpfbrM3XTQUTHNLgD5fr8Q2SszB6x4I0HCQqmwf0Y28aoHyqmwdul0fO9uMjuRastM5BMyV-VU01vXxv7JvZmXN9tASqQoSjQmMtLmRbYoGfEavrE32TAsNYkP6DgeSGg2Dp2AIRlGAFMHK9YS4GACosaGiNhNV0sm8WxqMbM7xnGiXeI"/>
+</div>
+<div class="flex-grow">
+<div class="font-medium text-body-sm truncate w-32">Audio HD Max</div>
+<div class="text-label-sm text-outline">SKU: 443211</div>
+</div>
+<div class="text-right">
+<div class="font-label-md text-primary">76 pcs</div>
+<div class="text-[10px] text-error font-bold">-2%</div>
+</div>
+</div>
+<div class="flex items-center gap-md">
+<div class="w-10 h-10 bg-surface-container rounded-lg overflow-hidden flex-shrink-0">
+<img alt="Produit 4" data-alt="A sharp, minimalist product photo of a designer desk lamp in a contemporary matte finish. The lamp is positioned centrally against a light neutral background, emphasizing its functional design. High-key studio lighting ensures clarity and a professional look that complements the systematic UI design." src="https://lh3.googleusercontent.com/aida-public/AB6AXuA5-rUH2zcpo19bGW-i03I05uDQVte6cN3T7X7GmSqI6atCbfBwhLgT-hM1lMD9RMV4P2XkF9CQmnq7ZHUk3jNg4bmQAlnzkZOoEaMt2Pkniv-xH2CjJF2CuLixAfNxh_irNQuVpIA1NjcMr089nDG9JP0L1LYJPs8yijAdDbDN8DchL3zcp7wrSuIx3udYq5Zhl5Gqs8Dshgt-i1tsmYTfKwvlCQmRd6ZtB64vkmeAP8Eiax1j6zUq1kqoYknG64ID6TBQijZad54"/>
+</div>
+<div class="flex-grow">
+<div class="font-medium text-body-sm truncate w-32">Smart Lamp Z</div>
+<div class="text-label-sm text-outline">SKU: 112009</div>
+</div>
+<div class="text-right">
+<div class="font-label-md text-primary">54 pcs</div>
+<div class="text-[10px] text-green-600 font-bold">+12%</div>
+</div>
+</div>
+</div>
+<div class="mt-gutter p-md bg-tertiary rounded-lg text-white">
+<div class="flex justify-between items-center mb-2">
+<span class="text-label-sm opacity-80 uppercase tracking-widest">Alerte Réappro</span>
+<span class="material-symbols-outlined text-sm">inventory</span>
+</div>
+<div class="font-label-md text-body-md font-bold mb-1">Sneakers Tech Pro</div>
+<div class="text-[10px] opacity-70">Stock: 12 units (Seuil: 20)</div>
+<button id="btnReapproCommander" class="w-full mt-3 py-1 bg-white/10 hover:bg-white/20 rounded text-label-sm transition-all">Commander</button>
+</div>
+</div>
+</section>
+</main>
+</div>
+<!-- Floating Action Button for focused mobile/desktop utility (suppressed according to rules on details pages, but here it's the dashboard) -->
+<button id="btnFloatingAction" class="fixed bottom-gutter right-gutter w-14 h-14 bg-secondary text-white rounded-full shadow-lg flex items-center justify-center hover:scale-105 active:scale-95 transition-all z-50">
+<span class="material-symbols-outlined">add</span>
+</button>
+<script>
+        // Toast Notification System
+        window.showToast = function(msg) {
+            const old = document.querySelector('.custom-toast');
+            if (old) old.remove();
+            const t = document.createElement('div');
+            t.className = 'custom-toast fixed bottom-24 right-6 bg-slate-900 text-white px-6 py-3 rounded-xl shadow-lg z-[99999] font-bold text-sm transition-all animate-bounce';
+            t.textContent = msg;
+            document.body.appendChild(t);
+            setTimeout(() => t.remove(), 2500);
+        };
+
+        // Update User Name in Header
+        const headerUserName = document.getElementById('headerUserName');
+        if (headerUserName) {
+            const username = sessionStorage.getItem('erp_username') || 'Propriétaire';
+            const role = sessionStorage.getItem('erp_role') || 'owner';
+            headerUserName.textContent = `${username} (${role.charAt(0).toUpperCase() + role.slice(1)})`;
+        }
+
+        document.querySelectorAll('.zebra-stripe').forEach(row => {
+            row.addEventListener('mouseenter', () => row.style.transform = 'translateX(4px)');
+            row.addEventListener('mouseleave', () => row.style.transform = 'translateX(0)');
+        });
+
+        // Refresh animation & toast
+        const btnActualiser = document.getElementById('btnActualiser');
+        if (btnActualiser) {
+            btnActualiser.addEventListener('click', () => {
+                const icon = btnActualiser.querySelector('.material-symbols-outlined');
+                if (icon) {
+                    icon.classList.add('animate-spin');
+                    setTimeout(() => icon.classList.remove('animate-spin'), 800);
+                }
+                showToast('✓ Données du tableau de bord actualisées');
+            });
+        }
+
+        document.querySelectorAll('.sidebar-active, aside a:not(.sidebar-active)').forEach(link => {
+            link.addEventListener('click', function(e) {
+                if (this.getAttribute('href') === '#') {
+                    e.preventDefault();
+                    document.querySelectorAll('aside a').forEach(a => a.classList.remove('sidebar-active', 'bg-secondary-container', 'text-on-secondary-container'));
+                    this.classList.add('sidebar-active', 'bg-secondary-container', 'text-on-secondary-container');
+                }
+            });
+        });
+
+        document.querySelectorAll('.grid-cols-3 .px-3, .grid.grid-cols-3 .px-3, .flex.gap-2 button').forEach(btn => {
+            btn.addEventListener('click', function() {
+                const parent = this.parentElement;
+                if (parent) {
+                    parent.querySelectorAll('button').forEach(b => {
+                        b.className = 'px-3 py-1.5 border border-outline-variant hover:bg-surface-container-low rounded text-body-sm';
+                    });
+                    this.className = 'px-3 py-1.5 border border-secondary bg-secondary-fixed text-on-secondary-fixed-variant rounded text-body-sm font-medium';
+                    showToast(`✓ Mode de paiement filtré`);
+                }
+            });
+        });
+
+        document.querySelectorAll('select').forEach(sel => {
+            sel.addEventListener('change', function() {
+                const label = this.options[this.selectedIndex].text;
+                showToast(`✓ Filtre appliqué : ${label}`);
+            });
+        });
+
+        // Reappro command click via ID
+        const btnReapproCommander = document.getElementById('btnReapproCommander');
+        if (btnReapproCommander) {
+            btnReapproCommander.onclick = () => {
+                showToast('✓ Commande de réapprovisionnement envoyée pour : Sneakers Tech Pro');
+            };
+        }
+
+        // Leaderboard complete list click
+        const btnVoirClassement = document.getElementById('btnVoirClassement');
+        if (btnVoirClassement) {
+            btnVoirClassement.onclick = () => {
+                showToast('ℹ Affichage du classement complet des vendeuses...');
+            };
+        }
+
+        // Floating Action Button click
+        const btnFloatingAction = document.getElementById('btnFloatingAction');
+        if (btnFloatingAction) {
+            btnFloatingAction.onclick = () => {
+                showToast('✓ Menu de création rapide ouvert');
+            };
+        }
+    </script>
+</body></html>

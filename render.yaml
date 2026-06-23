@@ -1,0 +1,17 @@
+services:
+  - type: web
+    name: origin-retail-os
+    env: node
+    runtime: node
+    plan: free
+    buildCommand: npm install
+    startCommand: node server.js
+    envVars:
+      - key: WHATSAPP_ENABLED
+        value: "false"
+      - key: NODE_ENV
+        value: "production"
+      - key: NODE_VERSION
+        value: "22"
+    healthCheckPath: /app.html
+    autoDeploy: true

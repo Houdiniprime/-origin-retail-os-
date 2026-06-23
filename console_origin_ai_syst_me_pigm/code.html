@@ -1,0 +1,547 @@
+<!DOCTYPE html>
+
+<html class="light" lang="en"><head>
+    <script>
+        // Toast Notification System
+        window.showToast = function(msg) {
+            const old = document.querySelector('.custom-toast');
+            if (old) old.remove();
+            const t = document.createElement('div');
+            t.className = 'custom-toast fixed bottom-6 right-6 bg-slate-900 text-white px-6 py-3 rounded-xl shadow-lg z-[99999] font-bold text-sm transition-all animate-bounce';
+            t.textContent = msg;
+            document.body.appendChild(t);
+            setTimeout(() => t.remove(), 2500);
+        };
+
+        // Hard-Lock Security Script
+        (function() {
+            const isAuthenticated = sessionStorage.getItem('erp_authenticated');
+            const isSuperUser = sessionStorage.getItem('erp_superuser');
+            const role = sessionStorage.getItem('erp_role');
+            
+            // If not authenticated and not in auth/login.html, redirect to login
+            if (!isAuthenticated && !isSuperUser && !window.location.href.includes('login.html')) {
+                window.location.href = '../auth/login.html';
+                return;
+            }
+            
+            // Restrict access for Caissier
+            if (role === 'caissier') {
+                document.addEventListener('DOMContentLoaded', () => {
+                    if (window.showToast) {
+                        window.showToast('Accès refusé : Ce module est réservé aux gérants et administrateurs.');
+                    } else {
+                        alert('Accès refusé : Ce module est réservé aux gérants et administrateurs.');
+                    }
+                    setTimeout(() => { window.location.href = '../index.html'; }, 2000);
+                });
+            }
+        })();
+    </script>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>ORIGIN AI Console | PIGM ERP</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Hanken+Grotesk:wght@300;400;500;600;700&amp;family=JetBrains+Mono:wght@400;500&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    "colors": {
+                        "on-error-container": "#93000a",
+                        "secondary": "#0058be",
+                        "primary-container": "#1e293b",
+                        "surface-container-high": "#e6e8ea",
+                        "on-tertiary-container": "#8191a9",
+                        "secondary-fixed": "#d8e2ff",
+                        "tertiary-container": "#1a2a3e",
+                        "background": "#f7f9fb",
+                        "on-tertiary-fixed": "#0b1c30",
+                        "tertiary": "#041528",
+                        "on-secondary": "#ffffff",
+                        "primary-fixed-dim": "#bcc7de",
+                        "on-tertiary-fixed-variant": "#38485d",
+                        "error": "#ba1a1a",
+                        "on-tertiary": "#ffffff",
+                        "surface-tint": "#545f73",
+                        "secondary-container": "#2170e4",
+                        "on-primary-fixed": "#111c2d",
+                        "outline": "#75777d",
+                        "surface": "#f7f9fb",
+                        "primary": "#091426",
+                        "on-primary": "#ffffff",
+                        "surface-dim": "#d8dadc",
+                        "surface-container-low": "#f2f4f6",
+                        "inverse-primary": "#bcc7de",
+                        "surface-container": "#eceef0",
+                        "surface-bright": "#f7f9fb",
+                        "on-secondary-fixed-variant": "#004395",
+                        "tertiary-fixed-dim": "#b7c8e1",
+                        "surface-container-highest": "#e0e3e5",
+                        "error-container": "#ffdad6",
+                        "primary-fixed": "#d8e3fb",
+                        "surface-container-lowest": "#ffffff",
+                        "on-surface": "#191c1e",
+                        "outline-variant": "#c5c6cd",
+                        "on-error": "#ffffff",
+                        "on-secondary-fixed": "#001a42",
+                        "on-primary-container": "#8590a6",
+                        "on-primary-fixed-variant": "#3c475a",
+                        "surface-variant": "#e0e3e5",
+                        "on-secondary-container": "#fefcff",
+                        "inverse-surface": "#2d3133",
+                        "secondary-fixed-dim": "#adc6ff",
+                        "on-surface-variant": "#45474c",
+                        "inverse-on-surface": "#eff1f3",
+                        "tertiary-fixed": "#d3e4fe",
+                        "on-background": "#191c1e"
+                    },
+                    "borderRadius": {
+                        "DEFAULT": "0.125rem",
+                        "lg": "0.25rem",
+                        "xl": "0.5rem",
+                        "full": "0.75rem"
+                    },
+                    "spacing": {
+                        "sidebar-width": "240px",
+                        "md": "16px",
+                        "base": "4px",
+                        "sm": "8px",
+                        "gutter": "16px",
+                        "xs": "4px",
+                        "filter-panel-width": "280px",
+                        "xl": "32px",
+                        "lg": "24px"
+                    },
+                    "fontFamily": {
+                        "body-lg": ["Hanken Grotesk"],
+                        "display-sm": ["Hanken Grotesk"],
+                        "label-sm": ["JetBrains Mono"],
+                        "body-sm": ["Hanken Grotesk"],
+                        "body-md": ["Hanken Grotesk"],
+                        "label-md": ["JetBrains Mono"],
+                        "headline-md": ["Hanken Grotesk"],
+                        "headline-lg": ["Hanken Grotesk"]
+                    },
+                    "fontSize": {
+                        "body-lg": ["16px", {"lineHeight": "24px", "fontWeight": "400"}],
+                        "display-sm": ["30px", {"lineHeight": "36px", "letterSpacing": "-0.02em", "fontWeight": "700"}],
+                        "label-sm": ["10px", {"lineHeight": "14px", "fontWeight": "500"}],
+                        "body-sm": ["13px", {"lineHeight": "18px", "fontWeight": "400"}],
+                        "body-md": ["14px", {"lineHeight": "20px", "fontWeight": "400"}],
+                        "label-md": ["12px", {"lineHeight": "16px", "fontWeight": "500"}],
+                        "headline-md": ["20px", {"lineHeight": "28px", "fontWeight": "600"}],
+                        "headline-lg": ["24px", {"lineHeight": "32px", "fontWeight": "600"}]
+                    }
+                },
+            },
+        }
+    </script>
+<style>
+        body { font-family: 'Hanken Grotesk', sans-serif; }
+        .material-symbols-outlined { font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24; }
+        .agent-pulse {
+            animation: pulse-glow 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+        }
+        @keyframes pulse-glow {
+            0%, 100% { opacity: 1; transform: scale(1); }
+            50% { opacity: .5; transform: scale(1.1); }
+        }
+        .ai-message-gradient {
+            background: linear-gradient(135deg, #f7f9fb 0%, #eceef0 100%);
+        }
+    </style>
+</head>
+<body class="bg-background text-on-surface flex h-screen overflow-hidden">
+<div class="fixed top-4 right-4 z-[9999]">
+    <a href="../index.html" class="flex items-center gap-2 bg-white/90 backdrop-blur shadow-lg border border-slate-200 px-4 py-2 rounded-full text-slate-700 hover:bg-white hover:scale-105 transition-all font-bold text-sm">
+        <span class="material-symbols-outlined text-[20px]">grid_view</span>
+        Menu Principal
+    </a>
+</div>
+<!-- Left Sidebar: Specialized AI Agents -->
+<aside class="w-sidebar-width bg-primary-container text-on-primary-container flex flex-col h-full z-50 shrink-0">
+<div class="px-md py-lg">
+<h1 class="font-headline-md text-headline-md text-primary-fixed mb-1">ORIGIN AI</h1>
+<p class="font-label-sm text-label-sm uppercase tracking-widest opacity-50">Local Intelligence Console</p>
+</div>
+<nav class="flex-1 px-sm space-y-xs overflow-y-auto">
+<div class="px-md py-sm mb-sm border-b border-outline-variant/20">
+<span class="font-label-md text-label-md opacity-60 uppercase">Specialized Agents</span>
+</div>
+<!-- Stock AI - Thinking -->
+<button class="w-full flex items-center justify-between px-md py-sm rounded-sm hover:bg-surface-container-highest/10 transition-all group">
+<div class="flex items-center gap-sm">
+<span class="material-symbols-outlined text-secondary-fixed">inventory_2</span>
+<span class="font-body-md text-body-md">Stock AI</span>
+</div>
+<div class="flex items-center gap-xs">
+<div class="w-2 h-2 bg-secondary rounded-full agent-pulse"></div>
+<span class="font-label-sm text-label-sm text-secondary-fixed">Thinking</span>
+</div>
+</button>
+<!-- Sales AI - Active -->
+<button class="w-full flex items-center justify-between px-md py-sm rounded-sm bg-secondary-container text-on-secondary-container font-bold">
+<div class="flex items-center gap-sm">
+<span class="material-symbols-outlined" style="font-variation-settings: 'FILL' 1;">point_of_sale</span>
+<span class="font-body-md text-body-md">Sales AI</span>
+</div>
+<div class="flex items-center gap-xs">
+<div class="w-2 h-2 bg-on-secondary-container rounded-full"></div>
+<span class="font-label-sm text-label-sm">Active</span>
+</div>
+</button>
+<!-- Finance AI -->
+<button class="w-full flex items-center justify-between px-md py-sm rounded-sm hover:bg-surface-container-highest/10 transition-all">
+<div class="flex items-center gap-sm">
+<span class="material-symbols-outlined">payments</span>
+<span class="font-body-md text-body-md">Finance AI</span>
+</div>
+<span class="font-label-sm text-label-sm opacity-40">Idle</span>
+</button>
+<!-- Security AI -->
+<button class="w-full flex items-center justify-between px-md py-sm rounded-sm hover:bg-surface-container-highest/10 transition-all">
+<div class="flex items-center gap-sm">
+<span class="material-symbols-outlined">security</span>
+<span class="font-body-md text-body-md">Security AI</span>
+</div>
+<span class="font-label-sm text-label-sm opacity-40">Monitoring</span>
+</button>
+<!-- Support AI -->
+<button class="w-full flex items-center justify-between px-md py-sm rounded-sm hover:bg-surface-container-highest/10 transition-all">
+<div class="flex items-center gap-sm">
+<span class="material-symbols-outlined">support_agent</span>
+<span class="font-body-md text-body-md">Support AI</span>
+</div>
+<span class="font-label-sm text-label-sm opacity-40">Idle</span>
+</button>
+</nav>
+<div class="p-md mt-auto border-t border-outline-variant/10">
+<div class="flex items-center gap-sm p-sm bg-surface-container-highest/5 rounded-sm">
+<div class="w-8 h-8 rounded-full overflow-hidden shrink-0">
+<img alt="Owner Profile" class="w-full h-full object-cover" data-alt="A professional portrait of a senior retail executive in a modern, brightly lit office environment. The lighting is crisp and corporate, emphasizing a sense of leadership and analytical focus. He is wearing a dark, well-tailored business suit, and the background features clean lines and a subtle glass-partitioned workspace with soft blue and grey tones." src="https://lh3.googleusercontent.com/aida-public/AB6AXuCpZ_ak7O8h3PTrwK1Ll_bhvKFjqPFuc1b4DupbdxmBhWyNcINmwqSFr0kWYQglHsKrkEy7h9JWABHAhhoiyBWUBOrIYdLHzBvhwQQ-0RAActW_-FNdh8_7hSjNP6M-2wga46ysVLhLgopkXPHc5IWB1X7G5ud4UG7oHNnpitl0NqRaUwmCSn-FNDjIXNw4tYqX5zTaEUFA-HUvg5-TyTDluwfrttInOwH814ZDix8pD9I7IaGtH9_Vr8-FVFMcIMUnM-8UZ0-4SyU"/>
+</div>
+<div class="overflow-hidden">
+<p id="sidebarUserName" class="font-body-sm text-body-sm truncate font-bold">Network Admin</p>
+<p id="sidebarUserRole" class="font-label-sm text-label-sm opacity-60 truncate">Main Branch Master</p>
+</div>
+</div>
+</div>
+</aside>
+<!-- Center: Conversational Area -->
+<main class="flex-1 flex flex-col h-full min-w-0 bg-background relative">
+<!-- Chat Header -->
+<header class="h-14 flex items-center justify-between px-lg bg-surface-container-lowest border-b border-outline-variant sticky top-0 z-10">
+<div class="flex items-center gap-sm">
+<span class="material-symbols-outlined text-secondary">analytics</span>
+<h2 class="font-headline-md text-headline-md">Session Analysis: Oct 2023 Performance</h2>
+</div>
+<div class="flex items-center gap-md">
+<span class="flex items-center gap-xs font-label-md text-label-md text-on-surface-variant">
+<span class="material-symbols-outlined text-[18px]">sync</span>
+                    Syncing Data
+                </span>
+<button class="material-symbols-outlined p-xs hover:bg-surface-container transition-colors">more_vert</button>
+</div>
+</header>
+<!-- Messages Content -->
+<div class="flex-1 overflow-y-auto p-lg space-y-xl custom-scrollbar">
+<!-- User Prompt -->
+<div class="flex justify-end">
+<div class="max-w-[80%] bg-primary text-on-primary p-md rounded-xl rounded-tr-none shadow-sm">
+<p class="font-body-md text-body-md">Analyze last week's sales performance across the top 3 branches and highlight any inventory anomalies for high-margin electronics.</p>
+</div>
+</div>
+<!-- AI Response -->
+<div class="flex justify-start gap-md">
+<div class="w-10 h-10 rounded-full bg-secondary-container flex items-center justify-center shrink-0">
+<span class="material-symbols-outlined text-on-secondary-container">auto_awesome</span>
+</div>
+<div class="max-w-[90%] space-y-md">
+<div class="ai-message-gradient p-lg rounded-xl rounded-tl-none border border-outline-variant shadow-sm space-y-md">
+<p class="font-body-md text-body-md leading-relaxed">
+                            I've analyzed the transactional data from <span class="font-bold">Oct 14th to Oct 21st</span>. Sales across North, Downtown, and Suburb branches show a consolidated <span class="text-secondary font-bold">+12.4% growth</span> compared to the previous week, driven primarily by the 'Alpha Series' product line.
+                        </p>
+<!-- Data Table within AI Response -->
+<div class="bg-surface-container-lowest border border-outline-variant rounded-sm overflow-hidden">
+<table class="w-full text-left border-collapse">
+<thead class="bg-surface-container-low border-b border-outline-variant">
+<tr>
+<th class="px-md py-sm font-label-md text-label-md text-on-surface-variant">BRANCH</th>
+<th class="px-md py-sm font-label-md text-label-md text-on-surface-variant">REVENUE</th>
+<th class="px-md py-sm font-label-md text-label-md text-on-surface-variant">MARGIN</th>
+<th class="px-md py-sm font-label-md text-label-md text-on-surface-variant">STATUS</th>
+</tr>
+</thead>
+<tbody class="font-label-md text-label-md">
+<tr class="border-b border-outline-variant hover:bg-surface-container transition-colors">
+<td class="px-md py-base font-medium">North Branch</td>
+<td class="px-md py-base font-label-md text-right tabular-nums">$42,500.00</td>
+<td class="px-md py-base text-right text-secondary">38%</td>
+<td class="px-md py-base">
+<span class="px-xs py-[1px] bg-green-100 text-green-800 rounded-xs text-[10px] font-bold">OPTIMAL</span>
+</td>
+</tr>
+<tr class="border-b border-outline-variant hover:bg-surface-container transition-colors">
+<td class="px-md py-base font-medium">Downtown Hub</td>
+<td class="px-md py-base font-label-md text-right tabular-nums">$61,200.00</td>
+<td class="px-md py-base text-right text-secondary">41%</td>
+<td class="px-md py-base">
+<span class="px-xs py-[1px] bg-red-100 text-red-800 rounded-xs text-[10px] font-bold">LOW STOCK</span>
+</td>
+</tr>
+<tr class="hover:bg-surface-container transition-colors">
+<td class="px-md py-base font-medium">Suburb Mall</td>
+<td class="px-md py-base font-label-md text-right tabular-nums">$28,900.00</td>
+<td class="px-md py-base text-right text-secondary">34%</td>
+<td class="px-md py-base">
+<span class="px-xs py-[1px] bg-yellow-100 text-yellow-800 rounded-xs text-[10px] font-bold">STAGNANT</span>
+</td>
+</tr>
+</tbody>
+</table>
+</div>
+<p class="font-body-md text-body-md leading-relaxed">
+<span class="material-symbols-outlined text-[16px] align-middle text-error mr-1">warning</span>
+<span class="font-bold">Anomaly detected:</span> The Alpha Tablet X stock at Downtown is projected to deplete in 48 hours. I recommend re-routing 15 units from Suburb Mall which has had 0 sales of this SKU in the last 72 hours.
+                        </p>
+<div class="flex items-center gap-sm pt-sm">
+<button class="flex items-center gap-xs px-md py-sm bg-primary text-on-primary rounded-sm font-label-md text-label-md hover:opacity-90 transition-opacity">
+<span class="material-symbols-outlined text-[18px]">check_circle</span>
+                                Approve Inventory Re-route
+                            </button>
+<button class="flex items-center gap-xs px-md py-sm border border-outline text-primary rounded-sm font-label-md text-label-md hover:bg-surface-container transition-colors">
+<span class="material-symbols-outlined text-[18px]">forum</span>
+                                Discuss Logic
+                            </button>
+</div>
+</div>
+<span class="font-label-sm text-label-sm opacity-40 italic px-md">Sales AI • Response generated in 1.4s</span>
+</div>
+</div>
+</div>
+<!-- Input Area -->
+<footer class="p-lg bg-surface-container-lowest border-t border-outline-variant">
+<div class="max-w-4xl mx-auto relative">
+<textarea class="w-full bg-surface-container-low border border-outline-variant rounded-xl pl-md pr-32 py-md font-body-md text-body-md focus:ring-2 focus:ring-secondary focus:border-transparent outline-none resize-none transition-all" placeholder="Ask ORIGIN about your network performance..." rows="1"></textarea>
+<div class="absolute right-md bottom-1/2 translate-y-1/2 flex items-center gap-sm">
+<button class="material-symbols-outlined text-on-surface-variant hover:text-secondary transition-colors" title="Attach context">attach_file</button>
+<button class="material-symbols-outlined text-on-surface-variant hover:text-secondary transition-colors" title="Voice command">mic</button>
+<button class="bg-secondary text-on-secondary p-sm rounded-lg flex items-center justify-center hover:opacity-90 transition-opacity">
+<span class="material-symbols-outlined">send</span>
+</button>
+</div>
+</div>
+<div class="mt-sm flex justify-center gap-xl opacity-50 font-label-sm text-label-sm">
+<span class="flex items-center gap-xs">⌘ + K : Command Bar</span>
+<span class="flex items-center gap-xs">⌘ + G : Toggle Agents</span>
+</div>
+</footer>
+</main>
+<!-- Right Sidebar: Contextual Info & Recommendations -->
+<aside class="w-filter-panel-width bg-surface-container-low border-l border-outline-variant flex flex-col h-full shrink-0">
+<!-- Context Panel -->
+<div class="p-md space-y-md border-b border-outline-variant">
+<h3 class="font-label-md text-label-md uppercase tracking-wide opacity-60">System Context</h3>
+<div class="space-y-sm">
+<div class="flex items-center justify-between">
+<span class="font-body-sm text-body-sm opacity-60">Role</span>
+<span class="font-label-md text-label-md font-bold">Network Owner</span>
+</div>
+<div class="flex items-center justify-between">
+<span class="font-body-sm text-body-sm opacity-60">Scope</span>
+<span class="font-label-md text-label-md">All 14 Stores</span>
+</div>
+<div class="flex items-center justify-between">
+<span class="font-body-sm text-body-sm opacity-60">Period</span>
+<span class="font-label-md text-label-md">Oct 2023</span>
+</div>
+</div>
+<div class="pt-sm border-t border-outline-variant/30">
+<div class="flex items-center justify-between mb-xs">
+<span class="font-label-sm text-label-sm">Data Integrity</span>
+<span class="font-label-sm text-label-sm text-secondary font-bold">99.8%</span>
+</div>
+<div class="h-1 bg-surface-container-highest rounded-full overflow-hidden">
+<div class="h-full bg-secondary w-[99.8%]"></div>
+</div>
+</div>
+</div>
+<!-- Recommendations Panel -->
+<div class="flex-1 overflow-y-auto p-md space-y-md">
+<h3 class="font-label-md text-label-md uppercase tracking-wide opacity-60">Smart Recommendations</h3>
+<!-- Recommendation Card: Rupture -->
+<div class="bg-surface-container-lowest border border-outline-variant p-md rounded-sm space-y-sm shadow-sm">
+<div class="flex items-start gap-sm">
+<span class="material-symbols-outlined text-error text-[20px]" style="font-variation-settings: 'FILL' 1;">error</span>
+<div class="min-w-0">
+<p class="font-body-sm text-body-sm font-bold truncate">High Rupture Risk</p>
+<p class="font-label-sm text-label-sm opacity-60">SKU: Alpha Tablet X</p>
+</div>
+</div>
+<p class="font-body-sm text-body-sm leading-snug">Stock in Hub A projected to hit 0 in <span class="font-bold text-error">4.2 hours</span> based on velocity.</p>
+<div class="flex gap-xs pt-xs">
+<button class="flex-1 py-base border border-outline text-primary font-label-md text-label-md rounded-xs hover:bg-surface-container transition-all">Discuss</button>
+<button class="flex-1 py-base bg-primary text-on-primary font-label-md text-label-md rounded-xs hover:opacity-90 transition-all">Approve</button>
+</div>
+</div>
+<!-- Recommendation Card: Security -->
+<div class="bg-surface-container-lowest border border-outline-variant p-md rounded-sm space-y-sm shadow-sm">
+<div class="flex items-start gap-sm">
+<span class="material-symbols-outlined text-tertiary-container text-[20px]" style="font-variation-settings: 'FILL' 1;">policy</span>
+<div class="min-w-0">
+<p class="font-body-sm text-body-sm font-bold truncate">Suspicious Discount</p>
+<p class="font-label-sm text-label-sm opacity-60">Store Y - Register 04</p>
+</div>
+</div>
+<p class="font-body-sm text-body-sm leading-snug">3 consecutive "Manual Overrides" (25%) performed by staff 'User_902'.</p>
+<div class="flex gap-xs pt-xs">
+<button class="flex-1 py-base border border-outline text-primary font-label-md text-label-md rounded-xs hover:bg-surface-container transition-all">Discuss</button>
+<button class="flex-1 py-base bg-primary text-on-primary font-label-md text-label-md rounded-xs hover:opacity-90 transition-all">Flag Audit</button>
+</div>
+</div>
+<!-- Recommendation Card: Performance -->
+<div class="bg-surface-container-lowest border border-outline-variant p-md rounded-sm space-y-sm shadow-sm">
+<div class="flex items-start gap-sm">
+<span class="material-symbols-outlined text-secondary text-[20px]" style="font-variation-settings: 'FILL' 1;">star</span>
+<div class="min-w-0">
+<p class="font-body-sm text-body-sm font-bold truncate">Top Performer</p>
+<p class="font-label-sm text-label-sm opacity-60">Associate: Sarah L.</p>
+</div>
+</div>
+<p class="font-body-sm text-body-sm leading-snug">Sarah surpassed monthly target by 14% in high-margin service sales.</p>
+<div class="flex gap-xs pt-xs">
+<button class="flex-1 py-base border border-outline text-primary font-label-md text-label-md rounded-xs hover:bg-surface-container transition-all">Discuss</button>
+<button class="flex-1 py-base bg-secondary text-on-secondary font-label-md text-label-md rounded-xs hover:opacity-90 transition-all">Reward</button>
+</div>
+</div>
+</div>
+<!-- Footer Actions -->
+<div class="p-md bg-surface-container-highest/20 border-t border-outline-variant">
+<button class="w-full flex items-center justify-center gap-sm px-md py-sm bg-primary-container text-on-primary-container rounded-sm font-label-md text-label-md hover:bg-primary transition-all">
+<span class="material-symbols-outlined text-[18px]">ios_share</span>
+                Export Intelligence Report
+            </button>
+</div>
+</aside>
+<script>
+        // Update user name and role dynamically
+        const sidebarUserName = document.getElementById('sidebarUserName');
+        const sidebarUserRole = document.getElementById('sidebarUserRole');
+        if (sidebarUserName && sidebarUserRole) {
+            const username = sessionStorage.getItem('erp_username') || 'Utilisateur';
+            const role = sessionStorage.getItem('erp_role') || 'admin';
+            sidebarUserName.textContent = username;
+            sidebarUserRole.textContent = role.charAt(0).toUpperCase() + role.slice(1);
+        }
+
+        document.querySelectorAll('button').forEach(btn => {
+            btn.addEventListener('mousedown', () => {
+                btn.style.transform = 'scale(0.98)';
+            });
+            btn.addEventListener('mouseup', () => {
+                btn.style.transform = 'scale(1)';
+            });
+            btn.addEventListener('mouseleave', () => {
+                btn.style.transform = 'scale(1)';
+            });
+        });
+
+        const textarea = document.querySelector('textarea');
+        if (textarea) {
+            textarea.addEventListener('input', function() {
+                this.style.height = 'auto';
+                this.style.height = (this.scrollHeight) + 'px';
+                if (this.scrollHeight > 200) {
+                    this.style.overflowY = 'scroll';
+                    this.style.height = '200px';
+                } else {
+                    this.style.overflowY = 'hidden';
+                }
+            });
+            textarea.addEventListener('focus', function() {
+                this.closest('.relative')?.classList.add('ring-2', 'ring-secondary');
+            });
+            textarea.addEventListener('blur', function() {
+                this.closest('.relative')?.classList.remove('ring-2', 'ring-secondary');
+            });
+        }
+
+        document.querySelectorAll('aside button').forEach(btn => {
+            btn.addEventListener('click', function() {
+                const text = this.textContent.trim();
+                document.querySelectorAll('aside button').forEach(b => {
+                    b.classList.remove('bg-secondary-container', 'text-on-secondary-container', 'font-bold');
+                });
+                if (text.toLowerCase().includes('stock ai') || text.toLowerCase().includes('sales ai') || text.toLowerCase().includes('finance ai') || text.toLowerCase().includes('security ai') || text.toLowerCase().includes('support ai')) {
+                    this.classList.add('bg-secondary-container', 'text-on-secondary-container', 'font-bold');
+                    window.showToast(`Activation de l'agent: ${text.split('\n')[0].trim()}`);
+                }
+            });
+        });
+
+        document.querySelectorAll('.ai-message-gradient button').forEach(btn => {
+            btn.addEventListener('click', function() {
+                const text = this.textContent.trim().toLowerCase();
+                if (text.includes('approve') || text.includes('approuve')) {
+                    window.showToast('Réacheminement de stock approuvé. Mise à jour des flux en cours...');
+                } else if (text.includes('discuss')) {
+                    window.showToast('Ouverture d\'un fil de discussion avec l\'agent ORIGIN AI.');
+                }
+            });
+        });
+
+        document.querySelectorAll('aside .gap-xs button, aside .gap-xs + button, .recommendation button, [class*="Recommendation"] button, .space-y-\\[4px\\] button, .gap-xs button').forEach(btn => {
+            if (btn.closest('.ai-message-gradient')) return;
+            btn.addEventListener('click', function() {
+                const text = this.textContent.trim().toLowerCase();
+                if (text.includes('discuss')) {
+                    window.showToast('Discussion avec l\'agent ORIGIN AI ouverte.');
+                } else if (text.includes('approve') || text.includes('approuve')) {
+                    window.showToast('Action approuvée par le network owner.');
+                } else if (text.includes('flag') || text.includes('audit')) {
+                    window.showToast('Audit déclenché sur cette activité suspecte.');
+                } else if (text.includes('reward')) {
+                    window.showToast('Récompense attribuée à l\'employé.');
+                } else if (text.includes('export')) {
+                    window.showToast('Export du rapport d\'intelligence ORIGIN en cours...');
+                }
+            });
+        });
+
+        document.querySelectorAll('footer button, header button').forEach(btn => {
+            btn.addEventListener('click', function(e) {
+                if (this.closest('footer')?.querySelector('textarea')) {
+                    const icon = this.querySelector('.material-symbols-outlined');
+                    if (icon?.textContent.includes('attach_file')) {
+                        window.showToast('Joindre un fichier de contexte à la requête.');
+                    } else if (icon?.textContent.includes('mic')) {
+                        window.showToast('Mode commande vocale - Parlez maintenant.');
+                    } else if (icon?.textContent.includes('send')) {
+                        const msg = document.querySelector('textarea')?.value;
+                        if (msg?.trim()) {
+                            window.showToast(`Message envoyé à ORIGIN AI:\n"${msg.substring(0, 60)}${msg.length > 60 ? '...' : ''}"`);
+                        } else {
+                            window.showToast('Veuillez saisir un message.');
+                        }
+                    }
+                }
+                if (this.querySelector('.material-symbols-outlined')?.textContent.includes('more_vert')) {
+                    window.showToast('Options du chat ORIGIN AI.');
+                }
+            });
+        });
+
+        setInterval(() => {
+            const activeAgent = document.querySelector('.agent-pulse');
+            if(activeAgent) {
+                activeAgent.parentElement.parentElement.classList.add('shadow-[0_0_15px_rgba(0,88,190,0.1)]');
+                setTimeout(() => {
+                    activeAgent.parentElement.parentElement.classList.remove('shadow-[0_0_15px_rgba(0,88,190,0.1)]');
+                }, 1000);
+            }
+        }, 3000);
+    </script>
+</body></html>

@@ -1,0 +1,704 @@
+<!DOCTYPE html>
+
+<html class="light" lang="fr"><head>
+    <script>
+        // Toast Notification System
+        window.showToast = function(msg) {
+            const old = document.querySelector('.custom-toast');
+            if (old) old.remove();
+            const t = document.createElement('div');
+            t.className = 'custom-toast fixed bottom-6 right-6 bg-slate-900 text-white px-6 py-3 rounded-xl shadow-lg z-[99999] font-bold text-sm transition-all animate-bounce';
+            t.textContent = msg;
+            document.body.appendChild(t);
+            setTimeout(() => t.remove(), 2500);
+        };
+
+        // Hard-Lock Security Script
+        (function() {
+            const isAuthenticated = sessionStorage.getItem('erp_authenticated');
+            const isSuperUser = sessionStorage.getItem('erp_superuser');
+            const role = sessionStorage.getItem('erp_role');
+            
+            // If not authenticated and not in auth/login.html, redirect to login
+            if (!isAuthenticated && !isSuperUser && !window.location.href.includes('login.html')) {
+                window.location.href = '../auth/login.html';
+                return;
+            }
+            
+            // Restrict access for Caissier
+            if (role === 'caissier') {
+                document.addEventListener('DOMContentLoaded', () => {
+                    if (window.showToast) {
+                        window.showToast('Accès refusé : Ce module est réservé aux gérants et administrateurs.');
+                    } else {
+                        alert('Accès refusé : Ce module est réservé aux gérants et administrateurs.');
+                    }
+                    setTimeout(() => { window.location.href = '../index.html'; }, 2000);
+                });
+            }
+        })();
+    </script>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>RetailLink ERP - Gestion des Dépenses</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Hanken+Grotesk:wght@400;500;600;700;800;900&amp;family=JetBrains+Mono:wght@400;500&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+      tailwind.config = {
+        darkMode: "class",
+        theme: {
+          extend: {
+            "colors": {
+                    "on-secondary-fixed": "#001a42",
+                    "surface-tint": "#545f73",
+                    "surface-bright": "#f7f9fb",
+                    "error": "#ba1a1a",
+                    "secondary-container": "#2170e4",
+                    "on-error": "#ffffff",
+                    "tertiary-fixed": "#d3e4fe",
+                    "on-tertiary": "#ffffff",
+                    "on-primary-fixed-variant": "#3c475a",
+                    "secondary": "#0058be",
+                    "surface-container": "#eceef0",
+                    "on-tertiary-fixed-variant": "#38485d",
+                    "tertiary": "#041528",
+                    "on-secondary-container": "#fefcff",
+                    "tertiary-container": "#1a2a3e",
+                    "secondary-fixed-dim": "#adc6ff",
+                    "on-primary": "#ffffff",
+                    "primary-fixed-dim": "#bcc7de",
+                    "outline-variant": "#c5c6cd",
+                    "on-tertiary-container": "#8191a9",
+                    "on-secondary": "#ffffff",
+                    "on-primary-fixed": "#111c2d",
+                    "surface-dim": "#d8dadc",
+                    "on-error-container": "#93000a",
+                    "on-tertiary-fixed": "#0b1c30",
+                    "background": "#f7f9fb",
+                    "secondary-fixed": "#d8e2ff",
+                    "primary-fixed": "#d8e3fb",
+                    "primary": "#091426",
+                    "surface-container-low": "#f2f4f6",
+                    "outline": "#75777d",
+                    "surface-variant": "#e0e3e5",
+                    "error-container": "#ffdad6",
+                    "surface-container-high": "#e6e8ea",
+                    "primary-container": "#1e293b",
+                    "on-secondary-fixed-variant": "#004395",
+                    "on-primary-container": "#8590a6",
+                    "tertiary-fixed-dim": "#b7c8e1",
+                    "inverse-on-surface": "#eff1f3",
+                    "on-surface": "#191c1e",
+                    "on-background": "#191c1e",
+                    "surface-container-highest": "#e0e3e5",
+                    "inverse-primary": "#bcc7de",
+                    "surface-container-lowest": "#ffffff",
+                    "surface": "#f7f9fb",
+                    "on-surface-variant": "#45474c",
+                    "inverse-surface": "#2d3133"
+            },
+            "borderRadius": {
+                    "DEFAULT": "0.125rem",
+                    "lg": "0.25rem",
+                    "xl": "0.5rem",
+                    "full": "0.75rem"
+            },
+            "spacing": {
+                    "filter-panel-width": "280px",
+                    "xl": "32px",
+                    "gutter": "16px",
+                    "base": "4px",
+                    "lg": "24px",
+                    "xs": "4px",
+                    "md": "16px",
+                    "sm": "8px",
+                    "sidebar-width": "240px"
+            },
+            "fontFamily": {
+                    "label-sm": ["JetBrains Mono"],
+                    "body-md": ["Hanken Grotesk"],
+                    "headline-md": ["Hanken Grotesk"],
+                    "label-md": ["JetBrains Mono"],
+                    "body-lg": ["Hanken Grotesk"],
+                    "headline-lg": ["Hanken Grotesk"],
+                    "display-sm": ["Hanken Grotesk"],
+                    "body-sm": ["Hanken Grotesk"]
+            },
+            "fontSize": {
+                    "label-sm": ["10px", {"lineHeight": "14px", "fontWeight": "500"}],
+                    "body-md": ["14px", {"lineHeight": "20px", "fontWeight": "400"}],
+                    "headline-md": ["20px", {"lineHeight": "28px", "fontWeight": "600"}],
+                    "label-md": ["12px", {"lineHeight": "16px", "fontWeight": "500"}],
+                    "body-lg": ["16px", {"lineHeight": "24px", "fontWeight": "400"}],
+                    "headline-lg": ["24px", {"lineHeight": "32px", "fontWeight": "600"}],
+                    "display-sm": ["30px", {"lineHeight": "36px", "letterSpacing": "-0.02em", "fontWeight": "700"}],
+                    "body-sm": ["13px", {"lineHeight": "18px", "fontWeight": "400"}]
+            }
+          },
+        },
+      }
+    </script>
+<style>
+      body {
+        background-color: #f7f9fb;
+        color: #191c1e;
+        -webkit-font-smoothing: antialiased;
+      }
+      .material-symbols-outlined {
+        font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+      }
+      .custom-scrollbar::-webkit-scrollbar {
+        width: 4px;
+        height: 4px;
+      }
+      .custom-scrollbar::-webkit-scrollbar-track {
+        background: transparent;
+      }
+      .custom-scrollbar::-webkit-scrollbar-thumb {
+        background: #c5c6cd;
+        border-radius: 2px;
+      }
+      .table-fixed-header th {
+        position: sticky;
+        top: 0;
+        z-index: 10;
+        background: #ffffff;
+      }
+    </style>
+</head>
+<body class="font-body-md text-body-md overflow-hidden h-screen flex">
+<div class="fixed top-4 right-4 z-[9999]">
+    <a href="../index.html" class="flex items-center gap-2 bg-white/90 backdrop-blur shadow-lg border border-slate-200 px-4 py-2 rounded-full text-slate-700 hover:bg-white hover:scale-105 transition-all font-bold text-sm">
+        <span class="material-symbols-outlined text-[20px]">grid_view</span>
+        Menu Principal
+    </a>
+</div>
+<!-- SIDEBAR -->
+<aside class="fixed h-full w-sidebar-width left-0 top-0 bg-surface-container-highest dark:bg-tertiary-container flex flex-col h-full py-md px-sm z-50">
+<div class="mb-lg px-sm">
+<h1 class="font-headline-md text-headline-md font-bold text-primary dark:text-primary-fixed">Network Admin</h1>
+<p class="text-label-md font-label-md text-on-surface-variant">Local Retail ERP</p>
+</div>
+<nav class="flex-1 space-y-1">
+<a class="flex items-center gap-sm px-sm py-base transition-colors duration-150 ease-in-out hover:bg-surface-container-high dark:hover:bg-tertiary hover:text-secondary text-on-surface-variant font-medium" href="#">
+<span class="material-symbols-outlined">dashboard</span>
+<span class="font-label-md text-label-md">Dashboard</span>
+</a>
+<a class="flex items-center gap-sm px-sm py-base transition-colors duration-150 ease-in-out hover:bg-surface-container-high dark:hover:bg-tertiary hover:text-secondary text-on-surface-variant font-medium" href="#">
+<span class="material-symbols-outlined">inventory_2</span>
+<span class="font-label-md text-label-md">Inventory</span>
+</a>
+<a class="flex items-center gap-sm px-sm py-base transition-colors duration-150 ease-in-out hover:bg-surface-container-high dark:hover:bg-tertiary hover:text-secondary text-on-surface-variant font-medium" href="#">
+<span class="material-symbols-outlined">payments</span>
+<span class="font-label-md text-label-md">Sales</span>
+</a>
+<a class="flex items-center gap-sm px-sm py-base transition-colors duration-150 ease-in-out hover:bg-surface-container-high dark:hover:bg-tertiary hover:text-secondary text-on-surface-variant font-medium" href="#">
+<span class="material-symbols-outlined">group</span>
+<span class="font-label-md text-label-md">Suppliers</span>
+</a>
+<a class="flex items-center gap-sm px-sm py-base transition-colors duration-150 ease-in-out text-secondary font-bold border-r-2 border-secondary bg-surface-container-high" href="#">
+<span class="material-symbols-outlined">receipt_long</span>
+<span class="font-label-md text-label-md">Expenses</span>
+</a>
+</nav>
+<div class="mt-auto space-y-1 border-t border-outline-variant pt-md">
+<a class="flex items-center gap-sm px-sm py-base transition-colors duration-150 ease-in-out hover:bg-surface-container-high text-on-surface-variant font-medium" href="#">
+<span class="material-symbols-outlined">settings</span>
+<span class="font-label-md text-label-md">Settings</span>
+</a>
+<a class="flex items-center gap-sm px-sm py-base transition-colors duration-150 ease-in-out hover:bg-surface-container-high text-on-surface-variant font-medium" href="#">
+<span class="material-symbols-outlined">help</span>
+<span class="font-label-md text-label-md">Support</span>
+</a>
+</div>
+</aside>
+<!-- MAIN CONTENT AREA -->
+<main class="flex-1 ml-sidebar-width flex flex-col h-screen">
+<!-- TOP NAVBAR -->
+<header class="h-16 flex justify-between items-center px-lg bg-surface-lowest border-b border-outline-variant shrink-0">
+<div class="flex items-center gap-md">
+<span class="font-headline-md text-headline-md font-black text-on-surface uppercase">RetailLink ERP</span>
+<div class="h-8 w-[1px] bg-outline-variant mx-sm"></div>
+<h2 class="text-label-md font-label-md text-on-surface-variant uppercase tracking-widest">Dépenses</h2>
+</div>
+<div class="flex items-center gap-lg">
+<div class="relative">
+<span class="absolute left-sm top-1/2 -translate-y-1/2 material-symbols-outlined text-outline">search</span>
+<input class="pl-xl pr-sm py-xs border border-outline-variant rounded-lg text-body-sm w-64 focus:ring-1 focus:ring-secondary focus:border-secondary outline-none bg-surface-container-low transition-all" placeholder="Rechercher une transaction..." type="text"/>
+</div>
+<div class="flex items-center gap-md">
+<button class="material-symbols-outlined text-on-surface-variant hover:bg-surface-container-low p-xs rounded-full cursor-pointer transition-all active:opacity-80">notifications</button>
+<button class="material-symbols-outlined text-on-surface-variant hover:bg-surface-container-low p-xs rounded-full cursor-pointer transition-all active:opacity-80">apps</button>
+<div class="flex items-center gap-sm cursor-pointer ml-sm">
+<img class="w-8 h-8 rounded-full object-cover" data-alt="A professional headshot of a middle-aged male retail executive with a confident yet approachable expression. He is wearing a sharp, charcoal grey business suit and a crisp white shirt, standing in a brightly lit, modern corporate office with glass partitions and soft architectural highlights. The lighting is clean and professional, creating a high-end corporate atmosphere with a minimalist color palette." src="https://lh3.googleusercontent.com/aida-public/AB6AXuCYBwirwqFxtCNIcZH9liF1937Z_n7sbQ8x1tt_DboC2HI6PbFkhlBpRfC4iGIJg3fO_Tx7QO5iZ0xzF9MyqJjnY6AloF6GM3WM4VNtMchAv3ZSsICZxxBIKRShYYaepJ2wQN3Eq0YezO_uRoogBE-t_EHC75RhN5S58YbI7XZKuAGgY0MYMZsgn51u7WnG334XBGuuDZgoSK0KVBp5r8-XwySP615_rqP6-x67tVnkwVyRXMbXQGw31Fq5TtgDMOriXvKsaabjvTY"/>
+<span id="headerUserName" class="text-label-md font-bold text-on-surface">Admin_FR</span>
+</div>
+</div>
+</div>
+</header>
+<!-- DASHBOARD BODY -->
+<section class="flex-1 overflow-y-auto p-lg space-y-lg custom-scrollbar">
+<!-- ACTION BAR & TITLE -->
+<div class="flex justify-between items-end">
+<div>
+<h3 class="font-headline-lg text-headline-lg text-on-surface">Journal des Dépenses</h3>
+<p class="text-body-md text-on-surface-variant">Analyse financière et validation des flux de trésorerie.</p>
+</div>
+<button class="bg-primary text-on-primary px-lg py-sm flex items-center gap-sm font-label-md text-label-md hover:opacity-90 transition-opacity">
+<span class="material-symbols-outlined text-[18px]">add</span>
+                    AJOUTER UNE DÉPENSE
+                </button>
+</div>
+<!-- KPI SECTION -->
+<div class="grid grid-cols-4 gap-gutter">
+<!-- KPI Card -->
+<div class="bg-surface-container-lowest p-md border border-outline-variant rounded-lg">
+<p class="text-label-md font-label-md text-on-surface-variant uppercase mb-xs">Dépenses Mensuelles</p>
+<div class="flex items-baseline justify-between">
+<span class="font-label-md text-display-sm text-on-surface">42,850.00 <span class="text-label-md text-on-surface-variant">€</span></span>
+<span class="text-error font-label-sm text-label-sm flex items-center gap-1">+4.2% <span class="material-symbols-outlined text-sm">trending_up</span></span>
+</div>
+<div class="mt-sm w-full bg-surface-container-high h-[2px] rounded-full overflow-hidden">
+<div class="bg-error w-3/4 h-full"></div>
+</div>
+</div>
+<!-- KPI Card -->
+<div class="bg-surface-container-lowest p-md border border-outline-variant rounded-lg">
+<p class="text-label-md font-label-md text-on-surface-variant uppercase mb-xs">Moyenne par Magasin</p>
+<div class="flex items-baseline justify-between">
+<span class="font-label-md text-display-sm text-on-surface">8,570.00 <span class="text-label-md text-on-surface-variant">€</span></span>
+<span class="text-secondary font-label-sm text-label-sm flex items-center gap-1">-1.5% <span class="material-symbols-outlined text-sm">trending_down</span></span>
+</div>
+<div class="mt-sm h-4 flex items-center gap-1">
+<span class="text-label-sm text-on-surface-variant">Cible: 8,000€</span>
+</div>
+</div>
+<!-- KPI Card -->
+<div class="bg-surface-container-lowest p-md border border-outline-variant rounded-lg">
+<p class="text-label-md font-label-md text-on-surface-variant uppercase mb-xs">Validations en Attente</p>
+<div class="flex items-baseline justify-between">
+<span class="font-label-md text-display-sm text-secondary">24</span>
+<span class="bg-secondary-container text-on-secondary-container px-sm py-xs text-label-sm font-label-sm rounded">ACTION REQUISE</span>
+</div>
+<div class="mt-sm h-4 flex items-center">
+<span class="text-label-sm text-on-surface-variant">Total: 4,120.00 €</span>
+</div>
+</div>
+<!-- KPI Card -->
+<div class="bg-surface-container-lowest p-md border border-outline-variant rounded-lg">
+<p class="text-label-md font-label-md text-on-surface-variant uppercase mb-xs">Impact sur le Profit</p>
+<div class="flex items-baseline justify-between">
+<span class="font-label-md text-display-sm text-error">-12.8 <span class="text-label-md text-on-surface-variant">%</span></span>
+<span class="text-on-surface-variant font-label-sm text-label-sm">S1 vs S2</span>
+</div>
+<div class="mt-sm h-4 flex items-center gap-1">
+<span class="material-symbols-outlined text-[14px] text-error">warning</span>
+<span class="text-label-sm text-error">Seuil de vigilance atteint</span>
+</div>
+</div>
+</div>
+<!-- CATEGORY BREAKDOWN & FILTERS -->
+<div class="grid grid-cols-12 gap-gutter">
+<!-- Filters Panel -->
+<div class="col-span-12 bg-white p-sm border border-outline-variant flex items-center gap-md">
+<span class="text-label-md font-bold text-on-surface-variant px-sm border-r border-outline-variant mr-sm">FILTRES</span>
+<div class="flex flex-1 gap-md">
+<select class="border-outline-variant text-label-md font-label-md py-xs px-sm focus:ring-0 focus:border-secondary outline-none bg-surface-container-low rounded-sm min-w-[140px]">
+<option>Tous les Magasins</option>
+<option>Store Yaoundé Sud</option>
+<option>Store Lyon Mvan</option>
+<option>Store Bordeaux</option>
+</select>
+<select class="border-outline-variant text-label-md font-label-md py-xs px-sm focus:ring-0 focus:border-secondary outline-none bg-surface-container-low rounded-sm min-w-[140px]">
+<option>Toutes les Catégories</option>
+<option>Loyer</option>
+<option>Salaires</option>
+<option>Transport</option>
+<option>Maintenance</option>
+</select>
+<select class="border-outline-variant text-label-md font-label-md py-xs px-sm focus:ring-0 focus:border-secondary outline-none bg-surface-container-low rounded-sm min-w-[140px]">
+<option>Statut: Tous</option>
+<option>En attente</option>
+<option>Validé</option>
+<option>Refusé</option>
+</select>
+<div class="flex items-center bg-surface-container-low border border-outline-variant rounded-sm px-sm">
+<span class="material-symbols-outlined text-[16px] text-outline mr-xs">calendar_today</span>
+<input class="bg-transparent border-none text-label-md font-label-md focus:ring-0 w-48 text-on-surface" type="text" value="01/10/2023 - 31/10/2023"/>
+</div>
+</div>
+<button class="text-label-md font-label-md text-secondary hover:underline px-md">Réinitialiser</button>
+<button class="bg-secondary text-on-secondary px-md py-xs flex items-center gap-sm font-label-md text-label-md rounded-sm">
+<span class="material-symbols-outlined text-[16px]">filter_list</span>
+                        Appliquer
+                    </button>
+</div>
+<!-- Visual Summary Chips -->
+<div class="col-span-12 flex flex-wrap gap-sm">
+<div class="flex items-center gap-sm bg-white border border-outline-variant px-sm py-xs rounded">
+<div class="w-3 h-3 bg-secondary"></div>
+<span class="text-label-md font-bold text-on-surface">Loyer:</span>
+<span class="text-label-md font-label-md text-on-surface-variant">12,400 FCFA (29%)</span>
+</div>
+<div class="flex items-center gap-sm bg-white border border-outline-variant px-sm py-xs rounded">
+<div class="w-3 h-3 bg-[#1e293b]"></div>
+<span class="text-label-md font-bold text-on-surface">Salaires:</span>
+<span class="text-label-md font-label-md text-on-surface-variant">18,200 FCFA (42%)</span>
+</div>
+<div class="flex items-center gap-sm bg-white border border-outline-variant px-sm py-xs rounded">
+<div class="w-3 h-3 bg-[#ba1a1a]"></div>
+<span class="text-label-md font-bold text-on-surface">Pertes:</span>
+<span class="text-label-md font-label-md text-on-surface-variant">2,150 FCFA (5%)</span>
+</div>
+<div class="flex items-center gap-sm bg-white border border-outline-variant px-sm py-xs rounded">
+<div class="w-3 h-3 bg-outline"></div>
+<span class="text-label-md font-bold text-on-surface">Autre:</span>
+<span class="text-label-md font-label-md text-on-surface-variant">10,100 FCFA (24%)</span>
+</div>
+</div>
+<!-- MAIN TABLE -->
+<div class="col-span-12 bg-white border border-outline-variant rounded-sm overflow-hidden flex flex-col min-h-[500px]">
+<div class="flex-1 overflow-auto custom-scrollbar">
+<table class="w-full text-left border-collapse table-fixed-header">
+<thead>
+<tr class="bg-surface-container-low border-b border-outline-variant">
+<th class="py-sm px-md text-label-sm font-bold text-on-surface-variant uppercase tracking-wider w-32">Date</th>
+<th class="py-sm px-md text-label-sm font-bold text-on-surface-variant uppercase tracking-wider">Magasin</th>
+<th class="py-sm px-md text-label-sm font-bold text-on-surface-variant uppercase tracking-wider">Catégorie</th>
+<th class="py-sm px-md text-label-sm font-bold text-on-surface-variant uppercase tracking-wider text-right">Montant</th>
+<th class="py-sm px-md text-label-sm font-bold text-on-surface-variant uppercase tracking-wider">Paiement</th>
+<th class="py-sm px-md text-label-sm font-bold text-on-surface-variant uppercase tracking-wider text-center">Pièce</th>
+<th class="py-sm px-md text-label-sm font-bold text-on-surface-variant uppercase tracking-wider">Statut</th>
+<th class="py-sm px-md text-label-sm font-bold text-on-surface-variant uppercase tracking-wider">Validateur</th>
+<th class="py-sm px-md text-label-sm font-bold text-on-surface-variant uppercase tracking-wider text-right w-48">Actions</th>
+</tr>
+</thead>
+<tbody class="divide-y divide-outline-variant">
+<!-- Row 1 -->
+<tr class="hover:bg-surface-container-low transition-colors group">
+<td class="py-xs px-md font-label-md text-label-md text-on-surface-variant">24/10/2023</td>
+<td class="py-xs px-md font-body-sm text-body-sm font-bold">Yaoundé - Rivoli</td>
+<td class="py-xs px-md">
+<span class="bg-tertiary-fixed text-on-tertiary-fixed-variant px-sm py-base rounded text-label-sm font-label-sm">MAINTENANCE</span>
+</td>
+<td class="py-xs px-md font-label-md text-label-md text-right font-bold">450.00 FCFA</td>
+<td class="py-xs px-md text-label-sm text-on-surface-variant">CB Entreprise</td>
+<td class="py-xs px-md text-center">
+<button class="material-symbols-outlined text-[20px] text-secondary hover:bg-secondary-fixed p-1 rounded transition-colors">description</button>
+</td>
+<td class="py-xs px-md">
+<span class="flex items-center gap-xs text-secondary font-bold text-label-sm">
+<span class="w-1.5 h-1.5 rounded-full bg-secondary"></span> EN ATTENTE
+                                        </span>
+</td>
+<td class="py-xs px-md text-label-sm text-on-surface-variant">—</td>
+<td class="py-xs px-md text-right space-x-1 opacity-0 group-hover:opacity-100 transition-opacity">
+<button class="text-label-sm font-bold text-secondary hover:bg-secondary-fixed px-sm py-1 rounded">VALIDER</button>
+<button class="text-label-sm font-bold text-error hover:bg-error-container px-sm py-1 rounded">REFUSER</button>
+</td>
+</tr>
+<!-- Row 2 -->
+<tr class="hover:bg-surface-container-low transition-colors group">
+<td class="py-xs px-md font-label-md text-label-md text-on-surface-variant">23/10/2023</td>
+<td class="py-xs px-md font-body-sm text-body-sm font-bold">Lyon - Part Dieu</td>
+<td class="py-xs px-md">
+<span class="bg-surface-variant text-on-surface-variant px-sm py-base rounded text-label-sm font-label-sm">LOYER</span>
+</td>
+<td class="py-xs px-md font-label-md text-label-md text-right font-bold">3,200.00 FCFA</td>
+<td class="py-xs px-md text-label-sm text-on-surface-variant">Virement</td>
+<td class="py-xs px-md text-center">
+<button class="material-symbols-outlined text-[20px] text-secondary hover:bg-secondary-fixed p-1 rounded transition-colors">description</button>
+</td>
+<td class="py-xs px-md">
+<span class="flex items-center gap-xs text-on-surface-variant font-bold text-label-sm">
+<span class="w-1.5 h-1.5 rounded-full bg-outline"></span> VALIDÉ
+                                        </span>
+</td>
+<td class="py-xs px-md text-label-sm text-on-surface-variant">Marc Lefebvre</td>
+<td class="py-xs px-md text-right space-x-1 opacity-0 group-hover:opacity-100 transition-opacity">
+<button class="text-label-sm font-bold text-on-surface-variant hover:bg-outline-variant px-sm py-1 rounded">DÉTAILS</button>
+</td>
+</tr>
+<!-- Row 3 -->
+<tr class="hover:bg-surface-container-low transition-colors group">
+<td class="py-xs px-md font-label-md text-label-md text-on-surface-variant">22/10/2023</td>
+<td class="py-xs px-md font-body-sm text-body-sm font-bold">Bordeaux - Lac</td>
+<td class="py-xs px-md">
+<span class="bg-error-container text-on-error-container px-sm py-base rounded text-label-sm font-label-sm">PERTÉS / CASSE</span>
+</td>
+<td class="py-xs px-md font-label-md text-label-md text-right font-bold">85.40 FCFA</td>
+<td class="py-xs px-md text-label-sm text-on-surface-variant">Espèces</td>
+<td class="py-xs px-md text-center">
+<button class="material-symbols-outlined text-[20px] text-outline opacity-30">attach_file_add</button>
+</td>
+<td class="py-xs px-md">
+<span class="flex items-center gap-xs text-error font-bold text-label-sm">
+<span class="w-1.5 h-1.5 rounded-full bg-error"></span> REFUSÉ
+                                        </span>
+</td>
+<td class="py-xs px-md text-label-sm text-on-surface-variant">Amina B.</td>
+<td class="py-xs px-md text-right space-x-1 opacity-0 group-hover:opacity-100 transition-opacity">
+<button class="text-label-sm font-bold text-secondary hover:bg-secondary-fixed px-sm py-1 rounded">JUSTIFIER</button>
+</td>
+</tr>
+<!-- Row 4 -->
+<tr class="hover:bg-surface-container-low transition-colors group">
+<td class="py-xs px-md font-label-md text-label-md text-on-surface-variant">22/10/2023</td>
+<td class="py-xs px-md font-body-sm text-body-sm font-bold">Yaoundé - Rivoli</td>
+<td class="py-xs px-md">
+<span class="bg-secondary-fixed text-on-secondary-fixed-variant px-sm py-base rounded text-label-sm font-label-sm">TRANSPORT</span>
+</td>
+<td class="py-xs px-md font-label-md text-label-md text-right font-bold">128.50 FCFA</td>
+<td class="py-xs px-md text-label-sm text-on-surface-variant">Note de Frais</td>
+<td class="py-xs px-md text-center">
+<button class="material-symbols-outlined text-[20px] text-secondary hover:bg-secondary-fixed p-1 rounded transition-colors">description</button>
+</td>
+<td class="py-xs px-md">
+<span class="flex items-center gap-xs text-secondary font-bold text-label-sm">
+<span class="w-1.5 h-1.5 rounded-full bg-secondary"></span> EN ATTENTE
+                                        </span>
+</td>
+<td class="py-xs px-md text-label-sm text-on-surface-variant">—</td>
+<td class="py-xs px-md text-right space-x-1 opacity-0 group-hover:opacity-100 transition-opacity">
+<button class="text-label-sm font-bold text-secondary hover:bg-secondary-fixed px-sm py-1 rounded">VALIDER</button>
+<button class="text-label-sm font-bold text-error hover:bg-error-container px-sm py-1 rounded">REFUSER</button>
+</td>
+</tr>
+<!-- Repeat Rows to simulate density -->
+<tr class="hover:bg-surface-container-low transition-colors group">
+<td class="py-xs px-md font-label-md text-label-md text-on-surface-variant">21/10/2023</td>
+<td class="py-xs px-md font-body-sm text-body-sm font-bold">Nantes Mvan</td>
+<td class="py-xs px-md">
+<span class="bg-tertiary-fixed text-on-tertiary-fixed-variant px-sm py-base rounded text-label-sm font-label-sm">ÉNERGIE</span>
+</td>
+<td class="py-xs px-md font-label-md text-label-md text-right font-bold">1,120.00 FCFA</td>
+<td class="py-xs px-md text-label-sm text-on-surface-variant">Prélèvement</td>
+<td class="py-xs px-md text-center">
+<button class="material-symbols-outlined text-[20px] text-secondary hover:bg-secondary-fixed p-1 rounded transition-colors">description</button>
+</td>
+<td class="py-xs px-md">
+<span class="flex items-center gap-xs text-on-surface-variant font-bold text-label-sm">
+<span class="w-1.5 h-1.5 rounded-full bg-outline"></span> VALIDÉ
+                                        </span>
+</td>
+<td class="py-xs px-md text-label-sm text-on-surface-variant">Marc Lefebvre</td>
+<td class="py-xs px-md text-right space-x-1 opacity-0 group-hover:opacity-100 transition-opacity">
+<button class="text-label-sm font-bold text-on-surface-variant hover:bg-outline-variant px-sm py-1 rounded">DÉTAILS</button>
+</td>
+</tr>
+<tr class="hover:bg-surface-container-low transition-colors group">
+<td class="py-xs px-md font-label-md text-label-md text-on-surface-variant">20/10/2023</td>
+<td class="py-xs px-md font-body-sm text-body-sm font-bold">Yaoundé - Rivoli</td>
+<td class="py-xs px-md">
+<span class="bg-surface-variant text-on-surface-variant px-sm py-base rounded text-label-sm font-label-sm">MARKETING</span>
+</td>
+<td class="py-xs px-md font-label-md text-label-md text-right font-bold">2,500.00 FCFA</td>
+<td class="py-xs px-md text-label-sm text-on-surface-variant">Virement</td>
+<td class="py-xs px-md text-center">
+<button class="material-symbols-outlined text-[20px] text-secondary hover:bg-secondary-fixed p-1 rounded transition-colors">description</button>
+</td>
+<td class="py-xs px-md">
+<span class="flex items-center gap-xs text-on-surface-variant font-bold text-label-sm">
+<span class="w-1.5 h-1.5 rounded-full bg-outline"></span> VALIDÉ
+                                        </span>
+</td>
+<td class="py-xs px-md text-label-sm text-on-surface-variant">Amina B.</td>
+<td class="py-xs px-md text-right space-x-1 opacity-0 group-hover:opacity-100 transition-opacity">
+<button class="text-label-sm font-bold text-on-surface-variant hover:bg-outline-variant px-sm py-1 rounded">DÉTAILS</button>
+</td>
+</tr>
+<tr class="hover:bg-surface-container-low transition-colors group">
+<td class="py-xs px-md font-label-md text-label-md text-on-surface-variant">19/10/2023</td>
+<td class="py-xs px-md font-body-sm text-body-sm font-bold">Lyon - Part Dieu</td>
+<td class="py-xs px-md">
+<span class="bg-secondary-fixed text-on-secondary-fixed-variant px-sm py-base rounded text-label-sm font-label-sm">FOURNITURES</span>
+</td>
+<td class="py-xs px-md font-label-md text-label-md text-right font-bold">342.10 FCFA</td>
+<td class="py-xs px-md text-label-sm text-on-surface-variant">CB Entreprise</td>
+<td class="py-xs px-md text-center">
+<button class="material-symbols-outlined text-[20px] text-secondary hover:bg-secondary-fixed p-1 rounded transition-colors">description</button>
+</td>
+<td class="py-xs px-md">
+<span class="flex items-center gap-xs text-secondary font-bold text-label-sm">
+<span class="w-1.5 h-1.5 rounded-full bg-secondary"></span> EN ATTENTE
+                                        </span>
+</td>
+<td class="py-xs px-md text-label-sm text-on-surface-variant">—</td>
+<td class="py-xs px-md text-right space-x-1 opacity-0 group-hover:opacity-100 transition-opacity">
+<button class="text-label-sm font-bold text-secondary hover:bg-secondary-fixed px-sm py-1 rounded">VALIDER</button>
+<button class="text-label-sm font-bold text-error hover:bg-error-container px-sm py-1 rounded">REFUSER</button>
+</td>
+</tr>
+</tbody>
+</table>
+</div>
+<!-- TABLE FOOTER / PAGINATION -->
+<div class="h-12 border-t border-outline-variant px-md flex items-center justify-between bg-surface-lowest">
+<span class="text-label-sm font-label-sm text-on-surface-variant">Affichage 1-7 sur 124 transactions</span>
+<div class="flex items-center gap-xs">
+<button class="p-1 hover:bg-surface-container-low rounded"><span class="material-symbols-outlined text-[18px]">chevron_left</span></button>
+<button class="px-sm py-1 bg-secondary text-on-secondary text-label-sm font-bold rounded">1</button>
+<button class="px-sm py-1 hover:bg-surface-container-low text-label-sm font-bold rounded">2</button>
+<button class="px-sm py-1 hover:bg-surface-container-low text-label-sm font-bold rounded">3</button>
+<button class="p-1 hover:bg-surface-container-low rounded"><span class="material-symbols-outlined text-[18px]">chevron_right</span></button>
+</div>
+</div>
+</div>
+</div>
+</section>
+<!-- FOOTER BAR -->
+<footer class="h-10 border-t border-outline-variant bg-surface-container-lowest px-lg flex items-center justify-between shrink-0">
+<div class="flex items-center gap-md">
+<span class="text-label-sm font-label-sm text-on-surface-variant">Status Système: <span class="text-secondary font-bold">OPÉRATIONNEL</span></span>
+<span class="w-[1px] h-4 bg-outline-variant"></span>
+<span class="text-label-sm font-label-sm text-on-surface-variant">Dernière Sync: 14:32</span>
+</div>
+<div class="flex items-center gap-md">
+<button class="text-label-sm font-label-sm text-on-surface-variant hover:text-secondary flex items-center gap-xs">
+<span class="material-symbols-outlined text-[14px]">download</span> Exporter Rapport
+                </button>
+<button class="text-label-sm font-label-sm text-on-surface-variant hover:text-secondary flex items-center gap-xs">
+<span class="material-symbols-outlined text-[14px]">print</span> Imprimer
+                </button>
+</div>
+</footer>
+</main>
+<script>
+        // Update user name
+        const headerUserName = document.getElementById('headerUserName');
+        if (headerUserName) {
+            const username = sessionStorage.getItem('erp_username') || 'Utilisateur';
+            const role = sessionStorage.getItem('erp_role') || 'staff';
+            headerUserName.textContent = `${username} (${role})`;
+        }
+
+        document.querySelectorAll('button').forEach(btn => {
+            btn.addEventListener('mousedown', () => {
+                btn.style.transform = 'scale(0.98)';
+            });
+            btn.addEventListener('mouseup', () => {
+                btn.style.transform = 'scale(1)';
+            });
+            btn.addEventListener('mouseleave', () => {
+                btn.style.transform = 'scale(1)';
+            });
+        });
+
+        document.querySelectorAll('tr').forEach(row => {
+            row.addEventListener('click', (e) => {
+                if(!e.target.closest('button')) {
+                    const label = row.querySelector('.font-bold')?.textContent?.trim() || 'Transaction';
+                    console.log(`Détails demande: ${label}`);
+                }
+            });
+        document.querySelectorAll('button').forEach(btn => {
+            btn.addEventListener('mousedown', () => {
+                btn.style.transform = 'scale(0.98)';
+            });
+            btn.addEventListener('mouseup', () => {
+                btn.style.transform = 'scale(1)';
+            });
+            btn.addEventListener('mouseleave', () => {
+                btn.style.transform = 'scale(1)';
+            });
+        });
+
+        document.querySelectorAll('tr').forEach(row => {
+            row.addEventListener('click', (e) => {
+                if(!e.target.closest('button')) {
+                    const label = row.querySelector('.font-bold')?.textContent?.trim() || 'Transaction';
+                    console.log(`Détails demande: ${label}`);
+                }
+            });
+        });
+
+        document.querySelectorAll('button').forEach(btn => {
+            btn.addEventListener('click', function(e) {
+                const text = this.textContent.trim().toUpperCase();
+                
+                // Security check for cashiers
+                if (role === 'cashier' && (text === 'VALIDER' || text === 'REFUSER')) {
+                    window.showToast('Accès refusé : Vous n\'avez pas les droits pour cette action.');
+                    return;
+                }
+
+                if (text === 'VALIDER') {
+                    const tr = this.closest('tr');
+                    if (tr) {
+                        tr.style.opacity = '0.5';
+                        tr.style.pointerEvents = 'none';
+                        setTimeout(() => { tr.remove(); }, 300);
+                    }
+                    window.showToast('Dépense validée avec succès.');
+                } else if (text === 'REFUSER') {
+                    window.showToast('Dépense refusée. Un justificatif sera demandé.');
+                } else if (text === 'DÉTAILS') {
+                    window.showToast('Affichage des détails de la transaction.');
+                } else if (text === 'JUSTIFIER') {
+                    window.showToast('Formulaire de justification ouvert.');
+                } else if (text.includes('AJOUTER')) {
+                    window.showToast('Création d\'une nouvelle dépense.');
+                } else if (text.includes('RÉINITIALISER')) {
+                    window.showToast('Filtres réinitialisés.');
+                } else if (text.includes('APPLIQUER')) {
+                    const selects = this.closest('.flex')?.querySelectorAll('select') || [];
+                    const filters = Array.from(selects).map(s => s.options[s.selectedIndex]?.text).join(', ');
+                    window.showToast(`Filtres appliqués: ${filters || 'Aucun filtre'}`);
+                } else if (text.includes('EXPORTER')) {
+                    window.showToast('Export du rapport en cours...');
+                } else if (text.includes('IMPRIMER')) {
+                    window.showToast('Impression du journal des dépenses.');
+                }
+            });
+        });
+
+        const searchInput = document.querySelector('input[type="text"]');
+        if (searchInput) {
+            searchInput.addEventListener('focus', function() {
+                this.closest('.relative')?.classList.add('ring-2', 'ring-secondary');
+            });
+            searchInput.addEventListener('blur', function() {
+                this.closest('.relative')?.classList.remove('ring-2', 'ring-secondary');
+            });
+        }
+
+        document.querySelectorAll('aside nav a').forEach(link => {
+            link.addEventListener('click', function(e) {
+                if (this.getAttribute('href') === '#') e.preventDefault();
+                document.querySelectorAll('aside nav a').forEach(l => {
+                    l.classList.remove('text-secondary', 'font-bold', 'border-r-2', 'border-secondary', 'bg-surface-container-high');
+                });
+                this.classList.add('text-secondary', 'font-bold', 'border-r-2', 'border-secondary', 'bg-surface-container-high');
+            });
+        });
+
+        document.querySelectorAll('select').forEach(sel => {
+            sel.addEventListener('change', function() {
+                const selected = this.options[this.selectedIndex]?.text || '';
+                console.log(`Filtre dépenses: ${selected}`);
+            });
+        });
+
+        document.querySelectorAll('aside .mt-auto a').forEach(link => {
+            link.addEventListener('click', function(e) {
+                if (this.getAttribute('href') === '#') e.preventDefault();
+                const text = this.textContent.trim();
+                if (text.toLowerCase().includes('support')) {
+                    window.showToast('Support technique: Contactez l\'assistance.');
+                } else {
+                    window.showToast(`Navigation: ${text}`);
+                }
+            });
+        });
+
+        document.querySelectorAll('.material-symbols-outlined').forEach(icon => {
+            if (icon.closest('button')) return;
+            icon.addEventListener('click', function() {
+                if (this.textContent.includes('description') || this.textContent.includes('attach_file')) {
+                    window.showToast('Affichage du justificatif.');
+                }
+            });
+        });
+    </script>
+</body></html>

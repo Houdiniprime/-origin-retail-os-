@@ -1,0 +1,55 @@
+<!DOCTYPE html>
+<html lang="fr" class="light">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Gestion des Stocks – Stitch Boutique</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Hanken+Grotesk:wght@400;600;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@400,0..1" rel="stylesheet" />
+    <style>
+        body {font-family: 'Hanken Grotesk', sans-serif; background: linear-gradient(135deg, #e0f7fa, #e8eaf6);}
+        .card {background: rgba(255,255,255,0.9); backdrop-filter: blur(8px);}
+    </style>
+</head>
+<body class="p-8">
+    <!-- Header -->
+    <div class="flex justify-between items-center mb-6">
+        <h1 class="text-3xl font-bold text-[#091426]">Gestion des Stocks – Multi‑Boutiques</h1>
+        <button onclick="window.location.href='../index.html'" class="flex items-center gap-2 bg-rose-500 text-white px-4 py-2 rounded-full hover:bg-rose-600 transition">
+            <span class="material-symbols-outlined">arrow_back</span> Retour
+        </button>
+    </div>
+    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+        <!-- Inventory -->
+        <div class="card p-6 rounded-xl shadow-lg border border-slate-200 flex flex-col items-center">
+            <span class="material-symbols-outlined text-4xl mb-2 text-emerald-600">inventory_2</span>
+            <h2 class="text-xl font-bold mb-2">Inventaire</h2>
+            <p class="text-sm text-slate-600 mb-4 text-center">Vue détaillée des produits en stock dans chaque boutique.</p>
+            <button onclick="window.location.href='inventory.html'" class="bg-indigo-600 text-white px-4 py-2 rounded-full hover:bg-indigo-700 transition">Ouvrir</button>
+        </div>
+        <!-- Sales -->
+        <div class="card p-6 rounded-xl shadow-lg border border-slate-200 flex flex-col items-center">
+            <span class="material-symbols-outlined text-4xl mb-2 text-blue-600">point_of_sale</span>
+            <h2 class="text-xl font-bold mb-2">Ventes</h2>
+            <p class="text-sm text-slate-600 mb-4 text-center">Statistiques de ventes par boutique, produit et période.</p>
+            <button onclick="window.location.href='sales.html'" class="bg-indigo-600 text-white px-4 py-2 rounded-full hover:bg-indigo-700 transition">Ouvrir</button>
+        </div>
+        <!-- Reports -->
+        <div class="card p-6 rounded-xl shadow-lg border border-slate-200 flex flex-col items-center">
+            <span class="material-symbols-outlined text-4xl mb-2 text-amber-600">assessment</span>
+            <h2 class="text-xl font-bold mb-2">Rapports</h2>
+            <p class="text-sm text-slate-600 mb-4 text-center">Génération de rapports PDF/CSV personnalisés.</p>
+            <button onclick="window.showToast('Rapports générés (placeholder)')" class="bg-indigo-600 text-white px-4 py-2 rounded-full hover:bg-indigo-700 transition">Générer</button>
+        </div>
+        <!-- Dashboard -->
+        <div class="card p-6 rounded-xl shadow-lg border border-slate-200 flex flex-col items-center">
+            <span class="material-symbols-outlined text-4xl mb-2 text-purple-600">dashboard</span>
+            <h2 class="text-xl font-bold mb-2">Dashboard</h2>
+            <p class="text-sm text-slate-600 mb-4 text-center">Vue globale des KPI de stock et performances.</p>
+            <button onclick="window.showToast('Dashboard Stock (placeholder)')" class="bg-indigo-600 text-white px-4 py-2 rounded-full hover:bg-indigo-700 transition">Voir</button>
+        </div>
+    </div>
+    <script src="../js/common.js"></script>
+</body>
+</html>

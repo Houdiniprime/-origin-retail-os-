@@ -1,0 +1,526 @@
+<!DOCTYPE html>
+
+<html class="light" lang="fr"><head>
+    <script>
+        // Hard-Lock Security Script - Cash Close Restrictions
+        (function() {
+            const isAuthenticated = sessionStorage.getItem('erp_authenticated');
+            const isSuperUser = sessionStorage.getItem('erp_superuser');
+            const role = sessionStorage.getItem('erp_role');
+            
+            // Redirect if not authenticated
+            if (!isAuthenticated && !isSuperUser && !window.location.href.includes('login.html')) {
+                window.location.href = '../auth/login.html';
+                return;
+            }
+            
+            // Block Caissiers from accessing cash close dashboard
+            if (role === 'caissier') {
+                document.addEventListener('DOMContentLoaded', () => {
+                    if (window.showToast) {
+                        window.showToast('Accès refusé : Ce module est réservé aux gérants et administrateurs.');
+                    } else {
+                        alert('Accès refusé : Ce module est réservé aux gérants et administrateurs.');
+                    }
+                    setTimeout(() => { window.location.href = '../index.html'; }, 2000);
+                });
+            }
+        })();
+    </script>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<meta name="description" content="ERP Retail Connect — Clôture de Caisse. Réconciliation financière quotidienne, calcul des écarts de caisse, et validation managériale."/>
+<meta name="author" content="Stitch Boutique Network"/>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Hanken+Grotesk:wght@400;500;600;700;800;900&amp;family=JetBrains+Mono:wght@400;500;700&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    "colors": {
+                        "surface-container-high": "#e6e8ea",
+                        "surface-bright": "#f7f9fb",
+                        "tertiary-container": "#1a2a3e",
+                        "on-secondary-fixed-variant": "#004395",
+                        "on-primary-fixed-variant": "#3c475a",
+                        "tertiary": "#041528",
+                        "on-tertiary": "#ffffff",
+                        "surface-container": "#eceef0",
+                        "primary": "#091426",
+                        "surface-container-lowest": "#ffffff",
+                        "on-background": "#191c1e",
+                        "inverse-surface": "#2d3133",
+                        "background": "#f7f9fb",
+                        "on-primary-container": "#8590a6",
+                        "on-surface": "#191c1e",
+                        "on-primary-fixed": "#111c2d",
+                        "inverse-on-surface": "#eff1f3",
+                        "on-tertiary-fixed": "#0b1c30",
+                        "outline": "#75777d",
+                        "on-tertiary-container": "#8191a9",
+                        "error-container": "#ffdad6",
+                        "surface-variant": "#e0e3e5",
+                        "surface": "#f7f9fb",
+                        "surface-dim": "#d8dadc",
+                        "on-tertiary-fixed-variant": "#38485d",
+                        "primary-fixed": "#d8e3fb",
+                        "surface-container-highest": "#e0e3e5",
+                        "secondary-fixed-dim": "#adc6ff",
+                        "on-secondary-container": "#fefcff",
+                        "primary-container": "#1e293b",
+                        "on-secondary-fixed": "#001a42",
+                        "inverse-primary": "#bcc7de",
+                        "tertiary-fixed": "#d3e4fe",
+                        "surface-container-low": "#f2f4f6",
+                        "outline-variant": "#c5c6cd",
+                        "on-error-container": "#93000a",
+                        "error": "#ba1a1a",
+                        "on-surface-variant": "#45474c",
+                        "tertiary-fixed-dim": "#b7c8e1",
+                        "on-primary": "#ffffff",
+                        "secondary": "#0058be",
+                        "surface-tint": "#545f73",
+                        "secondary-fixed": "#d8e2ff",
+                        "primary-fixed-dim": "#bcc7de",
+                        "on-secondary": "#ffffff",
+                        "secondary-container": "#2170e4",
+                        "on-error": "#ffffff"
+                    },
+                    "borderRadius": {
+                        "DEFAULT": "0.125rem",
+                        "lg": "0.25rem",
+                        "xl": "0.5rem",
+                        "full": "0.75rem"
+                    },
+                    "spacing": {
+                        "sidebar-width": "240px",
+                        "md": "16px",
+                        "xs": "4px",
+                        "lg": "24px",
+                        "sm": "8px",
+                        "base": "4px",
+                        "xl": "32px",
+                        "gutter": "16px",
+                        "filter-panel-width": "280px"
+                    },
+                    "fontFamily": {
+                        "headline-lg": ["Hanken Grotesk"],
+                        "label-sm": ["JetBrains Mono"],
+                        "label-md": ["JetBrains Mono"],
+                        "display-sm": ["Hanken Grotesk"],
+                        "body-md": ["Hanken Grotesk"],
+                        "headline-md": ["Hanken Grotesk"],
+                        "body-sm": ["Hanken Grotesk"],
+                        "body-lg": ["Hanken Grotesk"]
+                    },
+                    "fontSize": {
+                        "headline-lg": ["24px", {"lineHeight": "32px", "fontWeight": "600"}],
+                        "label-sm": ["10px", {"lineHeight": "14px", "fontWeight": "500"}],
+                        "label-md": ["12px", {"lineHeight": "16px", "fontWeight": "500"}],
+                        "display-sm": ["30px", {"lineHeight": "36px", "letterSpacing": "-0.02em", "fontWeight": "700"}],
+                        "body-md": ["14px", {"lineHeight": "20px", "fontWeight": "400"}],
+                        "headline-md": ["20px", {"lineHeight": "28px", "fontWeight": "600"}],
+                        "body-sm": ["13px", {"lineHeight": "18px", "fontWeight": "400"}],
+                        "body-lg": ["16px", {"lineHeight": "24px", "fontWeight": "400"}]
+                    }
+                },
+            },
+        }
+    </script>
+<style>
+        body { font-family: 'Hanken Grotesk', sans-serif; }
+        .material-symbols-outlined {
+            font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+            display: inline-block;
+            vertical-align: middle;
+            line-height: 1;
+        }
+        input::-webkit-outer-spin-button,
+        input::-webkit-inner-spin-button {
+            -webkit-appearance: none;
+            margin: 0;
+        }
+    </style>
+</head>
+<body class="bg-background text-on-surface overflow-hidden h-screen flex flex-col">
+<div class="fixed top-4 right-4 z-[9999]">
+    <a href="../index.html" class="flex items-center gap-2 bg-white/90 backdrop-blur shadow-lg border border-slate-200 px-4 py-2 rounded-full text-slate-700 hover:bg-white hover:scale-105 transition-all font-bold text-sm">
+        <span class="material-symbols-outlined text-[20px]">grid_view</span>
+        Menu Principal
+    </a>
+</div>
+<!-- TopNavBar (Derived from JSON) -->
+<header class="fixed top-0 left-0 w-full z-50 flex justify-between items-center px-md h-12 bg-surface border-b border-outline-variant dark:bg-inverse-surface dark:border-outline">
+<div class="flex items-center gap-md">
+<span class="font-headline-md text-headline-md font-bold text-primary dark:text-primary-fixed">ERP Retail Connect</span>
+<div class="h-6 w-[1px] bg-outline-variant mx-2"></div>
+<div class="flex items-center gap-sm font-body-md text-body-md text-on-surface-variant">
+<span class="font-bold">Session: #SES-2023-08842</span>
+<span class="text-outline">/</span>
+<span class="material-symbols-outlined text-sm">store</span>
+<span>Boutique #042</span>
+</div>
+</div>
+<div class="flex items-center gap-lg">
+<div class="flex items-center gap-sm">
+<span class="material-symbols-outlined text-primary">person</span>
+<span id="headerUserName" class="font-label-md text-label-md">Amina B.</span>
+</div>
+<div class="flex items-center gap-md">
+<span class="material-symbols-outlined text-on-surface-variant cursor-pointer hover:bg-surface-container-low transition-colors p-1">notifications</span>
+<span class="material-symbols-outlined text-on-surface-variant cursor-pointer hover:bg-surface-container-low transition-colors p-1">help</span>
+<span class="material-symbols-outlined text-on-surface-variant cursor-pointer hover:bg-surface-container-low transition-colors p-1">settings</span>
+</div>
+</div>
+</header>
+<!-- Main Container with SideNav -->
+<div class="flex flex-1 pt-12">
+<!-- SideNavBar (Derived from JSON) -->
+<aside class="fixed left-0 top-12 h-[calc(100vh-48px)] w-[240px] flex flex-col py-md bg-surface-container-low border-r border-outline-variant dark:bg-tertiary-container dark:border-outline">
+<div class="px-md mb-lg">
+<div class="flex items-center gap-sm mb-xs">
+<img alt="Store Location" class="w-10 h-10 rounded-full border border-outline-variant" src="https://lh3.googleusercontent.com/aida-public/AB6AXuAaX4IWdfMse6EpfdYq7AC-Ur28fOWeTp9XAfQhWa8w39DlcgYpjxNsYuYewMOfM9zv9r2bas3ViJIIkDsJgnytQHcV6EImKw6foz1l7maD_xQDfqLU3hrpjMNLdynC4MvrppMQo1L_tvvxAss89w8z03qNj6pHvFT--NlbWpC1-Vea0TywyApB-YlVzIkKIDk3LFetxCjR_cQaXPr_qDHIN06nHh-QoAc5Xo78A7HxJAMRZ0YORJzc-K_11kGt5PGZ3O3Ul1iYt0k"/>
+<div class="flex flex-col">
+<span class="font-label-md text-label-md font-bold text-primary">Main Street Branch</span>
+<span class="text-[10px] text-on-surface-variant uppercase tracking-wider">ID: #8842</span>
+</div>
+</div>
+</div>
+<nav class="flex-1">
+<a class="flex items-center gap-md px-md py-sm hover:bg-surface-container-high transition-all duration-200 text-on-surface-variant" href="#">
+<span class="material-symbols-outlined">inventory_2</span>
+<span class="font-label-md text-label-md">Inventory</span>
+</a>
+<a class="flex items-center gap-md px-md py-sm text-secondary font-bold border-r-4 border-secondary bg-surface-container-high transition-all duration-200" href="#">
+<span class="material-symbols-outlined">payments</span>
+<span class="font-label-md text-label-md">Sales</span>
+</a>
+<a class="flex items-center gap-md px-md py-sm hover:bg-surface-container-high transition-all duration-200 text-on-surface-variant" href="#">
+<span class="material-symbols-outlined">badge</span>
+<span class="font-label-md text-label-md">Employees</span>
+</a>
+<a class="flex items-center gap-md px-md py-sm hover:bg-surface-container-high transition-all duration-200 text-on-surface-variant" href="#">
+<span class="material-symbols-outlined">analytics</span>
+<span class="font-label-md text-label-md">Reports</span>
+</a>
+</nav>
+<div class="mt-auto pt-md border-t border-outline-variant mx-md">
+<a id="asideSupport" class="flex items-center gap-md py-sm hover:bg-surface-container-high transition-all duration-200 text-on-surface-variant" href="#">
+<span class="material-symbols-outlined">contact_support</span>
+<span class="font-label-md text-label-md">Support</span>
+</a>
+<a id="asideLogout" class="flex items-center gap-md py-sm hover:bg-surface-container-high transition-all duration-200 text-on-surface-variant" href="#">
+<span class="material-symbols-outlined">logout</span>
+<span class="font-label-md text-label-md">Logout</span>
+</a>
+</div>
+</aside>
+<!-- Main Content (Canvas) -->
+<main class="ml-[240px] flex-1 p-lg overflow-y-auto pb-24">
+<!-- Header Section -->
+<div class="flex justify-between items-end mb-lg border-b border-outline-variant pb-md">
+<div>
+<h1 class="font-headline-lg text-headline-lg text-primary">Clôture de Caisse</h1>
+<p class="font-body-sm text-body-sm text-on-surface-variant">Réconciliation financière et résumé de l'activité journalière.</p>
+</div>
+<div class="flex gap-xl text-right">
+<div class="flex flex-col">
+<span class="font-label-sm text-label-sm text-outline uppercase">Ouverture</span>
+<span class="font-label-md text-label-md">08:30:12</span>
+</div>
+<div class="flex flex-col">
+<span class="font-label-sm text-label-sm text-outline uppercase">Fermeture (Estimée)</span>
+<span class="font-label-md text-label-md text-secondary">19:45:00</span>
+</div>
+</div>
+</div>
+<div class="grid grid-cols-12 gap-lg">
+<!-- Left Column: Reconciliation -->
+<div class="col-span-12 lg:col-span-7 space-y-lg">
+<div class="bg-surface-container-lowest border border-outline-variant p-md">
+<h2 class="font-label-md text-label-md font-bold mb-md flex items-center gap-sm">
+<span class="material-symbols-outlined text-sm">balance</span>
+                            RÉCONCILIATION FINANCIÈRE
+                        </h2>
+<div class="overflow-x-auto">
+<table class="w-full text-left">
+<thead class="bg-surface-container-low border-y border-outline-variant">
+<tr>
+<th class="p-sm font-label-sm text-label-sm text-outline">MODE DE PAIEMENT</th>
+<th class="p-sm font-label-sm text-label-sm text-outline text-right">ATTENDU (XAF)</th>
+<th class="p-sm font-label-sm text-label-sm text-outline text-right">DÉCLARÉ (XAF)</th>
+<th class="p-sm font-label-sm text-label-sm text-outline text-right">ÉCART</th>
+</tr>
+</thead>
+<tbody class="font-label-md text-label-md divide-y divide-outline-variant">
+<tr class="hover:bg-surface-container-low transition-colors">
+<td class="p-sm font-bold">Espèces (Cash)</td>
+<td class="p-sm text-right font-mono">425 000</td>
+<td class="p-sm text-right">
+<input class="w-24 text-right bg-surface border border-outline-variant rounded-xs py-xs px-sm focus:border-secondary focus:ring-0 transition-all font-mono" oninput="calculateGap(this, 425000)" type="number" value="424500"/>
+</td>
+<td class="p-sm text-right font-bold text-error font-mono">-500</td>
+</tr>
+<tr class="hover:bg-surface-container-low transition-colors">
+<td class="p-sm font-bold">Mobile Money (MoMo)</td>
+<td class="p-sm text-right font-mono">152 450</td>
+<td class="p-sm text-right">
+<input class="w-24 text-right bg-surface border border-outline-variant rounded-xs py-xs px-sm focus:border-secondary focus:ring-0 transition-all font-mono" oninput="calculateGap(this, 152450)" type="number" value="152450"/>
+</td>
+<td class="p-sm text-right font-bold text-on-surface-variant font-mono">0</td>
+</tr>
+<tr class="hover:bg-surface-container-low transition-colors">
+<td class="p-sm font-bold">Orange Money (OM)</td>
+<td class="p-sm text-right font-mono">88 200</td>
+<td class="p-sm text-right">
+<input class="w-24 text-right bg-surface border border-outline-variant rounded-xs py-xs px-sm focus:border-secondary focus:ring-0 transition-all font-mono" oninput="calculateGap(this, 88200)" type="number" value="88200"/>
+</td>
+<td class="p-sm text-right font-bold text-on-surface-variant font-mono">0</td>
+</tr>
+</tbody>
+<tfoot class="bg-surface-container-high border-t border-outline-variant">
+<tr class="font-bold">
+<td class="p-sm">TOTAL</td>
+<td class="p-sm text-right font-mono">665 650</td>
+<td class="p-sm text-right font-mono">665 150</td>
+<td class="p-sm text-right text-error font-mono">-500</td>
+</tr>
+</tfoot>
+</table>
+</div>
+</div>
+<div class="bg-surface-container-lowest border border-outline-variant p-md">
+<label class="font-label-md text-label-md font-bold mb-sm flex items-center gap-sm text-error" for="comments" id="comment-label">
+<span class="material-symbols-outlined text-sm">comment</span>
+                            JUSTIFICATION DES ÉCARTS (OBLIGATOIRE)
+                        </label>
+<textarea class="w-full bg-surface border-2 border-error rounded-xs p-sm font-body-sm text-body-sm focus:ring-0 focus:border-error transition-all" id="comments" placeholder="Veuillez expliquer la raison du déficit de 500 XAF..." rows="4"></textarea>
+</div>
+</div>
+<!-- Right Column: Summary -->
+<div class="col-span-12 lg:col-span-5 space-y-lg">
+<div class="bg-primary text-on-primary p-md rounded-xs">
+<h2 class="font-label-sm text-label-sm font-bold opacity-70 mb-md tracking-widest uppercase">Performance Session</h2>
+<div class="space-y-sm">
+<div class="flex justify-between items-baseline">
+<span class="font-body-sm">Chiffre d'Affaires Net</span>
+<span class="font-display-sm text-display-sm">665 650 <span class="text-sm font-label-md opacity-60">XAF</span></span>
+</div>
+<div class="w-full bg-on-primary/10 h-1 rounded-full overflow-hidden">
+<div class="bg-on-primary h-full" style="width: 82%"></div>
+</div>
+<p class="font-label-sm text-label-sm text-on-primary/60 italic">Atteint 82% de l'objectif quotidien de la boutique.</p>
+</div>
+</div>
+<div class="bg-surface-container-lowest border border-outline-variant p-md">
+<h2 class="font-label-md text-label-md font-bold mb-md flex items-center gap-sm">
+<span class="material-symbols-outlined text-sm">receipt_long</span>
+                            RÉSUMÉ DES OPÉRATIONS
+                        </h2>
+<div class="space-y-xs">
+<div class="flex justify-between items-center p-sm hover:bg-surface-container-low transition-colors">
+<span class="font-body-sm text-on-surface-variant">Ventes Totales (142 tickets)</span>
+<span class="font-label-md text-label-md font-bold">712 400 XAF</span>
+</div>
+<div class="flex justify-between items-center p-sm hover:bg-surface-container-low transition-colors">
+<span class="font-body-sm text-on-surface-variant">Retours / Remboursements</span>
+<span class="font-label-md text-label-md font-bold text-error">- 12 500 XAF</span>
+</div>
+<div class="flex justify-between items-center p-sm hover:bg-surface-container-low transition-colors">
+<span class="font-body-sm text-on-surface-variant">Annulations</span>
+<span class="font-label-md text-label-md font-bold text-error">- 8 250 XAF</span>
+</div>
+<div class="flex justify-between items-center p-sm hover:bg-surface-container-low transition-colors">
+<span class="font-body-sm text-on-surface-variant">Remises Appliquées</span>
+<span class="font-label-md text-label-md font-bold text-secondary-container">- 26 000 XAF</span>
+</div>
+<div class="border-t border-outline-variant pt-sm mt-sm flex justify-between items-center p-sm">
+<span class="font-label-md text-label-md font-bold">Total Net Session</span>
+<span class="font-label-md text-label-md font-bold">665 650 XAF</span>
+</div>
+</div>
+</div>
+<!-- Visual Indicator Card -->
+<div class="relative overflow-hidden group bg-surface-container-low border border-outline-variant p-md h-32 flex flex-col justify-end">
+<div class="absolute inset-0 opacity-10 pointer-events-none grayscale group-hover:grayscale-0 transition-all duration-500">
+<img class="w-full h-full object-cover" data-alt="A clean and modern retail store interior with a minimal point of sale system, soft daylight filtering through the windows, and organized product shelves in the background, conveying a sense of order and professional management in a contemporary urban setting." src="https://lh3.googleusercontent.com/aida-public/AB6AXuAyzfL7arIbCIT0szgkc19RRyA0BOXRI8KFxAXmRzFOahJsQ5xvRvokvPdiWsOSvM0mzzzINIU1GuvtbslmDbhwYAnG0VTnXuMoSPE2LljN1JS9pGypOUY6ogNErZD_B6lIo14eRJa_BbNSS0xW3XyNuMuqgYaPKwlreNZNgAwaSnVSvkeV6wkbgKnA-80rcHM5nYkka_9ayKW4mkMU1m-WzhTIf_g1rAezl-tkBGaMEd_bOJR0dPDsvQfZmCITICdO4ADtxCiIQxc"/>
+</div>
+<div class="relative z-10">
+<span class="font-label-sm text-label-sm text-outline uppercase block mb-1">Dernière Synchronisation</span>
+<div class="flex items-center gap-sm">
+<span class="w-2 h-2 rounded-full bg-secondary animate-pulse"></span>
+<span class="font-label-md text-label-md">Système en ligne - Sync Active</span>
+</div>
+</div>
+</div>
+</div>
+</div>
+</main>
+</div>
+<!-- Bottom Action Bar -->
+<footer class="fixed bottom-0 left-0 w-full bg-surface-container-lowest border-t border-outline-variant h-16 px-lg flex items-center justify-between z-50">
+<div class="flex items-center gap-md">
+<button id="btnRejeter" class="flex items-center gap-sm px-md py-sm font-label-md text-label-md text-error hover:bg-error-container/20 transition-all">
+<span class="material-symbols-outlined text-sm">cancel</span>
+                REJETER
+            </button>
+<div class="h-6 w-[1px] bg-outline-variant"></div>
+<p class="font-body-sm text-body-sm text-on-surface-variant italic">
+                En clôturant, vous validez l'exactitude des fonds physiques par rapport au système.
+            </p>
+</div>
+<div class="flex items-center gap-sm">
+<button id="btnSoumettre" class="px-md py-sm font-label-md text-label-md border border-outline text-on-surface-variant hover:bg-surface-container-high transition-all">
+                SOUMETTRE POUR VALIDATION
+            </button>
+<button id="btnApprouver" class="px-md py-sm font-label-md text-label-md border border-secondary text-secondary hover:bg-secondary-fixed/20 transition-all">
+                APPROUVER (MANAGER)
+            </button>
+<button id="btnCloturer" class="flex items-center gap-sm px-xl py-sm bg-primary text-on-primary font-label-md text-label-md hover:opacity-90 active:scale-95 transition-all shadow-sm">
+<span class="material-symbols-outlined text-sm">lock</span>
+                CLÔTURER LA CAISSE
+            </button>
+</div>
+</footer>
+<script>
+        function calculateGap(input, expected) {
+            const declared = parseFloat(input.value) || 0;
+            const gapCell = input.closest('tr').lastElementChild;
+            const gap = declared - expected;
+            
+            gapCell.innerText = (gap > 0 ? '+' : '') + gap;
+            
+            if (gap < 0) {
+                gapCell.className = "p-sm text-right font-bold text-error font-mono";
+                document.getElementById('comments').classList.add('border-error');
+                document.getElementById('comment-label').classList.add('text-error');
+            } else {
+                gapCell.className = "p-sm text-right font-bold text-on-surface-variant font-mono";
+            }
+        }
+
+        // Toast Notification System
+        window.showToast = function(msg) {
+            const old = document.querySelector('.custom-toast');
+            if (old) old.remove();
+            const t = document.createElement('div');
+            t.className = 'custom-toast fixed bottom-24 right-6 bg-slate-900 text-white px-6 py-3 rounded-xl shadow-lg z-[99999] font-bold text-sm transition-all animate-bounce';
+            t.textContent = msg;
+            document.body.appendChild(t);
+            setTimeout(() => t.remove(), 2500);
+        }
+
+        // Display user info dynamically and restrict by role
+        const headerUserName = document.getElementById('headerUserName');
+        const savedRole = sessionStorage.getItem('erp_role') || 'manager';
+        
+        if (headerUserName) {
+            const savedUser = sessionStorage.getItem('erp_username') || sessionStorage.getItem('erp_phone') || 'Amina B.';
+            let roleText = 'Manager';
+            if (savedRole === 'owner') roleText = 'Propriétaire';
+            else if (savedRole === 'caissier') roleText = 'Caissier';
+            headerUserName.innerText = `${savedUser} (${roleText})`;
+        }
+
+        // Restrict actions for caissiers
+        if (savedRole === 'caissier') {
+            document.getElementById('btnApprouver')?.remove();
+            document.getElementById('btnRejeter')?.remove();
+        }
+
+        function updateTime() {
+            const now = new Date();
+            const timeString = now.toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit', second: '2-digit' });
+            const closingTimeElement = document.querySelector('.text-secondary.font-label-md');
+            if(closingTimeElement) closingTimeElement.textContent = timeString;
+        }
+        setInterval(updateTime, 1000);
+
+        document.querySelectorAll('aside nav a').forEach(link => {
+            link.addEventListener('click', function(e) {
+                if (this.getAttribute('href') === '#') e.preventDefault();
+                document.querySelectorAll('aside nav a').forEach(l => {
+                    l.classList.remove('text-secondary', 'font-bold', 'border-r-4', 'border-secondary', 'bg-surface-container-high');
+                    l.classList.add('text-on-surface-variant');
+                });
+                this.classList.add('text-secondary', 'font-bold', 'border-r-4', 'border-secondary', 'bg-surface-container-high');
+                this.classList.remove('text-on-surface-variant');
+            });
+        });
+
+        // Aside menu clicks via specific element IDs or listeners
+        const asideSupport = document.getElementById('asideSupport');
+        const asideLogout = document.getElementById('asideLogout');
+        
+        if (asideSupport) {
+            asideSupport.onclick = () => showToast('ℹ Chargement du support technique...');
+        }
+        if (asideLogout) {
+            asideLogout.onclick = () => {
+                showToast('🔐 Déconnexion...');
+                sessionStorage.clear();
+                setTimeout(() => window.location.href = '../auth/login.html', 1000);
+            };
+        }
+
+        // --- Event binding for footer actions ---
+        const btnRejeter = document.getElementById('btnRejeter');
+        const btnSoumettre = document.getElementById('btnSoumettre');
+        const btnApprouver = document.getElementById('btnApprouver');
+        const btnCloturer = document.getElementById('btnCloturer');
+
+        if (btnRejeter) {
+            btnRejeter.onclick = () => {
+                if (confirm('Êtes-vous sûr de vouloir rejeter cette clôture de caisse ?')) {
+                    showToast('✗ Clôture de caisse rejetée');
+                }
+            };
+        }
+        if (btnSoumettre) {
+            btnSoumettre.onclick = () => showToast('✓ Clôture soumise pour validation au manager');
+        }
+        if (btnApprouver) {
+            btnApprouver.onclick = () => showToast('✓ Clôture approuvée par le manager');
+        }
+        if (btnCloturer) {
+            btnCloturer.onclick = () => {
+                if (confirm('Confirmez-vous la clôture définitive de cette caisse ?')) {
+                    showToast('✓ Caisse clôturée avec succès');
+                }
+            };
+        }
+
+        document.querySelectorAll('input[type="number"]').forEach(input => {
+            input.addEventListener('focus', function() {
+                this.closest('tr')?.classList.add('bg-surface-container');
+            });
+            input.addEventListener('blur', function() {
+                this.closest('tr')?.classList.remove('bg-surface-container');
+            });
+        });
+
+        document.querySelectorAll('textarea').forEach(ta => {
+            ta.addEventListener('focus', function() {
+                this.classList.add('ring-2', 'ring-error');
+            });
+            ta.addEventListener('blur', function() {
+                this.classList.remove('ring-2', 'ring-error');
+            });
+        });
+
+        document.querySelectorAll('.material-symbols-outlined.cursor-pointer, header .material-symbols-outlined').forEach(icon => {
+            icon.addEventListener('click', function() {
+                const txt = this.textContent.trim().toLowerCase();
+                if (txt.includes('notifications')) {
+                    showToast('ℹ Notifications: Aucune nouvelle alerte');
+                } else if (txt.includes('help')) {
+                    showToast('ℹ Centre d\'aide: Documentation ouverte');
+                } else if (txt.includes('settings')) {
+                    showToast('ℹ Ouverture des paramètres système...');
+                }
+            });
+        });
+    </script>
+</body></html>

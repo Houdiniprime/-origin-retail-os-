@@ -1,0 +1,26 @@
+{
+  "name": "origin-retail-os",
+  "version": "2.0.0",
+  "private": true,
+  "description": "Origin Retail OS: ERP boutique PWA avec POS, stock, clients, dettes, cloture, rapports, WhatsApp et acces distant.",
+  "engines": {
+    "node": ">=18.0.0"
+  },
+  "scripts": {
+    "start": "node server.js",
+    "remote": "node scripts/remote-access.js",
+    "start:whatsapp": "set WHATSAPP_ENABLED=true&& node server.js",
+    "dev": "node server.js",
+    "check": "node --check server.js && node --check assets/app.js && node --check whatsapp-agent.js && node --check smoke-test.js",
+    "test": "node smoke-test.js",
+    "pwa:validate": "node scripts/pwa-validate.js",
+    "deploy:render": "echo 'Prêt pour déploiement Render. Push vers GitHub puis connecte sur dashboard.render.com'"
+  },
+  "dependencies": {
+    "@whiskeysockets/baileys": "^7.0.0-rc13",
+    "live-server": "^1.2.2",
+    "nodemailer": "^9.0.1",
+    "pino": "^9.5.0",
+    "qrcode-terminal": "^0.12.0"
+  }
+}

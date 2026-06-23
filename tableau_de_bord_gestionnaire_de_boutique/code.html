@@ -1,0 +1,621 @@
+<!DOCTYPE html>
+
+<html class="light" lang="fr"><head>
+    <script>
+        // Hard-Lock Security Script - Manager Dashboard Restrictions
+        (function() {
+            const isAuthenticated = sessionStorage.getItem('erp_authenticated');
+            const isSuperUser = sessionStorage.getItem('erp_superuser');
+            const role = sessionStorage.getItem('erp_role');
+            
+            // Redirect if not authenticated
+            if (!isAuthenticated && !isSuperUser && !window.location.href.includes('login.html')) {
+                window.location.href = '../auth/login.html';
+                return;
+            }
+            
+            // Restrict access for Caissier (only manager/owner can access)
+            if (role === 'caissier') {
+                document.addEventListener('DOMContentLoaded', () => {
+                    if(window.showToast) {
+                        window.showToast('Accès refusé : Réservé aux gérants et administrateurs.');
+                    } else {
+                        alert('Accès refusé : Réservé aux gérants et administrateurs.');
+                    }
+                    setTimeout(() => { window.location.href = '../index.html'; }, 2000);
+                });
+            }
+        })();
+    </script>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<meta name="description" content="ERP Retail Connect — Tableau de Bord Gestionnaire de Boutique. Suivi des ventes journalières, carnet de dettes, gestion du stock et clôtures de caisse."/>
+<meta name="author" content="Stitch Boutique Network"/>
+<title>Dashboard Manager - ERP Retail Connect</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Hanken+Grotesk:wght@400;500;600;700;800;900&amp;family=JetBrains+Mono:wght@400;500;700&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+      tailwind.config = {
+        darkMode: "class",
+        theme: {
+          extend: {
+            "colors": {
+                    "surface-tint": "#545f73",
+                    "surface-container-lowest": "#ffffff",
+                    "primary-fixed": "#d8e3fb",
+                    "outline-variant": "#c5c6cd",
+                    "error-container": "#ffdad6",
+                    "on-tertiary": "#ffffff",
+                    "tertiary": "#041528",
+                    "on-primary-fixed-variant": "#3c475a",
+                    "on-primary-fixed": "#111c2d",
+                    "surface-container-highest": "#e0e3e5",
+                    "primary-container": "#1e293b",
+                    "outline": "#75777d",
+                    "secondary-fixed": "#d8e2ff",
+                    "surface-container-low": "#f2f4f6",
+                    "primary-fixed-dim": "#bcc7de",
+                    "inverse-on-surface": "#eff1f3",
+                    "surface-dim": "#d8dadc",
+                    "on-surface": "#191c1e",
+                    "inverse-surface": "#2d3133",
+                    "on-background": "#191c1e",
+                    "secondary-container": "#2170e4",
+                    "surface": "#f7f9fb",
+                    "background": "#f7f9fb",
+                    "on-tertiary-fixed-variant": "#38485d",
+                    "inverse-primary": "#bcc7de",
+                    "on-primary": "#ffffff",
+                    "tertiary-fixed": "#d3e4fe",
+                    "on-secondary-container": "#fefcff",
+                    "on-secondary": "#ffffff",
+                    "surface-container-high": "#e6e8ea",
+                    "surface-bright": "#f7f9fb",
+                    "secondary": "#0058be",
+                    "primary": "#091426",
+                    "on-tertiary-fixed": "#0b1c30",
+                    "on-error-container": "#93000a",
+                    "surface-container": "#eceef0",
+                    "tertiary-fixed-dim": "#b7c8e1",
+                    "on-tertiary-container": "#8191a9",
+                    "on-primary-container": "#8590a6",
+                    "on-error": "#ffffff",
+                    "error": "#ba1a1a",
+                    "surface-variant": "#e0e3e5",
+                    "secondary-fixed-dim": "#adc6ff",
+                    "tertiary-container": "#1a2a3e",
+                    "on-surface-variant": "#45474c",
+                    "on-secondary-fixed": "#001a42",
+                    "on-secondary-fixed-variant": "#004395"
+            },
+            "borderRadius": {
+                    "DEFAULT": "0.125rem",
+                    "lg": "0.25rem",
+                    "xl": "0.5rem",
+                    "full": "0.75rem"
+            },
+            "spacing": {
+                    "base": "4px",
+                    "xl": "32px",
+                    "sm": "8px",
+                    "sidebar-width": "240px",
+                    "gutter": "16px",
+                    "filter-panel-width": "280px",
+                    "lg": "24px",
+                    "xs": "4px",
+                    "md": "16px"
+            },
+            "fontFamily": {
+                    "display-sm": ["Hanken Grotesk"],
+                    "body-lg": ["Hanken Grotesk"],
+                    "label-sm": ["JetBrains Mono"],
+                    "label-md": ["JetBrains Mono"],
+                    "headline-lg": ["Hanken Grotesk"],
+                    "body-md": ["Hanken Grotesk"],
+                    "headline-md": ["Hanken Grotesk"],
+                    "body-sm": ["Hanken Grotesk"]
+            },
+            "fontSize": {
+                    "display-sm": ["30px", {"lineHeight": "36px", "letterSpacing": "-0.02em", "fontWeight": "700"}],
+                    "body-lg": ["16px", {"lineHeight": "24px", "fontWeight": "400"}],
+                    "label-sm": ["10px", {"lineHeight": "14px", "fontWeight": "500"}],
+                    "label-md": ["12px", {"lineHeight": "16px", "fontWeight": "500"}],
+                    "headline-lg": ["24px", {"lineHeight": "32px", "fontWeight": "600"}],
+                    "body-md": ["14px", {"lineHeight": "20px", "fontWeight": "400"}],
+                    "headline-md": ["20px", {"lineHeight": "28px", "fontWeight": "600"}],
+                    "body-sm": ["13px", {"lineHeight": "18px", "fontWeight": "400"}]
+            }
+          },
+        },
+      }
+    </script>
+<style>
+        body { font-family: 'Hanken Grotesk', sans-serif; }
+        .material-symbols-outlined {
+            font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+            display: inline-block;
+            vertical-align: middle;
+        }
+        .mono { font-family: 'JetBrains Mono', monospace; }
+        /* High density table adjustments */
+        .dense-table td, .dense-table th { padding: 8px 12px; }
+        .custom-scrollbar::-webkit-scrollbar { width: 4px; }
+        .custom-scrollbar::-webkit-scrollbar-track { background: transparent; }
+        .custom-scrollbar::-webkit-scrollbar-thumb { background: #e2e8f0; border-radius: 10px; }
+    </style>
+</head>
+<body class="bg-surface text-on-surface">
+<div class="fixed top-4 right-4 z-[9999]">
+    <a href="../index.html" class="flex items-center gap-2 bg-white/90 backdrop-blur shadow-lg border border-slate-200 px-4 py-2 rounded-full text-slate-700 hover:bg-white hover:scale-105 transition-all font-bold text-sm">
+        <span class="material-symbols-outlined text-[20px]">grid_view</span>
+        Menu Principal
+    </a>
+</div>
+<!-- TopNavBar -->
+<header class="fixed top-0 left-0 w-full z-50 flex justify-between items-center px-md h-12 bg-surface border-b border-outline-variant">
+<div class="flex items-center gap-md">
+<span class="font-headline-md text-headline-md font-bold text-primary">ERP Retail Connect</span>
+<nav class="hidden md:flex gap-md ml-lg">
+<a class="font-body-md text-body-md text-secondary font-bold border-b-2 border-secondary pb-1" href="#">Dashboard</a>
+<a class="font-body-md text-body-md text-on-surface-variant hover:bg-surface-container-low transition-colors px-2 rounded" href="#">Commandes</a>
+<a class="font-body-md text-body-md text-on-surface-variant hover:bg-surface-container-low transition-colors px-2 rounded" href="#">Catalogue</a>
+</nav>
+</div>
+<div class="flex items-center gap-md">
+<button id="btnRapportWhatsApp" class="flex items-center gap-xs bg-[#25D366] text-white px-md py-1 rounded-full text-label-md font-bold hover:scale-105 transition-all shadow-md">
+    <span class="material-symbols-outlined text-[18px]">share</span>
+    Rapport WhatsApp
+</button>
+<div class="relative hidden sm:block">
+<span class="material-symbols-outlined absolute left-2 top-1/2 -translate-y-1/2 text-on-surface-variant text-[20px]">search</span>
+<input class="bg-surface-container-low border-none rounded-lg pl-9 pr-4 py-1 text-body-sm focus:ring-1 focus:ring-primary w-64" placeholder="Rechercher..." type="text"/>
+</div>
+<div class="flex items-center gap-sm">
+<button class="material-symbols-outlined text-on-surface-variant p-2 hover:bg-surface-container-low rounded-full">notifications</button>
+<button class="material-symbols-outlined text-on-surface-variant p-2 hover:bg-surface-container-low rounded-full">help</button>
+<button class="material-symbols-outlined text-on-surface-variant p-2 hover:bg-surface-container-low rounded-full">settings</button>
+</div>
+<div class="flex items-center gap-sm ml-sm border-l border-outline-variant pl-sm">
+<div class="hidden sm:flex flex-col text-right mr-2">
+    <span id="headerUserName" class="text-body-sm font-bold text-primary">Gestionnaire</span>
+</div>
+<div class="w-8 h-8 rounded-full bg-primary-container flex items-center justify-center text-on-primary-container overflow-hidden">
+<img alt="Manager profile" class="w-full h-full object-cover" data-alt="A professional headshot of a middle-aged male retail manager with a friendly but serious expression. He is wearing a crisp white shirt and a dark navy blue blazer, standing against a softly blurred background of a modern retail office environment. The lighting is clean and even, reflecting a professional and authoritative atmosphere within a light-mode corporate UI." src="https://lh3.googleusercontent.com/aida-public/AB6AXuBRFiNsG12ytU1jK2TzrMr-0rbz3ZAUtM-wN-Niy6_hl2V6kKU7uU6tJJkIeFa1ilN_KJL_qmSo164EzkhupjG60giVBdqKysIK1BMx2EKJKw_owgw7rzQNwMx6dUL3l4oLysJwJqclJQ2KA9o-ze0A91wmiS0M3b9ksgWvFMOpKy20scfQ8r1qw_wlXnbQi67LY74qIRxdJjGAHViMV1k6z5y9bP3lPij9MAxe1TVOuCkqJwYeRJ_O13cGK6e_AcVdnQR6Hgi3oPA"/>
+</div>
+</div>
+</div>
+</header>
+<!-- SideNavBar -->
+<aside class="fixed left-0 top-12 h-[calc(100vh-48px)] w-[240px] flex flex-col py-md bg-surface-container-low border-r border-outline-variant">
+<div class="px-md mb-lg">
+<div class="flex items-center gap-sm mb-1">
+<div class="w-8 h-8 bg-primary rounded-lg flex items-center justify-center text-white">
+<span class="material-symbols-outlined text-[18px]">store</span>
+</div>
+<div>
+<h2 class="font-label-md text-label-md font-bold text-primary leading-tight">Main Street Branch</h2>
+<p class="font-label-sm text-label-sm text-on-surface-variant">ID: #8842</p>
+</div>
+</div>
+</div>
+<nav class="flex-1 px-sm space-y-1">
+<a class="flex items-center gap-md px-md py-2 text-on-surface-variant hover:bg-surface-container-high transition-all rounded-lg group" href="#">
+<span class="material-symbols-outlined text-[20px] group-hover:text-primary">inventory_2</span>
+<span class="font-label-md text-label-md">Inventory</span>
+</a>
+<a class="flex items-center gap-md px-md py-2 text-on-surface-variant hover:bg-surface-container-high transition-all rounded-lg group" href="#">
+<span class="material-symbols-outlined text-[20px] group-hover:text-primary">payments</span>
+<span class="font-label-md text-label-md">Sales</span>
+</a>
+<a class="flex items-center gap-md px-md py-2 text-on-surface-variant hover:bg-surface-container-high transition-all rounded-lg group" href="#">
+<span class="material-symbols-outlined text-[20px] group-hover:text-primary">menu_book</span>
+<span class="font-label-md text-label-md font-bold text-slate-700">Carnet de Dettes</span>
+</a>
+<a class="flex items-center gap-md px-md py-2 text-on-surface-variant hover:bg-surface-container-high transition-all rounded-lg group" href="#">
+<span class="material-symbols-outlined text-[20px] group-hover:text-primary">badge</span>
+<span class="font-label-md text-label-md">Employees</span>
+</a>
+<a class="flex items-center gap-md px-md py-2 text-on-surface-variant hover:bg-surface-container-high transition-all rounded-lg group" href="#">
+<span class="material-symbols-outlined text-[20px] group-hover:text-primary">analytics</span>
+<span class="font-label-md text-label-md">Reports</span>
+</a>
+</nav>
+<div class="px-sm mt-auto border-t border-outline-variant pt-md">
+<a class="flex items-center gap-md px-md py-2 text-on-surface-variant hover:bg-surface-container-high transition-all rounded-lg group" href="#">
+<span class="material-symbols-outlined text-[20px]">contact_support</span>
+<span class="font-label-md text-label-md">Support</span>
+</a>
+<a class="flex items-center gap-md px-md py-2 text-on-surface-variant hover:bg-surface-container-high transition-all rounded-lg group" href="#">
+<span class="material-symbols-outlined text-[20px]">logout</span>
+<span class="font-label-md text-label-md">Logout</span>
+</a>
+</div>
+</aside>
+<!-- Main Content -->
+<main class="ml-[240px] pt-12 min-h-screen p-gutter flex flex-col gap-gutter">
+<!-- Header Stats -->
+<section class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-gutter">
+<!-- Today's Sales -->
+<div class="bg-surface-container-lowest border border-outline-variant p-md rounded shadow-sm">
+<div class="flex justify-between items-start mb-2">
+<span class="font-label-md text-label-md text-on-surface-variant">Ventes du jour</span>
+<span class="material-symbols-outlined text-secondary text-[20px]">monetization_on</span>
+</div>
+<div class="flex items-baseline gap-2">
+<span class="font-label-md text-headline-md font-bold mono">4 825,50 FCFA</span>
+</div>
+<div class="mt-2 flex items-center gap-1 text-[11px] font-bold text-secondary">
+<span class="material-symbols-outlined text-[14px]">trending_up</span>
+<span>+12.4% vs hier</span>
+</div>
+</div>
+<!-- Low Stock -->
+<div class="bg-surface-container-lowest border border-outline-variant p-md rounded shadow-sm">
+<div class="flex justify-between items-start mb-2">
+<span class="font-label-md text-label-md text-on-surface-variant">Stock faible</span>
+<span class="material-symbols-outlined text-error text-[20px]">warning</span>
+</div>
+<div class="flex items-baseline gap-2">
+<span class="font-label-md text-headline-md font-bold mono">14</span>
+</div>
+<div class="mt-2 flex items-center gap-1 text-[11px] font-bold text-on-surface-variant">
+<span class="font-label-sm text-label-sm">8 articles urgents</span>
+</div>
+</div>
+<!-- Today's Returns -->
+<div class="bg-surface-container-lowest border border-outline-variant p-md rounded shadow-sm">
+<div class="flex justify-between items-start mb-2">
+<span class="font-label-md text-label-md text-on-surface-variant">Retours</span>
+<span class="material-symbols-outlined text-on-surface-variant text-[20px]">keyboard_return</span>
+</div>
+<div class="flex items-baseline gap-2">
+<span class="font-label-md text-headline-md font-bold mono">3</span>
+</div>
+<div class="mt-2 flex items-center gap-1 text-[11px] font-bold text-on-surface-variant">
+<span class="font-label-sm text-label-sm">Total: 184,20 FCFA</span>
+</div>
+</div>
+<!-- Customer Debt -->
+<div class="bg-surface-container-lowest border border-outline-variant p-md rounded shadow-sm ring-2 ring-slate-200">
+<div class="flex justify-between items-start mb-2">
+<span class="font-label-md text-label-md text-on-surface-variant">Dettes Clients</span>
+<span class="material-symbols-outlined text-slate-700 text-[20px]">menu_book</span>
+</div>
+<div class="flex items-baseline gap-2">
+<span class="font-label-md text-headline-md font-bold mono">850 000 FCFA</span>
+</div>
+<div class="mt-2 flex items-center gap-1 text-[11px] font-bold text-slate-600">
+<span class="font-label-sm text-label-sm">12 clients en attente</span>
+</div>
+</div>
+<!-- Cash Discrepancies -->
+<div class="bg-surface-container-lowest border border-outline-variant p-md rounded shadow-sm">
+<div class="flex justify-between items-start mb-2">
+<span class="font-label-md text-label-md text-on-surface-variant">Écarts de caisse</span>
+<span class="material-symbols-outlined text-on-surface-variant text-[20px]">account_balance_wallet</span>
+</div>
+<div class="flex items-baseline gap-2">
+<span class="font-label-md text-headline-md font-bold mono">0,00 FCFA</span>
+</div>
+<div class="mt-2 flex items-center gap-1 text-[11px] font-bold text-on-secondary-fixed-variant">
+<span class="material-symbols-outlined text-[14px] font-variation-settings: 'FILL' 1;">check_circle</span>
+<span>Équilibré</span>
+</div>
+</div>
+</section>
+<!-- Main Workspace Area -->
+<div class="grid grid-cols-1 lg:grid-cols-12 gap-gutter">
+<!-- Quick Actions Zone -->
+<section class="lg:col-span-8 flex flex-col gap-gutter">
+<div class="bg-surface-container-lowest border border-outline-variant rounded p-md">
+<h3 class="font-headline-sm text-headline-sm font-bold text-primary mb-md">Actions Rapides</h3>
+<div class="grid grid-cols-2 sm:grid-cols-3 gap-md">
+<button id="btnClotureCaisse" class="flex flex-col items-center justify-center p-md bg-surface hover:bg-surface-container-high border border-outline-variant rounded transition-all group">
+<span class="material-symbols-outlined text-[32px] text-primary mb-2">point_of_sale</span>
+<span class="font-label-md text-label-md text-center">Valider une clôture de caisse</span>
+</button>
+<button id="btnApprouverRetour" class="flex flex-col items-center justify-center p-md bg-surface hover:bg-surface-container-high border border-outline-variant rounded transition-all group">
+<span class="material-symbols-outlined text-[32px] text-primary mb-2">assignment_return</span>
+<span class="font-label-md text-label-md text-center">Approuver un retour</span>
+</button>
+<button id="btnGererStock" class="flex flex-col items-center justify-center p-md bg-surface hover:bg-surface-container-high border border-outline-variant rounded transition-all group">
+<span class="material-symbols-outlined text-[32px] text-primary mb-2">inventory</span>
+<span class="font-label-md text-label-md text-center">Gérer le stock</span>
+</button>
+<button id="btnConsulterAlertes" class="flex flex-col items-center justify-center p-md bg-surface hover:bg-surface-container-high border border-outline-variant rounded transition-all group">
+<span class="material-symbols-outlined text-[32px] text-error mb-2">notification_important</span>
+<span class="font-label-md text-label-md text-center">Consulter les alertes</span>
+</button>
+<button id="btnLancerInventaire" class="flex flex-col items-center justify-center p-md bg-surface hover:bg-surface-container-high border border-outline-variant rounded transition-all group">
+<span class="material-symbols-outlined text-[32px] text-primary mb-2">fact_check</span>
+<span class="font-label-md text-label-md text-center">Lancer un inventaire</span>
+</button>
+<button class="flex flex-col items-center justify-center p-md bg-surface-container-high border border-outline-variant rounded transition-all cursor-not-allowed opacity-50">
+<span class="material-symbols-outlined text-[32px] text-on-surface-variant mb-2">more_horiz</span>
+<span class="font-label-md text-label-md text-center">Autres actions</span>
+</button>
+</div>
+</div>
+<!-- Performance Charts/Tables -->
+<div class="grid grid-cols-1 sm:grid-cols-2 gap-gutter">
+<!-- Sales by Staff -->
+<div class="bg-surface-container-lowest border border-outline-variant rounded p-md">
+<div class="flex justify-between items-center mb-md">
+<h3 class="font-label-md text-label-md font-bold text-primary">Ventes par vendeuse</h3>
+<button id="btnDetailsVendeuses" class="text-secondary font-label-sm text-label-sm hover:underline">Détails</button>
+</div>
+<div class="space-y-3">
+<div>
+<div class="flex justify-between text-[12px] mb-1">
+<span>Amina B.</span>
+<span class="mono font-bold">1 420 FCFA</span>
+</div>
+<div class="w-full bg-surface-container-high h-2 rounded-full overflow-hidden">
+<div class="bg-secondary h-full" style="width: 85%"></div>
+</div>
+</div>
+<div>
+<div class="flex justify-between text-[12px] mb-1">
+<span>Clara L.</span>
+<span class="mono font-bold">980 FCFA</span>
+</div>
+<div class="w-full bg-surface-container-high h-2 rounded-full overflow-hidden">
+<div class="bg-secondary h-full" style="width: 60%"></div>
+</div>
+</div>
+<div>
+<div class="flex justify-between text-[12px] mb-1">
+<span>Emma D.</span>
+<span class="mono font-bold">640 FCFA</span>
+</div>
+<div class="w-full bg-surface-container-high h-2 rounded-full overflow-hidden">
+<div class="bg-secondary h-full" style="width: 40%"></div>
+</div>
+</div>
+</div>
+</div>
+<!-- Best Selling Products -->
+<div class="bg-surface-container-lowest border border-outline-variant rounded p-md">
+<div class="flex justify-between items-center mb-md">
+<h3 class="font-label-md text-label-md font-bold text-primary">Top Produits</h3>
+<span class="font-label-sm text-label-sm text-on-surface-variant">Aujourd'hui</span>
+</div>
+<table class="w-full dense-table text-left font-body-sm text-body-sm">
+<thead class="bg-surface-container-low border-b border-outline-variant">
+<tr>
+<th class="font-bold">Article</th>
+<th class="font-bold text-right">Qté</th>
+<th class="font-bold text-right">CA</th>
+</tr>
+</thead>
+<tbody>
+<tr class="border-b border-outline-variant">
+<td class="truncate max-w-[120px]">Rob' été Lin</td>
+<td class="text-right mono">12</td>
+<td class="text-right mono">708 FCFA</td>
+</tr>
+<tr class="border-b border-outline-variant">
+<td class="truncate max-w-[120px]">Top Soie Rose</td>
+<td class="text-right mono">8</td>
+<td class="text-right mono">432 FCFA</td>
+</tr>
+<tr>
+<td class="truncate max-w-[120px]">Jean Slim Brut</td>
+<td class="text-right mono">6</td>
+<td class="text-right mono">354 FCFA</td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
+</section>
+<!-- Operations Log -->
+<aside class="lg:col-span-4 bg-surface-container-lowest border border-outline-variant rounded p-md flex flex-col max-h-[600px]">
+<div class="flex justify-between items-center mb-md">
+<h3 class="font-headline-sm text-headline-sm font-bold text-primary">Journal des Opérations</h3>
+<span class="material-symbols-outlined text-on-surface-variant cursor-pointer">filter_list</span>
+</div>
+<div class="flex-1 overflow-y-auto custom-scrollbar space-y-md">
+<!-- Entry: Return -->
+<div class="flex gap-md items-start p-sm hover:bg-surface-container-low rounded border border-transparent hover:border-outline-variant transition-colors">
+<div class="p-1 bg-surface-container-high rounded text-on-surface-variant">
+<span class="material-symbols-outlined text-[18px]">keyboard_return</span>
+</div>
+<div class="flex-1">
+<div class="flex justify-between items-start">
+<span class="font-label-md text-label-md font-bold">Retour Produit #4459</span>
+<span class="font-label-sm text-label-sm text-on-surface-variant">14:22</span>
+</div>
+<p class="font-body-sm text-body-sm text-on-surface-variant mt-1">Caisse 2 • Clara L.</p>
+<span class="inline-block mt-2 px-2 py-0.5 bg-tertiary-fixed text-on-tertiary-fixed-variant font-label-sm text-label-sm rounded">En attente</span>
+</div>
+</div>
+<!-- Entry: Cancellation -->
+<div class="flex gap-md items-start p-sm hover:bg-surface-container-low rounded border border-transparent hover:border-outline-variant transition-colors">
+<div class="p-1 bg-error-container rounded text-on-error-container">
+<span class="material-symbols-outlined text-[18px]">cancel</span>
+</div>
+<div class="flex-1">
+<div class="flex justify-between items-start">
+<span class="font-label-md text-label-md font-bold">Annulation Ticket</span>
+<span class="font-label-sm text-label-sm text-on-surface-variant">12:15</span>
+</div>
+<p class="font-body-sm text-body-sm text-on-surface-variant mt-1">Erreur de saisie • Amina B.</p>
+<span class="inline-block mt-2 px-2 py-0.5 bg-surface-container-high text-on-surface-variant font-label-sm text-label-sm rounded">Vérifié</span>
+</div>
+</div>
+<!-- Entry: Alert -->
+<div class="flex gap-md items-start p-sm hover:bg-surface-container-low rounded border border-transparent hover:border-outline-variant transition-colors">
+<div class="p-1 bg-error-container rounded text-error">
+<span class="material-symbols-outlined text-[18px]">priority_high</span>
+</div>
+<div class="flex-1">
+<div class="flex justify-between items-start">
+<span class="font-label-md text-label-md font-bold">Alerte Caisse</span>
+<span class="font-label-sm text-label-sm text-on-surface-variant">10:05</span>
+</div>
+<p class="font-body-sm text-body-sm text-error mt-1">Retrait de fond nécessaire (&gt;1500 FCFA cash)</p>
+<div class="flex gap-2 mt-2">
+<button id="btnAgirAlerte" class="bg-primary text-white font-label-sm text-label-sm px-3 py-1 rounded">Agir</button>
+<button id="btnIgnorerAlerte" class="text-on-surface-variant font-label-sm text-label-sm px-3 py-1 rounded border border-outline-variant">Ignorer</button>
+</div>
+</div>
+</div>
+<!-- Entry: Low Stock -->
+<div class="flex gap-md items-start p-sm hover:bg-surface-container-low rounded border border-transparent hover:border-outline-variant transition-colors">
+<div class="p-1 bg-surface-container-high rounded text-on-surface-variant">
+<span class="material-symbols-outlined text-[18px]">inventory_2</span>
+</div>
+<div class="flex-1">
+<div class="flex justify-between items-start">
+<span class="font-label-md text-label-md font-bold">Stock : Pull Cachemire V</span>
+<span class="font-label-sm text-label-sm text-on-surface-variant">09:12</span>
+</div>
+<p class="font-body-sm text-body-sm text-on-surface-variant mt-1">Reste 2 unités • Commandé</p>
+</div>
+</div>
+<!-- Entry: Opening -->
+<div class="flex gap-md items-start p-sm hover:bg-surface-container-low rounded border border-transparent hover:border-outline-variant transition-colors">
+<div class="p-1 bg-secondary-container rounded text-white">
+<span class="material-symbols-outlined text-[18px]">lock_open</span>
+</div>
+<div class="flex-1">
+<div class="flex justify-between items-start">
+<span class="font-label-md text-label-md font-bold">Ouverture Magasin</span>
+<span class="font-label-sm text-label-sm text-on-surface-variant">08:55</span>
+</div>
+<p class="font-body-sm text-body-sm text-on-surface-variant mt-1">Manager: Amina B. • Fond: 350 FCFA</p>
+</div>
+</div>
+</div>
+<button id="btnVoirHistorique" class="mt-md w-full py-2 border-t border-outline-variant text-secondary font-label-md text-label-md hover:bg-surface-container-low transition-colors">
+                    Voir tout l'historique
+                </button>
+</aside>
+</div>
+</main>
+<script>
+        // Toast Notification System
+        window.showToast = function(msg) {
+            const old = document.querySelector('.custom-toast');
+            if (old) old.remove();
+            const t = document.createElement('div');
+            t.className = 'custom-toast fixed bottom-6 right-6 bg-slate-900 text-white px-6 py-3 rounded-xl shadow-lg z-[99999] font-bold text-sm transition-all animate-bounce';
+            t.textContent = msg;
+            document.body.appendChild(t);
+            setTimeout(() => t.remove(), 2500);
+        };
+
+        // Update User Name in Header
+        const headerUserName = document.getElementById('headerUserName');
+        if (headerUserName) {
+            const username = sessionStorage.getItem('erp_username') || 'Gestionnaire';
+            const role = sessionStorage.getItem('erp_role') || 'manager';
+            headerUserName.textContent = `${username} (${role.charAt(0).toUpperCase() + role.slice(1)})`;
+        }
+
+        document.querySelectorAll('button').forEach(btn => {
+            btn.addEventListener('mousedown', () => {
+                btn.style.transform = 'scale(0.98)';
+            });
+            btn.addEventListener('mouseup', () => {
+                btn.style.transform = 'scale(1)';
+            });
+            btn.addEventListener('mouseleave', () => {
+                btn.style.transform = 'scale(1)';
+            });
+        });
+
+        const searchInput = document.querySelector('input[placeholder*="Rechercher"]');
+        if (searchInput) {
+            searchInput.addEventListener('focus', () => {
+                searchInput.parentElement.classList.add('scale-105');
+                searchInput.parentElement.style.transition = 'all 0.2s ease';
+                searchInput.classList.add('ring-2', 'ring-primary');
+            });
+            searchInput.addEventListener('blur', () => {
+                searchInput.parentElement.classList.remove('scale-105');
+                searchInput.classList.remove('ring-2', 'ring-primary');
+            });
+        }
+
+        document.querySelectorAll('aside nav a, aside div a[href="#"]').forEach(link => {
+            link.addEventListener('click', function(e) {
+                if (this.getAttribute('href') === '#') e.preventDefault();
+                document.querySelectorAll('aside nav a, aside div a').forEach(l => {
+                    l.classList.remove('bg-secondary-container', 'text-on-secondary-container', 'font-bold');
+                    l.style.borderRight = '';
+                });
+                this.classList.add('font-bold');
+            });
+        });
+
+        document.querySelectorAll('header nav a').forEach(link => {
+            link.addEventListener('click', function(e) {
+                if (this.getAttribute('href') === '#') e.preventDefault();
+                document.querySelectorAll('header nav a').forEach(l => {
+                    l.classList.remove('border-b-2', 'border-secondary', 'font-bold');
+                    l.classList.add('text-on-surface-variant');
+                });
+                this.classList.remove('text-on-surface-variant');
+                this.classList.add('border-b-2', 'border-secondary', 'font-bold');
+            });
+        });
+
+        document.querySelectorAll('select').forEach(sel => {
+            sel.addEventListener('change', function() {
+                const selected = this.options[this.selectedIndex]?.text || '';
+                showToast(`✓ Filtre de boutique appliqué : ${selected}`);
+            });
+        });
+
+        // --- Action Events via explicit IDs ---
+        const btnRapportWhatsApp = document.getElementById('btnRapportWhatsApp');
+        const btnClotureCaisse = document.getElementById('btnClotureCaisse');
+        const btnApprouverRetour = document.getElementById('btnApprouverRetour');
+        const btnGererStock = document.getElementById('btnGererStock');
+        const btnConsulterAlertes = document.getElementById('btnConsulterAlertes');
+        const btnLancerInventaire = document.getElementById('btnLancerInventaire');
+        const btnAgirAlerte = document.getElementById('btnAgirAlerte');
+        const btnIgnorerAlerte = document.getElementById('btnIgnorerAlerte');
+        const btnVoirHistorique = document.getElementById('btnVoirHistorique');
+        const btnDetailsVendeuses = document.getElementById('btnDetailsVendeuses');
+
+        if (btnRapportWhatsApp) {
+            btnRapportWhatsApp.onclick = () => {
+                showToast('✓ Rapport généré. Redirection vers WhatsApp...');
+                setTimeout(() => {
+                    window.location.href = 'whatsapp://send?text=Rapport de Clôture Yaoundé - CA: 4.825.500 FCFA, Dépenses: 1.200.000 FCFA. Statut: Opérationnel.';
+                }, 1000);
+            };
+        }
+        if (btnClotureCaisse) {
+            btnClotureCaisse.onclick = () => showToast('✓ Module de clôture de caisse chargé');
+        }
+        if (btnApprouverRetour) {
+            btnApprouverRetour.onclick = () => showToast('✓ Approbation du retour produit validée');
+        }
+        if (btnGererStock) {
+            btnGererStock.onclick = () => showToast('ℹ Redirection vers le module de gestion des stocks...');
+        }
+        if (btnConsulterAlertes) {
+            btnConsulterAlertes.onclick = () => showToast('✓ Liste des alertes critiques affichée');
+        }
+        if (btnLancerInventaire) {
+            btnLancerInventaire.onclick = () => showToast('✓ Nouvel inventaire physique initialisé');
+        }
+        if (btnAgirAlerte) {
+            btnAgirAlerte.onclick = () => showToast('✓ Action de retrait de fond initiée');
+        }
+        if (btnIgnorerAlerte) {
+            btnIgnorerAlerte.onclick = () => showToast('✓ Alerte caisse masquée temporairement');
+        }
+        if (btnVoirHistorique) {
+            btnVoirHistorique.onclick = () => showToast('ℹ Historique complet du journal des opérations chargé');
+        }
+        if (btnDetailsVendeuses) {
+            btnDetailsVendeuses.onclick = () => showToast('ℹ Affichage du détail des ventes par vendeuse');
+        }
+</script>
+</body></html>

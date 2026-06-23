@@ -1,0 +1,53 @@
+<!DOCTYPE html>
+<html lang="fr" class="light">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Connexion – Stitch Boutique ERP</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Hanken+Grotesk:wght@400;600;700&display=swap" rel="stylesheet">
+    <style>
+        body {font-family: 'Hanken Grotesk', sans-serif; background: linear-gradient(135deg, #e0f7fa, #e8eaf6);}
+        .card {background: rgba(255,255,255,0.9); backdrop-filter: blur(8px);}
+    </style>
+</head>
+<body class="flex items-center justify-center min-h-screen">
+    <div class="card p-8 rounded-xl shadow-lg max-w-sm w-full">
+        <h1 class="text-2xl font-bold text-center mb-4 text-[#091426]">Connexion</h1>
+        <form id="loginForm" class="space-y-4">
+            <div>
+                <label class="block text-sm font-medium text-gray-700" for="email">Email</label>
+                <input type="email" id="email" required class="mt-1 w-full rounded-md border-gray-300 focus:border-indigo-500 focus:ring-indigo-500" placeholder="exemple@exemple.com" />
+            </div>
+            <div>
+                <label class="block text-sm font-medium text-gray-700" for="whatsapp">WhatsApp (numéro)</label>
+                <input type="tel" id="whatsapp" required class="mt-1 w-full rounded-md border-gray-300 focus:border-indigo-500 focus:ring-indigo-500" placeholder="+2376xxxxxxxx" />
+            </div>
+            <div>
+                <label class="block text-sm font-medium text-gray-700" for="pin">Code PIN super‑utilisateur</label>
+                <input type="password" id="pin" minlength="4" maxlength="6" required class="mt-1 w-full rounded-md border-gray-300 focus:border-indigo-500 focus:ring-indigo-500" placeholder="1234" />
+            </div>
+            <button type="submit" class="w-full bg-indigo-600 text-white py-2 rounded-md hover:bg-indigo-700 transition">Se connecter</button>
+        </form>
+    </div>
+    <script src="../js/common.js"></script>
+    <script>
+        document.getElementById('loginForm').addEventListener('submit', function(e) {
+            e.preventDefault();
+            const email = document.getElementById('email').value.trim();
+            const whatsapp = document.getElementById('whatsapp').value.trim();
+            const pin = document.getElementById('pin').value.trim();
+            // Simple hash (not secure, demo only)
+            const pinHash = btoa(pin);
+            // Store session data
+            sessionStorage.setItem('erp_authenticated', 'true');
+            sessionStorage.setItem('erp_email', email);
+            sessionStorage.setItem('erp_whatsapp', whatsapp);
+            sessionStorage.setItem('erp_pin_hash', pinHash);
+            sessionStorage.setItem('erp_role', 'owner'); // default role after login
+            // Redirect to dashboard
+            window.location.href = '../index.html';
+        });
+    </script>
+</body>
+</html>

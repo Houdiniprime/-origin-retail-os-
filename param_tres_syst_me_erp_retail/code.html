@@ -1,0 +1,705 @@
+<!DOCTYPE html>
+
+<html class="light" lang="fr"><head>
+    <script>
+        // Toast Notification System
+        window.showToast = function(msg) {
+            const old = document.querySelector('.custom-toast');
+            if (old) old.remove();
+            const t = document.createElement('div');
+            t.className = 'custom-toast fixed bottom-6 right-6 bg-slate-900 text-white px-6 py-3 rounded-xl shadow-lg z-[99999] font-bold text-sm transition-all animate-bounce';
+            t.textContent = msg;
+            document.body.appendChild(t);
+            setTimeout(() => t.remove(), 2500);
+        };
+
+        // Hard-Lock Security Script
+        (function() {
+            const isAuthenticated = sessionStorage.getItem('erp_authenticated');
+            const isSuperUser = sessionStorage.getItem('erp_superuser');
+            const role = sessionStorage.getItem('erp_role');
+            
+            // If not authenticated and not in auth/login.html, redirect to login
+            if (!isAuthenticated && !isSuperUser && !window.location.href.includes('login.html')) {
+                window.location.href = '../auth/login.html';
+                return;
+            }
+            
+            // Restrict access for Caissier
+            if (role === 'caissier') {
+                document.addEventListener('DOMContentLoaded', () => {
+                    if (window.showToast) {
+                        window.showToast('Accès refusé : Les paramètres système sont réservés aux administrateurs.');
+                    } else {
+                        alert('Accès refusé : Les paramètres système sont réservés aux administrateurs.');
+                    }
+                    setTimeout(() => { window.location.href = '../index.html'; }, 2000);
+                });
+            }
+        })();
+    </script>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>RetailCore ERP - Paramètres Système</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Hanken+Grotesk:wght@400;500;600;700&amp;family=JetBrains+Mono:wght@500&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    "colors": {
+                        "secondary-fixed-dim": "#adc6ff",
+                        "tertiary": "#041528",
+                        "background": "#f7f9fb",
+                        "outline": "#75777d",
+                        "on-tertiary-fixed-variant": "#38485d",
+                        "surface-variant": "#e0e3e5",
+                        "secondary-container": "#2170e4",
+                        "surface": "#f7f9fb",
+                        "on-tertiary": "#ffffff",
+                        "on-tertiary-container": "#8191a9",
+                        "surface-container": "#eceef0",
+                        "primary-container": "#1e293b",
+                        "surface-container-low": "#f2f4f6",
+                        "on-secondary-fixed-variant": "#004395",
+                        "tertiary-fixed": "#d3e4fe",
+                        "primary-fixed-dim": "#bcc7de",
+                        "primary": "#091426",
+                        "error": "#ba1a1a",
+                        "inverse-surface": "#2d3133",
+                        "on-primary": "#ffffff",
+                        "surface-container-highest": "#e0e3e5",
+                        "surface-container-lowest": "#ffffff",
+                        "primary-fixed": "#d8e3fb",
+                        "surface-container-high": "#e6e8ea",
+                        "on-error": "#ffffff",
+                        "tertiary-fixed-dim": "#b7c8e1",
+                        "inverse-on-surface": "#eff1f3",
+                        "on-tertiary-fixed": "#0b1c30",
+                        "on-surface": "#191c1e",
+                        "on-secondary-container": "#fefcff",
+                        "on-secondary": "#ffffff",
+                        "surface-tint": "#545f73",
+                        "surface-dim": "#d8dadc",
+                        "on-primary-container": "#8590a6",
+                        "on-background": "#191c1e",
+                        "inverse-primary": "#bcc7de",
+                        "outline-variant": "#c5c6cd",
+                        "on-secondary-fixed": "#001a42",
+                        "secondary-fixed": "#d8e2ff",
+                        "secondary": "#0058be",
+                        "on-primary-fixed": "#111c2d",
+                        "tertiary-container": "#1a2a3e",
+                        "on-surface-variant": "#45474c",
+                        "on-primary-fixed-variant": "#3c475a",
+                        "surface-bright": "#f7f9fb",
+                        "on-error-container": "#93000a",
+                        "error-container": "#ffdad6"
+                    },
+                    "borderRadius": {
+                        "DEFAULT": "0.125rem",
+                        "lg": "0.25rem",
+                        "xl": "0.5rem",
+                        "full": "0.75rem"
+                    },
+                    "spacing": {
+                        "md": "16px",
+                        "sidebar-width": "240px",
+                        "gutter": "16px",
+                        "base": "4px",
+                        "xl": "32px",
+                        "lg": "24px",
+                        "xs": "4px",
+                        "filter-panel-width": "280px",
+                        "sm": "8px"
+                    },
+                    "fontFamily": {
+                        "headline-md": ["Hanken Grotesk"],
+                        "body-sm": ["Hanken Grotesk"],
+                        "headline-lg": ["Hanken Grotesk"],
+                        "display-sm": ["Hanken Grotesk"],
+                        "body-md": ["Hanken Grotesk"],
+                        "label-sm": ["JetBrains Mono"],
+                        "label-md": ["JetBrains Mono"],
+                        "body-lg": ["Hanken Grotesk"]
+                    },
+                    "fontSize": {
+                        "headline-md": ["20px", { "lineHeight": "28px", "fontWeight": "600" }],
+                        "body-sm": ["13px", { "lineHeight": "18px", "fontWeight": "400" }],
+                        "headline-lg": ["24px", { "lineHeight": "32px", "fontWeight": "600" }],
+                        "display-sm": ["30px", { "lineHeight": "36px", "letterSpacing": "-0.02em", "fontWeight": "700" }],
+                        "body-md": ["14px", { "lineHeight": "20px", "fontWeight": "400" }],
+                        "label-sm": ["10px", { "lineHeight": "14px", "fontWeight": "500" }],
+                        "label-md": ["12px", { "lineHeight": "16px", "fontWeight": "500" }],
+                        "body-lg": ["16px", { "lineHeight": "24px", "fontWeight": "400" }]
+                    }
+                },
+            },
+        }
+    </script>
+<style>
+        .material-symbols-outlined {
+            font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+            vertical-align: middle;
+        }
+        ::-webkit-scrollbar { width: 6px; }
+        ::-webkit-scrollbar-track { background: transparent; }
+        ::-webkit-scrollbar-thumb { background: #e2e8f0; border-radius: 10px; }
+        .active-tab-indicator { position: absolute; left: 0; width: 4px; height: 100%; background: currentColor; border-radius: 0 4px 4px 0; }
+        input:focus, select:focus, textarea:focus { outline: none; border-color: #2170e4 !important; ring: 1px #2170e4; }
+    </style>
+</head>
+<body class="bg-background text-on-surface font-body-md overflow-hidden">
+<div class="fixed top-4 right-4 z-[9999]">
+    <a href="../index.html" class="flex items-center gap-2 bg-white/90 backdrop-blur shadow-lg border border-slate-200 px-4 py-2 rounded-full text-slate-700 hover:bg-white hover:scale-105 transition-all font-bold text-sm">
+        <span class="material-symbols-outlined text-[20px]">grid_view</span>
+        Menu Principal
+    </a>
+</div>
+<!-- TopAppBar Shell -->
+<header class="bg-surface-container-lowest text-primary font-body-md w-full h-14 border-b border-outline-variant flex items-center justify-between px-md sticky top-0 z-50">
+<div class="flex items-center gap-md">
+<span class="text-headline-md font-headline-md text-primary">RetailCore ERP</span>
+</div>
+<div class="flex items-center gap-lg">
+<div class="relative group">
+<input class="bg-surface-container-low border-none rounded px-md py-xs text-body-sm w-64 transition-all focus:w-80" placeholder="Rechercher..." type="text"/>
+<span class="material-symbols-outlined absolute right-2 top-1/2 -translate-y-1/2 text-outline-variant">search</span>
+</div>
+<div class="flex items-center gap-md">
+<span class="material-symbols-outlined text-on-surface-variant cursor-pointer hover:bg-surface-container-low p-xs rounded transition-colors" data-icon="notifications">notifications</span>
+<span class="material-symbols-outlined text-on-surface-variant cursor-pointer hover:bg-surface-container-low p-xs rounded transition-colors" data-icon="help">help</span>
+<span class="material-symbols-outlined text-on-surface-variant cursor-pointer hover:bg-surface-container-low p-xs rounded transition-colors" data-icon="apps">apps</span>
+<div class="w-8 h-8 rounded-full bg-surface-container-highest overflow-hidden cursor-pointer active:opacity-80">
+<img alt="User profile avatar" class="w-full h-full object-cover" src="https://lh3.googleusercontent.com/aida-public/AB6AXuCqCi1seuvv-dPougEWKLROZg3OFa9vyiZTYjkWCjoOcKr0nAVGCSUQrYtQU6NyksaMimJ6sjYXGO3EgwKP_jG7RcZaeJZxH_3ZqHijXvheypZpVDUroe9FOs2Xs771TzQgz2AAn0mgHcVGSuWmwZQKtb4af45zqEoWK6FVvNuQndhs1aYp7T6n_a9Sqe8in5b64AczcX16VcW3MOnIJPXMHw0RK3bgKxt_nQaUkmc3IFeXPxajqOLm_wjSQygPkTztoZBgkruDRig"/>
+</div>
+</div>
+</div>
+</header>
+<div class="flex h-[calc(100vh-3.5rem)] overflow-hidden">
+<!-- SideNavBar Shell -->
+<aside class="bg-surface-container-low text-secondary font-label-md w-sidebar-width h-full border-r border-outline-variant flex flex-col py-md shrink-0">
+<div class="px-md mb-xl">
+<div class="flex items-center gap-sm">
+<div class="w-8 h-8 bg-primary rounded flex items-center justify-center text-on-primary">
+<span class="material-symbols-outlined text-body-lg" data-icon="store" style="font-variation-settings: 'FILL' 1;">store</span>
+</div>
+<div>
+<h1 id="headerUserName" class="font-headline-sm text-headline-sm text-primary leading-tight">RetailNetwork</h1>
+<p id="headerUserRole" class="text-label-sm text-on-surface-variant">Console Admin</p>
+</div>
+</div>
+</div>
+<nav class="flex-grow flex flex-col gap-xs overflow-y-auto">
+<a class="text-on-surface-variant hover:bg-surface-container-high flex items-center gap-sm px-md py-sm cursor-pointer transition-all" href="#">
+<span class="material-symbols-outlined" data-icon="dashboard">dashboard</span> Dashboard
+                </a>
+<a class="text-on-surface-variant hover:bg-surface-container-high flex items-center gap-sm px-md py-sm cursor-pointer transition-all" href="#">
+<span class="material-symbols-outlined" data-icon="inventory_2">inventory_2</span> Inventaire
+                </a>
+<a class="text-on-surface-variant hover:bg-surface-container-high flex items-center gap-sm px-md py-sm cursor-pointer transition-all" href="#">
+<span class="material-symbols-outlined" data-icon="payments">payments</span> Ventes
+                </a>
+<a class="text-on-surface-variant hover:bg-surface-container-high flex items-center gap-sm px-md py-sm cursor-pointer transition-all" href="#">
+<span class="material-symbols-outlined" data-icon="local_shipping">local_shipping</span> Fournisseurs
+                </a>
+<a class="text-on-surface-variant hover:bg-surface-container-high flex items-center gap-sm px-md py-sm cursor-pointer transition-all" href="#">
+<span class="material-symbols-outlined" data-icon="receipt_long">receipt_long</span> Dépenses
+                </a>
+<a class="bg-secondary-container text-on-secondary-container font-bold rounded-lg flex items-center gap-sm px-md py-sm cursor-pointer relative mx-sm" href="#">
+<span class="material-symbols-outlined" data-icon="settings" style="font-variation-settings: 'FILL' 1;">settings</span> Paramètres
+                </a>
+</nav>
+<div class="mt-auto pt-md flex flex-col gap-xs">
+<a class="text-on-surface-variant hover:bg-surface-container-highest flex items-center gap-sm px-md py-sm cursor-pointer" href="#">
+<span class="material-symbols-outlined" data-icon="help_outline">help_outline</span> Centre d'aide
+                </a>
+<a class="text-on-surface-variant hover:bg-surface-container-highest flex items-center gap-sm px-md py-sm cursor-pointer" href="#">
+<span class="material-symbols-outlined" data-icon="logout">logout</span> Déconnexion
+                </a>
+</div>
+</aside>
+<!-- Main Canvas -->
+<main class="flex-grow overflow-y-auto bg-background p-lg relative">
+<div class="max-w-6xl mx-auto space-y-lg">
+<!-- System Health Header -->
+<div class="bg-surface-container-lowest border border-outline-variant p-md flex items-center justify-between shadow-sm">
+<div class="flex items-center gap-lg">
+<div class="flex items-center gap-sm text-label-md">
+<span class="w-2 h-2 rounded-full bg-success bg-green-500"></span>
+<span class="text-on-surface">Serveur Local: <span class="font-bold">Actif</span></span>
+</div>
+<div class="flex items-center gap-sm text-label-md border-l border-outline-variant pl-lg">
+<span class="material-symbols-outlined text-secondary" data-icon="database">database</span>
+<span class="text-on-surface">Base de données: <span class="font-bold">Connecté</span></span>
+</div>
+<div class="flex items-center gap-sm text-label-md border-l border-outline-variant pl-lg">
+<span class="material-symbols-outlined text-outline" data-icon="history">history</span>
+<span class="text-on-surface">Dernier Backup: <span class="font-bold">il y a 12 min</span></span>
+</div>
+<div class="flex items-center gap-sm text-label-md border-l border-outline-variant pl-lg">
+<span class="material-symbols-outlined text-outline" data-icon="storage">storage</span>
+<span class="text-on-surface">Disque: <span class="font-bold">85% libre</span></span>
+</div>
+</div>
+<div class="bg-tertiary-fixed text-on-tertiary-fixed px-sm py-xs text-label-sm font-bold flex items-center gap-xs">
+<span class="material-symbols-outlined text-[14px]" data-icon="wifi_off">wifi_off</span>
+                        MODE HORS LIGNE (LOCAL-FIRST)
+                    </div>
+</div>
+<div class="grid grid-cols-12 gap-lg items-start">
+<!-- Settings Secondary Nav -->
+<div class="col-span-3 space-y-xs">
+<h3 class="px-sm text-label-sm font-bold text-outline uppercase tracking-wider mb-sm">Catégories</h3>
+<button class="w-full text-left px-md py-sm bg-surface-container-high rounded text-primary font-bold flex items-center justify-between">
+                            Entreprise <span class="material-symbols-outlined text-sm" data-icon="chevron_right">chevron_right</span>
+</button>
+<button class="w-full text-left px-md py-sm hover:bg-surface-container-low text-on-surface-variant flex items-center justify-between transition-colors">
+                            Boutiques <span class="material-symbols-outlined text-sm" data-icon="chevron_right">chevron_right</span>
+</button>
+<button class="w-full text-left px-md py-sm hover:bg-surface-container-low text-on-surface-variant flex items-center justify-between transition-colors">
+                            Utilisateurs <span class="material-symbols-outlined text-sm" data-icon="chevron_right">chevron_right</span>
+</button>
+<button class="w-full text-left px-md py-sm hover:bg-surface-container-low text-on-surface-variant flex items-center justify-between transition-colors">
+                            Paiements <span class="material-symbols-outlined text-sm" data-icon="chevron_right">chevron_right</span>
+</button>
+<button class="w-full text-left px-md py-sm hover:bg-surface-container-low text-on-surface-variant flex items-center justify-between transition-colors">
+                            Matériel <span class="material-symbols-outlined text-sm" data-icon="chevron_right">chevron_right</span>
+</button>
+<button class="w-full text-left px-md py-sm hover:bg-surface-container-low text-on-surface-variant flex items-center justify-between transition-colors">
+                            Sauvegarde <span class="material-symbols-outlined text-sm" data-icon="chevron_right">chevron_right</span>
+</button>
+<button class="w-full text-left px-md py-sm hover:bg-surface-container-low text-on-surface-variant flex items-center justify-between transition-colors">
+                            Config AI <span class="material-symbols-outlined text-sm" data-icon="chevron_right">chevron_right</span>
+</button>
+</div>
+<!-- Main Configuration Content -->
+<div class="col-span-9 space-y-lg">
+<!-- Localization & Currency Section -->
+<section class="bg-surface-container-lowest border border-outline-variant p-lg shadow-sm ring-2 ring-secondary/20">
+    <div class="flex items-center gap-sm mb-md">
+        <span class="material-symbols-outlined text-secondary" data-icon="language">language</span>
+        <h2 class="font-headline-md text-headline-md text-primary">Localisation & Taux de Change</h2>
+    </div>
+    
+    <div class="grid grid-cols-2 gap-lg">
+        <!-- Currency Conversion -->
+        <div class="space-y-md border-r border-outline-variant pr-lg">
+            <h3 class="text-label-md font-bold text-outline uppercase">Réglages de Conversion</h3>
+            <div class="space-y-sm">
+                <label class="text-label-sm text-on-surface-variant block">Taux de base (1 EUR vers FCFA)</label>
+                <div class="flex items-center gap-sm">
+                    <input class="w-full border border-outline-variant bg-surface-bright rounded px-md py-sm font-bold text-primary" type="number" value="655.95"/>
+                    <span class="text-label-md font-bold">XAF</span>
+                </div>
+            </div>
+            <div class="space-y-sm">
+                <label class="text-label-sm text-on-surface-variant block">Arrondi automatique</label>
+                <select class="w-full border border-outline-variant bg-surface-bright rounded px-md py-sm text-body-sm">
+                    <option>Au FCFA supérieur</option>
+                    <option selected>Standard (0.5)</option>
+                    <option>Dizaine supérieure (10 FCFA)</option>
+                </select>
+            </div>
+        </div>
+
+        <!-- Store Names Customization -->
+        <div class="space-y-md">
+            <h3 class="text-label-md font-bold text-outline uppercase">Personnalisation des Sites</h3>
+            <div class="space-y-sm">
+                <label class="text-label-sm text-on-surface-variant block">Ville Principale</label>
+                <input class="w-full border border-outline-variant bg-surface-bright rounded px-md py-sm text-body-sm" type="text" value="Yaoundé"/>
+            </div>
+            <div class="space-y-sm">
+                <label class="text-label-sm text-on-surface-variant block">Quartiers / Zones Actives</label>
+                <div class="flex flex-wrap gap-xs">
+                    <span class="px-sm py-xs bg-secondary-container text-on-secondary-container text-[10px] font-bold rounded-full">Bastos</span>
+                    <span class="px-sm py-xs bg-secondary-container text-on-secondary-container text-[10px] font-bold rounded-full">Mvan</span>
+                    <span class="px-sm py-xs bg-secondary-container text-on-secondary-container text-[10px] font-bold rounded-full">Biyem-Assi</span>
+                    <button class="px-sm py-xs border border-dashed border-outline-variant text-[10px] font-bold rounded-full hover:bg-surface-container-high">+ Ajouter</button>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="mt-lg pt-md border-t border-outline-variant flex justify-end">
+        <button class="bg-primary text-on-primary px-lg py-sm text-label-md font-bold rounded hover:bg-secondary transition-all shadow-md">
+            Enregistrer les Ajustements Locaux
+        </button>
+    </div>
+</section>
+
+<!-- Company Details Section -->
+<section class="bg-surface-container-lowest border border-outline-variant p-lg shadow-sm">
+<h2 class="font-headline-md text-headline-md text-primary mb-md">Détails de l'entreprise</h2>
+<div class="grid grid-cols-2 gap-lg">
+<div class="space-y-sm">
+<label class="text-label-md text-on-surface-variant block">Nom de l'entreprise</label>
+<input class="w-full border border-outline-variant bg-surface-bright rounded-lg px-md py-sm text-body-md font-medium" type="text" value="Supermarché Horizon"/>
+</div>
+<div class="space-y-sm">
+<label class="text-label-md text-on-surface-variant block">Identifiant Fiscal (NUI/TIN)</label>
+<input class="w-full border border-outline-variant bg-surface-bright rounded-lg px-md py-sm text-body-md font-medium" type="text" value="RC-YDE-2023-B-042"/>
+</div>
+<div class="space-y-sm">
+<label class="text-label-md text-on-surface-variant block">Devise</label>
+<select class="w-full border border-outline-variant bg-surface-bright rounded-lg px-md py-sm text-body-md font-medium">
+<option>FCFA (XAF)</option>
+<option>Euro (FCFA)</option>
+<option>Dollar (USD)</option>
+</select>
+</div>
+<div class="space-y-sm">
+<label class="text-label-md text-on-surface-variant block">Logo de l'entreprise</label>
+<div class="border-2 border-dashed border-outline-variant rounded-lg p-md flex items-center justify-center gap-md bg-surface-container-low cursor-pointer hover:bg-surface-container-high transition-colors">
+<span class="material-symbols-outlined text-outline" data-icon="upload">upload</span>
+<span class="text-label-md">Télécharger un logo (PNG, JPG)</span>
+</div>
+</div>
+</div>
+</section>
+<!-- User Management Section -->
+<section class="bg-surface-container-lowest border border-outline-variant overflow-hidden shadow-sm">
+<div class="p-lg flex items-center justify-between">
+<h2 class="font-headline-md text-headline-md text-primary">Gestion des utilisateurs</h2>
+<button class="bg-secondary text-on-secondary px-md py-sm flex items-center gap-xs text-label-md font-bold rounded">
+<span class="material-symbols-outlined text-md" data-icon="person_add">person_add</span> Nouvel utilisateur
+                                </button>
+</div>
+<table class="w-full border-collapse">
+<thead>
+<tr class="bg-surface-container text-left border-y border-outline-variant">
+<th class="px-lg py-sm font-label-md text-on-surface-variant uppercase">Nom</th>
+<th class="px-lg py-sm font-label-md text-on-surface-variant uppercase">Rôle</th>
+<th class="px-lg py-sm font-label-md text-on-surface-variant uppercase">Accès Boutique</th>
+<th class="px-lg py-sm font-label-md text-on-surface-variant uppercase">Statut</th>
+<th class="px-lg py-sm font-label-md text-on-surface-variant uppercase text-right">Action</th>
+</tr>
+</thead>
+<tbody>
+<tr class="border-b border-outline-variant hover:bg-surface-container-low transition-colors">
+<td class="px-lg py-sm font-body-md">Jean Dupont</td>
+<td class="px-lg py-sm font-body-md">Administrateur</td>
+<td class="px-lg py-sm font-body-md">Toutes</td>
+<td class="px-lg py-sm">
+<div class="w-10 h-5 bg-secondary-container rounded-full relative p-xs cursor-pointer">
+<div class="w-3 h-3 bg-on-secondary-container rounded-full absolute right-1"></div>
+</div>
+</td>
+<td class="px-lg py-sm text-right">
+<span class="material-symbols-outlined text-outline-variant cursor-pointer hover:text-primary" data-icon="edit">edit</span>
+</td>
+</tr>
+<tr class="border-b border-outline-variant hover:bg-surface-container-low transition-colors">
+<td class="px-lg py-sm font-body-md">Marie Mbarga</td>
+<td class="px-lg py-sm font-body-md">Gérante</td>
+<td class="px-lg py-sm font-body-md">Bonanjo, Akwa</td>
+<td class="px-lg py-sm">
+<div class="w-10 h-5 bg-secondary-container rounded-full relative p-xs cursor-pointer">
+<div class="w-3 h-3 bg-on-secondary-container rounded-full absolute right-1"></div>
+</div>
+</td>
+<td class="px-lg py-sm text-right">
+<span class="material-symbols-outlined text-outline-variant cursor-pointer hover:text-primary" data-icon="edit">edit</span>
+</td>
+</tr>
+<tr class="border-b border-outline-variant hover:bg-surface-container-low transition-colors">
+<td class="px-lg py-sm font-body-md">Alain Sorel</td>
+<td class="px-lg py-sm font-body-md">Caissier</td>
+<td class="px-lg py-sm font-body-md">Akwa Main</td>
+<td class="px-lg py-sm">
+<div class="w-10 h-5 bg-outline-variant rounded-full relative p-xs cursor-pointer">
+<div class="w-3 h-3 bg-surface-container-lowest rounded-full absolute left-1"></div>
+</div>
+</td>
+<td class="px-lg py-sm text-right">
+<span class="material-symbols-outlined text-outline-variant cursor-pointer hover:text-primary" data-icon="edit">edit</span>
+</td>
+</tr>
+</tbody>
+</table>
+</section>
+<!-- Roles & Permissions Grid -->
+<section class="bg-surface-container-lowest border border-outline-variant p-lg shadow-sm">
+<h2 class="font-headline-md text-headline-md text-primary mb-md">Rôles &amp; Permissions</h2>
+<div class="grid grid-cols-3 gap-md">
+<div class="border border-outline-variant p-md rounded-lg bg-surface-bright">
+<div class="flex items-center justify-between mb-sm">
+<span class="font-bold text-primary">Admin</span>
+<span class="material-symbols-outlined text-sm text-secondary" data-icon="shield" style="font-variation-settings: 'FILL' 1;">shield</span>
+</div>
+<div class="space-y-xs opacity-60 pointer-events-none">
+<label class="flex items-center gap-sm text-body-sm"><input checked="" class="rounded border-outline" disabled="" type="checkbox"/> Accès complet</label>
+<label class="flex items-center gap-sm text-body-sm"><input checked="" class="rounded border-outline" disabled="" type="checkbox"/> Gestion finances</label>
+<label class="flex items-center gap-sm text-body-sm"><input checked="" class="rounded border-outline" disabled="" type="checkbox"/> Configuration système</label>
+</div>
+</div>
+<div class="border border-outline-variant p-md rounded-lg bg-surface-bright ring-1 ring-secondary">
+<div class="flex items-center justify-between mb-sm">
+<span class="font-bold text-primary">Manager</span>
+<span class="material-symbols-outlined text-sm text-outline" data-icon="settings_accessibility">settings_accessibility</span>
+</div>
+<div class="space-y-xs">
+<label class="flex items-center gap-sm text-body-sm cursor-pointer"><input checked="" class="rounded border-outline text-secondary" type="checkbox"/> Gérer stocks</label>
+<label class="flex items-center gap-sm text-body-sm cursor-pointer"><input checked="" class="rounded border-outline text-secondary" type="checkbox"/> Rapports ventes</label>
+<label class="flex items-center gap-sm text-body-sm cursor-pointer"><input class="rounded border-outline text-secondary" type="checkbox"/> Supprimer transactions</label>
+</div>
+</div>
+<div class="border border-outline-variant p-md rounded-lg bg-surface-bright">
+<div class="flex items-center justify-between mb-sm">
+<span class="font-bold text-primary">Caissier</span>
+<span class="material-symbols-outlined text-sm text-outline" data-icon="point_of_sale">point_of_sale</span>
+</div>
+<div class="space-y-xs">
+<label class="flex items-center gap-sm text-body-sm cursor-pointer"><input checked="" class="rounded border-outline text-secondary" type="checkbox"/> Effectuer ventes</label>
+<label class="flex items-center gap-sm text-body-sm cursor-pointer"><input class="rounded border-outline text-secondary" type="checkbox"/> Voir prix</label>
+<label class="flex items-center gap-sm text-body-sm cursor-pointer"><input class="rounded border-outline text-secondary" type="checkbox"/> Appliquer remises</label>
+</div>
+</div>
+</div>
+</section>
+<div class="grid grid-cols-2 gap-lg">
+<!-- Payment Methods Section -->
+<section class="bg-surface-container-lowest border border-outline-variant p-lg shadow-sm">
+<h2 class="font-headline-md text-headline-md text-primary mb-md">Méthodes de Paiement</h2>
+<div class="space-y-md">
+<div class="flex items-center justify-between p-sm border border-outline-variant rounded bg-surface-bright">
+<div class="flex items-center gap-sm">
+<span class="material-symbols-outlined text-outline" data-icon="payments">payments</span>
+<span class="text-body-md font-medium">Espèces (Cash)</span>
+</div>
+<div class="w-10 h-5 bg-secondary-container rounded-full relative p-xs cursor-pointer">
+<div class="w-3 h-3 bg-on-secondary-container rounded-full absolute right-1"></div>
+</div>
+</div>
+<div class="flex items-center justify-between p-sm border border-outline-variant rounded bg-surface-bright">
+<div class="flex items-center gap-sm">
+<span class="material-symbols-outlined text-outline" data-icon="smartphone">smartphone</span>
+<span class="text-body-md font-medium">Mobile Money (MoMo/OM)</span>
+</div>
+<div class="w-10 h-5 bg-secondary-container rounded-full relative p-xs cursor-pointer">
+<div class="w-3 h-3 bg-on-secondary-container rounded-full absolute right-1"></div>
+</div>
+</div>
+<div class="flex items-center justify-between p-sm border border-outline-variant rounded bg-surface-bright">
+<div class="flex items-center gap-sm">
+<span class="material-symbols-outlined text-outline" data-icon="credit_card">credit_card</span>
+<span class="text-body-md font-medium">Carte Bancaire / Visa</span>
+</div>
+<div class="w-10 h-5 bg-outline-variant rounded-full relative p-xs cursor-pointer">
+<div class="w-3 h-3 bg-surface-container-lowest rounded-full absolute left-1"></div>
+</div>
+</div>
+</div>
+</section>
+<!-- Hardware & Storage -->
+<section class="bg-surface-container-lowest border border-outline-variant p-lg shadow-sm">
+<h2 class="font-headline-md text-headline-md text-primary mb-md">Matériel &amp; Stockage</h2>
+<div class="space-y-md">
+<div class="space-y-xs">
+<label class="text-label-md text-on-surface-variant">Imprimante de reçus</label>
+<select class="w-full border border-outline-variant bg-surface-bright rounded px-md py-sm text-body-sm">
+<option>USB: EPSON TM-T20III</option>
+<option>IP: 192.168.1.105 (WiFi)</option>
+<option>Désactivé</option>
+</select>
+</div>
+<div class="flex items-center justify-between pt-sm">
+<div class="space-y-0">
+<p class="text-body-md font-medium">Cloud Image Storage</p>
+<p class="text-label-sm text-outline">Synchronisation auto des photos produits</p>
+</div>
+<div class="w-10 h-5 bg-secondary-container rounded-full relative p-xs cursor-pointer">
+<div class="w-3 h-3 bg-on-secondary-container rounded-full absolute right-1"></div>
+</div>
+</div>
+</div>
+</section>
+</div>
+<!-- Backup & Security Section -->
+<section class="bg-surface-container-lowest border border-outline-variant p-lg shadow-sm">
+<h2 class="font-headline-md text-headline-md text-primary mb-md">Sauvegarde &amp; Sécurité</h2>
+<div class="grid grid-cols-2 gap-xl">
+<div class="space-y-md">
+<div class="flex items-center justify-between">
+<span class="text-body-md font-medium">Backup automatique à la fermeture</span>
+<div class="w-10 h-5 bg-secondary-container rounded-full relative p-xs cursor-pointer">
+<div class="w-3 h-3 bg-on-secondary-container rounded-full absolute right-1"></div>
+</div>
+</div>
+<div class="flex items-center justify-between">
+<span class="text-body-md font-medium">Journaux d'audit (Audit Logging)</span>
+<div class="w-10 h-5 bg-secondary-container rounded-full relative p-xs cursor-pointer">
+<div class="w-3 h-3 bg-on-secondary-container rounded-full absolute right-1"></div>
+</div>
+</div>
+</div>
+<div class="space-y-md">
+<div class="space-y-xs">
+<label class="text-label-md text-on-surface-variant">Niveau de Chiffrement (Database)</label>
+<select class="w-full border border-outline-variant bg-surface-bright rounded px-md py-sm text-body-sm">
+<option>AES-256 (Standard)</option>
+<option>AES-512 (Militaire)</option>
+<option>Désactivé (Non recommandé)</option>
+</select>
+</div>
+</div>
+</div>
+</section>
+<!-- Actions Footer -->
+<div class="flex items-center justify-end gap-md pb-xl">
+<button class="px-lg py-sm text-label-md font-bold text-outline hover:bg-surface-container transition-colors">Réinitialiser les changements</button>
+<button class="bg-primary text-on-primary px-xl py-sm text-label-md font-bold rounded shadow hover:opacity-90 transition-opacity">Enregistrer les paramètres</button>
+</div>
+</div>
+</div>
+</div>
+</main>
+</div>
+<script>
+        // Security check
+        if (!sessionStorage.getItem('erp_token')) {
+            window.location.href = '/login.html';
+        }
+
+        // Global Toast Notification
+        window.showToast = (msg) => {
+            const toast = document.createElement('div');
+            toast.className = 'fixed bottom-lg right-lg bg-inverse-surface text-inverse-on-surface px-lg py-md rounded-lg shadow-lg z-50';
+            toast.textContent = msg;
+            document.body.appendChild(toast);
+            setTimeout(() => toast.remove(), 3000);
+        };
+
+        // Update user name and role dynamically
+        const headerUserName = document.getElementById('headerUserName');
+        const headerUserRole = document.getElementById('headerUserRole');
+        if (headerUserName && headerUserRole) {
+            const username = sessionStorage.getItem('erp_username') || 'Utilisateur';
+            const role = sessionStorage.getItem('erp_role') || 'admin';
+            headerUserName.textContent = username;
+            headerUserRole.textContent = role.charAt(0).toUpperCase() + role.slice(1);
+        }
+
+        document.querySelectorAll('button').forEach(btn => {
+            btn.addEventListener('mousedown', () => {
+                btn.style.transform = 'scale(0.98)';
+            });
+            btn.addEventListener('mouseup', () => {
+                btn.style.transform = 'scale(1)';
+            });
+            btn.addEventListener('mouseleave', () => {
+                btn.style.transform = 'scale(1)';
+            });
+        });
+
+        const searchInput = document.querySelector('input[type="text"]');
+        if (searchInput) {
+            searchInput.addEventListener('focus', function() {
+                this.closest('.relative')?.classList.add('ring-2', 'ring-secondary');
+            });
+            searchInput.addEventListener('blur', function() {
+                this.closest('.relative')?.classList.remove('ring-2', 'ring-secondary');
+            });
+        }
+
+        document.querySelectorAll('.rounded-full.relative').forEach(toggle => {
+            toggle.addEventListener('click', function() {
+                const knob = this.querySelector('div');
+                const isOff = this.classList.contains('bg-outline-variant');
+                
+                if (isOff) {
+                    this.classList.remove('bg-outline-variant');
+                    this.classList.add('bg-secondary-container');
+                    knob.classList.remove('left-1');
+                    knob.classList.add('right-1');
+                    knob.classList.replace('bg-surface-container-lowest', 'bg-on-secondary-container');
+                } else {
+                    this.classList.add('bg-outline-variant');
+                    this.classList.remove('bg-secondary-container');
+                    knob.classList.add('left-1');
+                    knob.classList.remove('right-1');
+                    knob.classList.replace('bg-on-secondary-container', 'bg-surface-container-lowest');
+                }
+                const label = this.closest('.flex')?.querySelector('.text-body-md, .font-medium')?.textContent?.trim() || 'Option';
+                window.showToast(`${label}: ${isOff ? 'Activé' : 'Désactivé'}`);
+            });
+        });
+
+        document.querySelectorAll('aside nav a').forEach(link => {
+            link.addEventListener('click', function(e) {
+                if (this.getAttribute('href') === '#') e.preventDefault();
+                document.querySelectorAll('aside nav a').forEach(l => {
+                    l.classList.remove('bg-secondary-container', 'text-on-secondary-container', 'font-bold', 'rounded-lg');
+                });
+                this.classList.add('bg-secondary-container', 'text-on-secondary-container', 'font-bold', 'rounded-lg');
+            });
+        });
+
+        document.querySelectorAll('.col-span-3 button, aside .mt-auto a').forEach(btn => {
+            btn.addEventListener('click', function() {
+                const text = this.textContent.trim();
+                if (text.toLowerCase().includes('aide') || text.toLowerCase().includes('help')) {
+                    window.showToast('Centre d\'aide: Consultez la documentation utilisateur.');
+                } else if (text.toLowerCase().includes('déconnexion') || text.toLowerCase().includes('logout')) {
+                    window.showToast('Déconnexion en cours...');
+                } else if (text.toLowerCase().includes('ajouter')) {
+                    window.showToast('Ajout d\'une nouvelle zone active.');
+                } else {
+                    const cat = text.replace('chevron_right', '').trim();
+                    if (cat) {
+                        window.showToast(`Navigation vers la catégorie: ${cat}`);
+                    }
+                }
+            });
+        });
+
+        document.querySelectorAll('main button').forEach(btn => {
+            btn.addEventListener('click', function() {
+                const text = this.textContent.trim().toLowerCase();
+                if (text.includes('enregistrer') && text.includes('locaux')) {
+                    window.showToast('Ajustements locaux enregistrés avec succès.');
+                } else if (text.includes('enregistrer') && text.includes('paramètres')) {
+                    window.showToast('Paramètres système enregistrés avec succès.');
+                } else if (text.includes('réinitialiser')) {
+                    window.showToast('Configuration réinitialisée aux valeurs par défaut.');
+                } else if (text.includes('nouvel utilisateur') || text.includes('person_add')) {
+                    window.showToast('Création d\'un nouvel utilisateur - Formulaire d\'inscription.');
+                }
+            });
+        });
+
+        document.querySelectorAll('select').forEach(sel => {
+            sel.addEventListener('change', function() {
+                const selected = this.options[this.selectedIndex]?.text || '';
+                window.showToast(`Paramètre changé: ${selected}`);
+            });
+        });
+
+        document.querySelectorAll('input[type="number"], input[type="text"]').forEach(input => {
+            if (input === searchInput) return;
+            input.addEventListener('focus', function() {
+                this.classList.add('ring-2', 'ring-secondary');
+            });
+            input.addEventListener('blur', function() {
+                this.classList.remove('ring-2', 'ring-secondary');
+            });
+        });
+
+        document.querySelectorAll('.border-dashed').forEach(drop => {
+            drop.addEventListener('click', function() {
+                window.showToast('Sélectionnez un fichier logo (PNG, JPG) à télécharger.');
+            });
+        });
+
+        document.querySelectorAll('.cursor-pointer.hover\\:text-primary, .material-symbols-outlined.cursor-pointer').forEach(el => {
+            if (el.closest('.rounded-full.relative')) return;
+            el.addEventListener('click', function() {
+                if (this.textContent.includes('edit') || this.getAttribute('data-icon') === 'edit') {
+                    window.showToast('Édition de l\'élément sélectionné.');
+                }
+            });
+        });
+    </script>
+</body></html>

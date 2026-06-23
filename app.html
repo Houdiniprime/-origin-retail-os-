@@ -1,0 +1,83 @@
+<!doctype html>
+<html lang="fr">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
+  <meta name="description" content="Origin Retail OS: ERP boutique pour caisse POS, stock, clients, dettes, cloture, rapports, acces distant et assistant WhatsApp.">
+  <meta name="theme-color" content="#131921">
+  <!-- PWA / Apple -->
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="apple-mobile-web-app-title" content="Origin Retail">
+  <meta name="mobile-web-app-capable" content="yes">
+  <meta name="application-name" content="Origin Retail OS">
+  <!-- Microsoft -->
+  <meta name="msapplication-TileColor" content="#131921">
+  <meta name="msapplication-TileImage" content="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 144 144'%3E%3Crect width='144' height='144' rx='29' fill='%23131921'/%3E%3Ctext x='72' y='98' font-size='72' font-weight='900' text-anchor='middle' fill='%23ff9900'%3EOR%3C/text%3E%3C/svg%3E">
+  <meta name="msapplication-config" content="none">
+  <!-- Open Graph -->
+  <meta property="og:title" content="Origin Retail OS">
+  <meta property="og:description" content="ERP boutique intelligent : caisse POS, stock, clients, dettes, WhatsApp et accès distant">
+  <meta property="og:type" content="website">
+  <meta property="og:locale" content="fr_FR">
+  <title>Origin Retail OS</title>
+  <link rel="manifest" href="/manifest.json">
+  <link rel="apple-touch-icon" sizes="180x180" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 180 180'%3E%3Crect width='180' height='180' rx='36' fill='%23131921'/%3E%3Ctext x='90' y='122' font-size='90' font-weight='900' text-anchor='middle' fill='%23ff9900'%3EOR%3C/text%3E%3C/svg%3E">
+  <link rel="stylesheet" href="assets/app.css?v=20260623-p8">
+  <script src="assets/lib/chart.umd.min.js"></script>
+  <link rel="stylesheet" href="assets/lib/fontawesome-all.min.css">
+  <link rel="stylesheet" href="assets/lib/google-fonts-inter.css">
+  <script>
+    // Enregistrement du Service Worker PWA
+    if ('serviceWorker' in navigator) {
+      window.addEventListener('load', function() {
+        navigator.serviceWorker.register('/sw.js').then(function(reg) {
+          console.log('[PWA] Service Worker enregistré, scope:', reg.scope);
+          // Vérifier les mises à jour périodiquement
+          reg.addEventListener('updatefound', function() {
+            var newWorker = reg.installing;
+            newWorker.addEventListener('statechange', function() {
+              if (newWorker.state === 'installed' && navigator.serviceWorker.controller) {
+                console.log('[PWA] Nouvelle version disponible — actualisez la page.');
+              }
+            });
+          });
+        }).catch(function(err) {
+          console.warn('[PWA] Service Worker échec:', err.message);
+        });
+      });
+      // Écouter les messages du SW (sync, push, etc.)
+      navigator.serviceWorker.addEventListener('message', function(event) {
+        if (event.data && event.data.type === 'SYNC_TRIGGERED') {
+          console.log('[PWA] Synchronisation en arrière-plan déclenchée');
+          // L'application écoute cet événement et synchronise automatiquement
+        }
+      });
+    }
+    // Détection online/offline
+    window.addEventListener('online', function() {
+      document.body.classList.remove('is-offline');
+      console.log('[PWA] Connexion rétablie');
+    });
+    window.addEventListener('offline', function() {
+      document.body.classList.add('is-offline');
+      console.log('[PWA] Mode hors ligne');
+    });
+    if (!navigator.onLine) {
+      document.body.classList.add('is-offline');
+    }
+  </script>
+  <style>
+    /* Fallback font if Google Fonts not available */
+    @font-face {
+      font-family: 'Inter Fallback';
+      src: local('Segoe UI'), local('Arial');
+      size-adjust: 98%;
+    }
+  </style>
+</head>
+<body>
+  <div id="app"></div>
+  <script src="assets/app.js?v=20260623-p8" defer></script>
+</body>
+</html>

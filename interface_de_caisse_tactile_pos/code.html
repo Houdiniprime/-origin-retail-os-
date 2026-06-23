@@ -1,0 +1,473 @@
+<!DOCTYPE html>
+
+<html class="light" lang="fr"><head>
+    <script>
+        // Vérification d'authentification
+        if (sessionStorage.getItem('erp_authenticated') !== 'true') {
+            window.location.href = '../auth/login.html';
+        }
+    </script>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<meta name="description" content="Interface de caisse tactile POS — Stitch Boutique Network. Gestion des ventes, paiements Cash, MTN MoMo, Orange Money et ventes à crédit."/>
+<meta name="author" content="Stitch Boutique Network"/>
+<title>RetailPOS Pro - Terminal de Vente</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Hanken+Grotesk:wght@400;500;600;700&amp;family=JetBrains+Mono:wght@500&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+      tailwind.config = {
+        darkMode: "class",
+        theme: {
+          extend: {
+            "colors": {
+                    "surface": "#f7f9fb",
+                    "background": "#f7f9fb",
+                    "on-primary": "#ffffff",
+                    "on-tertiary-fixed-variant": "#38485d",
+                    "inverse-primary": "#bcc7de",
+                    "tertiary-fixed": "#d3e4fe",
+                    "surface-container-high": "#e6e8ea",
+                    "on-secondary-container": "#fefcff",
+                    "on-secondary": "#ffffff",
+                    "secondary": "#0058be",
+                    "primary": "#091426",
+                    "surface-bright": "#f7f9fb",
+                    "surface-container": "#eceef0",
+                    "on-tertiary-fixed": "#0b1c30",
+                    "on-error-container": "#93000a",
+                    "on-error": "#ffffff",
+                    "tertiary-fixed-dim": "#b7c8e1",
+                    "on-tertiary-container": "#8191a9",
+                    "on-primary-container": "#8590a6",
+                    "error": "#ba1a1a",
+                    "surface-variant": "#e0e3e5",
+                    "secondary-fixed-dim": "#adc6ff",
+                    "tertiary-container": "#1a2a3e",
+                    "on-surface-variant": "#45474c",
+                    "on-secondary-fixed-variant": "#004395",
+                    "on-secondary-fixed": "#001a42",
+                    "surface-tint": "#545f73",
+                    "surface-container-lowest": "#ffffff",
+                    "primary-fixed": "#d8e3fb",
+                    "outline-variant": "#c5c6cd",
+                    "error-container": "#ffdad6",
+                    "tertiary": "#041528",
+                    "on-tertiary": "#ffffff",
+                    "on-primary-fixed": "#111c2d",
+                    "on-primary-fixed-variant": "#3c475a",
+                    "surface-container-highest": "#e0e3e5",
+                    "secondary-fixed": "#d8e2ff",
+                    "primary-container": "#1e293b",
+                    "outline": "#75777d",
+                    "surface-container-low": "#f2f4f6",
+                    "surface-dim": "#d8dadc",
+                    "primary-fixed-dim": "#bcc7de",
+                    "inverse-on-surface": "#eff1f3",
+                    "inverse-surface": "#2d3133",
+                    "on-surface": "#191c1e",
+                    "on-background": "#191c1e",
+                    "secondary-container": "#2170e4"
+            },
+            "borderRadius": {
+                    "DEFAULT": "0.125rem",
+                    "lg": "0.25rem",
+                    "xl": "0.5rem",
+                    "full": "0.75rem"
+            },
+            "spacing": {
+                    "md": "16px",
+                    "xs": "4px",
+                    "gutter": "16px",
+                    "filter-panel-width": "280px",
+                    "lg": "24px",
+                    "sidebar-width": "240px",
+                    "base": "4px",
+                    "xl": "32px",
+                    "sm": "8px"
+            },
+            "fontFamily": {
+                    "headline-md": ["Hanken Grotesk"],
+                    "body-sm": ["Hanken Grotesk"],
+                    "headline-lg": ["Hanken Grotesk"],
+                    "body-md": ["Hanken Grotesk"],
+                    "label-sm": ["JetBrains Mono"],
+                    "label-md": ["JetBrains Mono"],
+                    "display-sm": ["Hanken Grotesk"],
+                    "body-lg": ["Hanken Grotesk"]
+            },
+            "fontSize": {
+                    "headline-md": ["20px", {"lineHeight": "28px", "fontWeight": "600"}],
+                    "body-sm": ["13px", {"lineHeight": "18px", "fontWeight": "400"}],
+                    "headline-lg": ["24px", {"lineHeight": "32px", "fontWeight": "600"}],
+                    "body-md": ["14px", {"lineHeight": "20px", "fontWeight": "400"}],
+                    "label-sm": ["10px", {"lineHeight": "14px", "fontWeight": "500"}],
+                    "label-md": ["12px", {"lineHeight": "16px", "fontWeight": "500"}],
+                    "display-sm": ["30px", {"lineHeight": "36px", "letterSpacing": "-0.02em", "fontWeight": "700"}],
+                    "body-lg": ["16px", {"lineHeight": "24px", "fontWeight": "400"}]
+            }
+          },
+        },
+      }
+    </script>
+<style>
+        .material-symbols-outlined {
+            font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+        }
+        .hide-scrollbar::-webkit-scrollbar { display: none; }
+        .hide-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
+    </style>
+</head>
+<body class="bg-background text-on-background font-body-md text-body-md overflow-hidden h-screen flex flex-col">
+<div class="fixed top-4 right-4 z-[9999]">
+    <a href="../index.html" class="flex items-center gap-2 bg-white/90 backdrop-blur shadow-lg border border-slate-200 px-4 py-2 rounded-full text-slate-700 hover:bg-white hover:scale-105 transition-all font-bold text-sm">
+        <span class="material-symbols-outlined text-[20px]">grid_view</span>
+        Menu Principal
+    </a>
+</div>
+<!-- Top Navigation Anchor -->
+<header class="bg-surface border-b border-outline-variant flex justify-between items-center w-full px-md h-16 flex-shrink-0">
+<div class="flex items-center gap-md">
+<span class="font-headline-lg text-headline-lg font-bold text-primary">RetailPOS Pro</span>
+<div class="h-8 w-[1px] bg-outline-variant mx-sm"></div>
+<div class="flex flex-col">
+<span class="font-headline-md text-headline-md leading-tight text-primary">Boutique #042</span>
+<span class="text-on-surface-variant text-[11px] uppercase tracking-wider font-bold">Opérationnel</span>
+</div>
+</div>
+<div class="flex items-center gap-sm">
+<div class="flex items-center gap-xs px-sm py-1 bg-green-100 text-green-700 rounded-full border border-green-200">
+    <span class="material-symbols-outlined text-[16px]">cloud_done</span>
+    <span class="text-[10px] font-bold uppercase tracking-tighter">Sync Local Actif</span>
+</div>
+<button class="p-sm rounded-lg hover:bg-surface-container-high transition-colors duration-150">
+<span class="material-symbols-outlined text-primary">sync</span>
+</button>
+<button class="p-sm rounded-lg hover:bg-surface-container-high transition-colors duration-150">
+<span class="material-symbols-outlined text-primary">settings</span>
+</button>
+<div class="flex items-center gap-sm ml-sm p-xs pr-sm bg-surface-container rounded-full">
+<div class="w-8 h-8 rounded-full bg-primary-container flex items-center justify-center">
+<span class="material-symbols-outlined text-on-primary-container text-md" style="font-variation-settings: 'FILL' 1;">person</span>
+</div>
+<span id="userRoleBadge" class="font-bold text-primary">Manager</span>
+</div>
+</div>
+</header>
+<main class="flex flex-1 overflow-hidden">
+<!-- Side Navigation (Suppressed for focused POS journey, but keeping minimal anchors if needed) -->
+<!-- Main Content Area: Split Screen POS -->
+<div class="flex w-full h-full">
+<!-- Left Column: Product Grid (60%) -->
+<section class="w-[60%] flex flex-col border-r border-outline-variant bg-surface-container-lowest">
+<!-- Search & Filters -->
+<div class="p-md space-y-md border-b border-outline-variant">
+<div class="relative group">
+<span class="material-symbols-outlined absolute left-md top-1/2 -translate-y-1/2 text-outline group-focus-within:text-secondary">search</span>
+<input id="searchInput" class="w-full pl-12 pr-md py-md bg-surface-container-low border border-outline-variant rounded-lg focus:ring-2 focus:ring-secondary focus:border-secondary outline-none transition-all font-body-lg text-body-lg" placeholder="Rechercher un produit ou scanner code-barres..." type="text"/>
+</div>
+<div class="flex gap-sm overflow-x-auto hide-scrollbar pb-xs">
+<button class="px-lg py-sm bg-primary text-on-primary rounded-full font-bold whitespace-nowrap transition-colors">Tous</button>
+<button class="px-lg py-sm bg-surface-container-high text-on-surface hover:bg-surface-variant rounded-full font-medium whitespace-nowrap transition-colors">Sneakers</button>
+<button class="px-lg py-sm bg-surface-container-high text-on-surface hover:bg-surface-variant rounded-full font-medium whitespace-nowrap transition-colors">Accessoires</button>
+<button class="px-lg py-sm bg-surface-container-high text-on-surface hover:bg-surface-variant rounded-full font-medium whitespace-nowrap transition-colors">Électronique</button>
+<button class="px-lg py-sm bg-surface-container-high text-on-surface hover:bg-surface-variant rounded-full font-medium whitespace-nowrap transition-colors">Vêtements</button>
+<button class="px-lg py-sm bg-surface-container-high text-on-surface hover:bg-surface-variant rounded-full font-medium whitespace-nowrap transition-colors">Audio</button>
+</div>
+</div>
+<!-- Grid Scrollable -->
+<div id="productGrid" class="flex-1 overflow-y-auto p-md grid grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-md content-start bg-surface-container-lowest">
+    <!-- Chargement dynamique via JavaScript -->
+    <div class="col-span-full py-12 text-center text-outline">
+        <span class="material-symbols-outlined animate-spin text-4xl">sync</span>
+        <p class="mt-2 text-sm font-medium">Chargement du catalogue...</p>
+    </div>
+</div>
+</section>
+<!-- Right Column: Active Cart (40%) -->
+<section class="w-[40%] flex flex-col bg-white">
+<!-- Header -->
+<div class="p-md border-b border-outline-variant bg-surface flex justify-between items-center">
+<h2 class="font-headline-md text-headline-md text-primary">Panier Client</h2>
+<button class="p-sm rounded hover:bg-surface-container-high transition-colors">
+<span class="material-symbols-outlined text-outline">more_vert</span>
+</button>
+</div>
+<!-- Cart Items List -->
+<div class="flex-1 overflow-y-auto divide-y divide-outline-variant">
+    <!-- Injecté dynamiquement -->
+</div>
+<!-- Footer Summary -->
+<div class="p-md bg-surface border-t border-outline-variant space-y-md">
+<div class="space-y-sm">
+<div class="flex justify-between items-center text-on-surface-variant">
+<span class="font-body-md">Sous-total</span>
+<span class="font-label-md">922,00  FCFA</span>
+</div>
+<div class="flex justify-between items-center text-on-surface-variant">
+<div class="flex items-center gap-xs">
+<span class="font-body-md">Remise</span>
+<span class="text-[10px] bg-error-container text-on-error-container px-xs rounded font-bold">-5%</span>
+</div>
+<span class="font-label-md text-error">-46,10  FCFA</span>
+</div>
+<div class="pt-sm border-t border-outline-variant flex justify-between items-baseline">
+<span class="font-headline-md text-headline-md text-primary">Total</span>
+<span class="font-display-sm text-display-sm text-secondary">875,90  FCFA</span>
+</div>
+</div>
+<div class="grid grid-cols-2 gap-sm">
+<button id="btnAnnuler" class="py-md px-md rounded-lg border border-outline-variant font-bold text-primary hover:bg-surface-container transition-colors flex items-center justify-center gap-sm">
+<span class="material-symbols-outlined">cancel</span>
+                            Annuler
+                        </button>
+<button id="btnImprimer" class="py-md px-md rounded-lg border border-outline-variant font-bold text-primary hover:bg-surface-container transition-colors flex items-center justify-center gap-sm">
+<span class="material-symbols-outlined">print</span>
+                            Imprimer Reçu
+                        </button>
+</div>
+<div class="grid grid-cols-2 gap-sm">
+    <button id="btnMTN" class="py-md bg-[#FFCC00] text-[#000000] rounded-xl font-bold flex flex-col items-center justify-center gap-1 shadow hover:scale-[1.02] transition-transform">
+        <span class="text-[12px] font-extrabold">MTN</span>
+        <span class="text-[10px] uppercase">MoMo</span>
+    </button>
+    <button id="btnOrange" class="py-md bg-[#FF6600] text-white rounded-xl font-bold flex flex-col items-center justify-center gap-1 shadow hover:scale-[1.02] transition-transform">
+        <span class="text-[12px] font-extrabold">Orange</span>
+        <span class="text-[10px] uppercase">Money</span>
+    </button>
+</div>
+<button id="btnCash" class="w-full bg-[#2E7D32] text-white py-lg rounded-xl font-bold text-lg flex items-center justify-center gap-2 shadow-lg hover:bg-[#1B5E20] transition-colors mt-2">
+    <span class="material-symbols-outlined">payments</span>
+    ENCAISSER (CASH)
+</button>
+<button id="btnCredit" class="w-full bg-slate-700 text-white py-3 rounded-xl font-bold text-md flex items-center justify-center gap-2 shadow-lg hover:bg-slate-800 transition-colors mt-2">
+    <span class="material-symbols-outlined">menu_book</span>
+    VENDRE À CRÉDIT (CARNET)
+</button>
+</div>
+</section>
+</div>
+</main>
+<!-- Global Footer -->
+<footer class="bg-surface-container-low border-t border-outline-variant flex justify-between items-center px-lg py-sm w-full h-10 flex-shrink-0">
+<span class="font-label-md text-label-md text-on-surface-variant">© 2025 Stitch Boutique Network</span>
+<div class="flex gap-lg">
+<a class="font-label-md text-label-md text-on-surface-variant hover:underline" href="#">Conditions d'utilisation</a>
+<a class="font-label-md text-label-md text-on-surface-variant hover:underline" href="#">Confidentialité</a>
+<div class="flex items-center gap-xs">
+<div class="w-2 h-2 rounded-full bg-green-500"></div>
+<span class="font-label-md text-label-md text-on-surface-variant">Statut Terminal: Connecté</span>
+</div>
+</div>
+</footer>
+<script>
+        const products = [
+            { id: 1, name: 'Sneakers Tech Pro', price: 124, category: 'Sneakers', stock: 12, img: 'https://lh3.googleusercontent.com/aida-public/AB6AXuB6kzfHlgjJPLdCRDudmrMdAREnZlzL-KlQmkPKFEZ3RQGRywLHQO2F1deA1UTCb7fpnKB0QpQYVVYHQWb8lwv39k3GtyF_VhWqqel7s22v_W91MBYKkDUnSl0aKCoXlijN9M9oZzZcfnr18Ei8NVx3tf4XY4pENIttmFEIhyECfTKQdaOkEGugA2nEWBr3iLHvhYzxv4Aiws8ciMt5h5HE6W-xH9ilslKAu-FujMk65ot3OXMqknZWiCNp4zhhSPJKZjy5OJI5XuY' },
+            { id: 2, name: 'Watch Series X', price: 399, category: 'Accessoires', stock: 5, img: 'https://lh3.googleusercontent.com/aida-public/AB6AXuAoCFaNRZsOElOAP9QsXuF-1pJJ_yhRzt32lRC4YFNQiZWkxKozNPqWDaJG3goFkwQzf8PcAweFvyc0OqRroVqqpjQH8CGjCv7QTfpi14fGi4Demdn4qOsrFJSazplqn6UIVSFDB34zSSx84LuV6-4OPZjpnLGErhtS_Oy7wEz31-40CqdSbx1cDKuW-mEmbhFyovtOUuKX2rjBGgh4Um2tuhILt5l8SPuMD8kPZz-FiK7nPjpmplO3psVdaBGIE8E6FiOyRO0bxR0' },
+            { id: 3, name: 'Acoustic Pro Max', price: 249, category: 'Audio', stock: 8, img: 'https://lh3.googleusercontent.com/aida-public/AB6AXuBx38Gkcr_Gcq8DVn4O1hlZYBt2GV_U053YxKIhuxDh6QmdD7nHB8KQ6_Hg1W1oZ4lp31Ra8107plocpnRb5BHYe0OcJ_UJcQqm3tVzmZ5ZT1CyBzBxeJrY-bTNYTHIy_T34dSMWU-F04FoNpbLaVAA77P6Uiz_8VZ8iTcnnzNVXQsWKtsqBjpqjupfVdCU9W8pHDm6GkR02ZbCMJXu4_YsMWtSM5PT_QHMB71bWY9wyAwDD-aE1WUUU3vYo8cPCaX_0IurKTfx0T8' },
+            { id: 4, name: 'Smart Lite L1', price: 89, category: 'Électronique', stock: 22, img: 'https://lh3.googleusercontent.com/aida-public/AB6AXuDgSqyP7HLCOnUPAv_ulSQhtbWvDmD8wKm5Nrkja49GWV9bDCvsibu0EkARauutIZiSPjqyaVOYk7X6CcmjbWkBeLxxZAP_60BUuHEgmN2EmreLryXBJ76NN_2E8uB630PM5bjNmkqxlDZknQQmK1w4T6YmC3VOFttkgU3WCgak8laIJMEpxS4Ucl-bkCZEPUMInLfKzlk62p4_Eyf5yIkug3JSdoKmb7wAuPAt5VrZQYRb0OVDVxuJt4uONc0DcBKgsevpFUBDn0s' },
+            { id: 5, name: 'Sac Urbain Cuir', price: 185, category: 'Vêtements', stock: 3, img: 'https://lh3.googleusercontent.com/aida-public/AB6AXuBKMnOMvR2MgfMyFoq_44JoUjVLESsPn3Jnuqrfx0E-ciV4FgzqoPJTz4va6mJFzrNHuZEbEQMUFlTQIk8cGKS18Stq5nfKfoDaAv4SdY-8DsZMjojxG8jRJaMbADH-RdcniqVu6f-VJql84IT0_q1pUhhEqoiPyrlWCMpTwskkzl9TbDUKL10EdBEJrRVYOu-pnVNActJEK0LqFti41QSDPoG3SZD0QareGXMAbbRVGTVqyl48wom-Jh02_iOCm1c2HzRaFniMc_A' }
+        ];
+        let cart = [];
+        let currentCategory = 'Tous';
+
+        function getProduct(id) { return products.find(p => p.id === id); }
+        function getCartItem(id) { return cart.find(c => c.id === id); }
+        function formatPrice(n) { return n.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ' '); }
+
+        const userRoleBadge = document.getElementById('userRoleBadge');
+        if (userRoleBadge) {
+            const savedRole = sessionStorage.getItem('erp_role') || 'manager';
+            const savedUser = sessionStorage.getItem('erp_username') || sessionStorage.getItem('erp_phone') || 'Employé';
+            let roleText = 'Manager';
+            if (savedRole === 'owner') roleText = 'Propriétaire';
+            else if (savedRole === 'caissier') roleText = 'Caissier';
+            
+            userRoleBadge.innerText = `${savedUser} (${roleText})`;
+        }
+
+        function calculateCart() {
+            let subtotal = 0;
+            cart.forEach(item => {
+                const p = getProduct(item.id);
+                if (p) subtotal += p.price * item.qty;
+            });
+            const discount = subtotal * 0.05;
+            const total = subtotal - discount;
+            return { subtotal, discount, total };
+        }
+
+        function updateCart() {
+            const container = document.querySelector('.divide-y.divide-outline-variant');
+            const summary = document.querySelector('.space-y-md .space-y-sm');
+            if (!container || !summary) return;
+            
+            let html = '';
+            cart.forEach(item => {
+                const p = getProduct(item.id);
+                if (!p) return;
+                html += '<div class="p-md flex items-center gap-md group hover:bg-surface-container-low transition-colors">';
+                html += '<div class="w-16 h-16 rounded bg-surface-container overflow-hidden flex-shrink-0"><img class="w-full h-full object-cover" src="' + p.img + '" alt="' + p.name + '"/></div>';
+                html += '<div class="flex-1 min-w-0"><h3 class="font-bold text-primary truncate">' + p.name + '</h3><p class="font-label-md text-label-md text-secondary">' + p.price + ' FCFA</p></div>';
+                html += '<div class="flex items-center gap-xs">';
+                html += '<button class="w-10 h-10 rounded border border-outline-variant flex items-center justify-center active:bg-surface-container-high text-primary" onclick="decQty(' + p.id + ')"><span class="material-symbols-outlined">remove</span></button>';
+                html += '<span class="w-8 text-center font-bold font-label-md">' + item.qty + '</span>';
+                html += '<button class="w-10 h-10 rounded border border-outline-variant flex items-center justify-center active:bg-surface-container-high text-primary" onclick="incQty(' + p.id + ')"><span class="material-symbols-outlined">add</span></button>';
+                html += '</div></div>';
+            });
+            if (cart.length === 0) {
+                html = '<div class="p-md text-center text-outline"><span class="material-symbols-outlined text-4xl">shopping_cart</span><p class="mt-2">Panier vide</p></div>';
+            }
+            container.innerHTML = html;
+
+            const { subtotal, discount, total } = calculateCart();
+            summary.innerHTML = '<div class="flex justify-between items-center text-on-surface-variant"><span class="font-body-md">Sous-total</span><span class="font-label-md">' + formatPrice(subtotal.toFixed(0)) + ' FCFA</span></div>' +
+                '<div class="flex justify-between items-center text-on-surface-variant"><div class="flex items-center gap-xs"><span class="font-body-md">Remise</span><span class="text-[10px] bg-error-container text-on-error-container px-xs rounded font-bold">-5%</span></div><span class="font-label-md text-error">-' + formatPrice(discount.toFixed(0)) + ' FCFA</span></div>' +
+                '<div class="pt-sm border-t border-outline-variant flex justify-between items-baseline"><span class="font-headline-md text-headline-md text-primary">Total</span><span class="font-display-sm text-display-sm text-secondary">' + formatPrice(total.toFixed(0)) + ' FCFA</span></div>';
+        }
+
+        function incQty(id) {
+            const item = getCartItem(id);
+            const product = getProduct(id);
+            if (item && product) {
+                if (item.qty >= product.stock) {
+                    showToast('⚠️ Stock insuffisant ! (max: ' + product.stock + ')');
+                    return;
+                }
+                item.qty++;
+                updateCart();
+            }
+        }
+        function decQty(id) {
+            const item = getCartItem(id);
+            if (item) { item.qty--; if (item.qty <= 0) cart = cart.filter(c => c.id !== id); updateCart(); }
+        }
+        function addToCart(id) {
+            const product = getProduct(id);
+            if (!product) return;
+            const item = getCartItem(id);
+            const currentQty = item ? item.qty : 0;
+            if (currentQty >= product.stock) {
+                showToast('⚠️ Stock insuffisant ! (max: ' + product.stock + ')');
+                return;
+            }
+            if (item) { item.qty++; }
+            else { cart.push({ id, qty: 1 }); }
+            updateCart();
+            showToast('✓ ' + product.name + ' ajouté au panier');
+        }
+
+        function showToast(msg) {
+            const old = document.querySelector('.custom-toast');
+            if (old) old.remove();
+            const t = document.createElement('div');
+            t.className = 'custom-toast fixed bottom-24 right-4 bg-slate-900 text-white px-6 py-3 rounded-xl shadow-lg z-[99999] font-bold text-sm animate-bounce';
+            t.textContent = msg;
+            document.body.appendChild(t);
+            setTimeout(() => t.remove(), 2000);
+        }
+
+        const productGrid = document.getElementById('productGrid');
+
+        function renderProducts(list) {
+            if (!productGrid) return;
+            let html = '';
+            (list || products).forEach(p => {
+                html += '<button class="flex flex-col text-left group bg-white border border-outline-variant rounded-lg overflow-hidden transition-all active:scale-95 hover:border-secondary hover:shadow-md" onclick="addToCart(' + p.id + ')">';
+                html += '<div class="aspect-square bg-surface-container overflow-hidden"><img class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300" src="' + p.img + '" alt="' + p.name + '"/></div>';
+                html += '<div class="p-sm flex flex-col gap-xs"><span class="font-bold text-primary truncate">' + p.name + '</span>';
+                html += '<div class="flex justify-between items-end"><span class="font-label-md text-label-md text-secondary">' + p.price + ' FCFA</span><span class="text-[10px] text-on-surface-variant bg-surface-container px-xs py-[2px] rounded">Stock: ' + p.stock + '</span></div></div></button>';
+            });
+            productGrid.innerHTML = html;
+        }
+
+        function filterProducts() {
+            const filtered = currentCategory === 'Tous' ? products : products.filter(p => p.category === currentCategory);
+            renderProducts(filtered);
+        }
+
+        const catContainer = document.querySelector('.gap-sm.overflow-x-auto');
+        if (catContainer) {
+            catContainer.querySelectorAll('button').forEach(b => {
+                b.onclick = () => {
+                    catContainer.querySelectorAll('button').forEach(b2 => {
+                        b2.className = 'px-lg py-sm bg-surface-container-high text-on-surface hover:bg-surface-variant rounded-full font-medium whitespace-nowrap transition-colors';
+                    });
+                    b.className = 'px-lg py-sm bg-primary text-on-primary rounded-full font-bold whitespace-nowrap transition-colors';
+                    currentCategory = b.textContent.trim();
+                    filterProducts();
+                };
+            });
+        }
+
+        const searchInput = document.getElementById('searchInput');
+        if (searchInput) {
+            searchInput.addEventListener('focus', () => searchInput.parentElement.classList.add('ring-2', 'ring-secondary'));
+            searchInput.addEventListener('blur', () => searchInput.parentElement.classList.remove('ring-2', 'ring-secondary'));
+            searchInput.addEventListener('input', function() {
+                const q = this.value.toLowerCase();
+                const filtered = products.filter(p => p.name.toLowerCase().includes(q) && (currentCategory === 'Tous' || p.category === currentCategory));
+                renderProducts(filtered);
+            });
+        }
+
+        const btnAnnuler = document.getElementById('btnAnnuler');
+        const btnImprimer = document.getElementById('btnImprimer');
+        if (btnAnnuler) {
+            btnAnnuler.onclick = () => { if (confirm('Annuler la vente en cours ?')) { cart = []; updateCart(); showToast('Vente annulée'); } };
+        }
+        if (btnImprimer) {
+            btnImprimer.onclick = () => { if (cart.length === 0) { showToast('Panier vide'); return; } showToast('Reçu imprimé'); };
+        }
+
+        const btnMTN = document.getElementById('btnMTN');
+        const btnOrange = document.getElementById('btnOrange');
+        const btnCash = document.getElementById('btnCash');
+        const btnCredit = document.getElementById('btnCredit');
+
+        if (btnMTN) {
+            btnMTN.onclick = () => {
+                if (cart.length === 0) { showToast('Panier vide'); return; }
+                const { total } = calculateCart();
+                showToast('Paiement MTN MoMo de ' + formatPrice(total.toFixed(0)) + ' FCFA réussi');
+                cart = []; updateCart();
+            };
+        }
+        if (btnOrange) {
+            btnOrange.onclick = () => {
+                if (cart.length === 0) { showToast('Panier vide'); return; }
+                const { total } = calculateCart();
+                showToast('Paiement Orange Money de ' + formatPrice(total.toFixed(0)) + ' FCFA réussi');
+                cart = []; updateCart();
+            };
+        }
+        if (btnCash) {
+            btnCash.onclick = () => {
+                if (cart.length === 0) { showToast('Panier vide'); return; }
+                const { total } = calculateCart();
+                showToast('Vente encaissée ! Total: ' + formatPrice(total.toFixed(0)) + ' FCFA');
+                cart = []; updateCart();
+            };
+        }
+        if (btnCredit) {
+            btnCredit.onclick = () => {
+                if (cart.length === 0) { showToast('Panier vide'); return; }
+                showToast('Vente à crédit enregistrée dans le carnet de dettes');
+                cart = []; updateCart();
+            };
+        }
+
+        document.querySelectorAll('button span.material-symbols-outlined').forEach(span => {
+            const txt = span.textContent.trim();
+            const btn = span.closest('button');
+            if (!btn || btn.onclick) return;
+            if (txt === 'sync') btn.onclick = () => showToast('Synchronisation déclenchée');
+            else if (txt === 'settings') btn.onclick = () => showToast('Paramètres du terminal');
+            else if (txt === 'more_vert') btn.onclick = () => showToast('Options du panier');
+        });
+        document.querySelectorAll('a[href="#"]').forEach(a => a.onclick = (e) => { e.preventDefault(); showToast('Page en construction'); });
+
+        renderProducts();
+        updateCart();
+    </script>
+</body></html>

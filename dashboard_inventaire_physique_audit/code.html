@@ -1,0 +1,649 @@
+<!DOCTYPE html>
+
+<html class="light" lang="fr"><head>
+    <script>
+        // Toast Notification System
+        window.showToast = function(msg) {
+            const old = document.querySelector('.custom-toast');
+            if (old) old.remove();
+            const t = document.createElement('div');
+            t.className = 'custom-toast fixed bottom-6 right-6 bg-slate-900 text-white px-6 py-3 rounded-xl shadow-lg z-[99999] font-bold text-sm transition-all animate-bounce';
+            t.textContent = msg;
+            document.body.appendChild(t);
+            setTimeout(() => t.remove(), 2500);
+        };
+
+        // Hard-Lock Security Script
+        (function() {
+            const isAuthenticated = sessionStorage.getItem('erp_authenticated');
+            const isSuperUser = sessionStorage.getItem('erp_superuser');
+            const role = sessionStorage.getItem('erp_role');
+            
+            // If not authenticated and not in auth/login.html, redirect to login
+            if (!isAuthenticated && !isSuperUser && !window.location.href.includes('login.html')) {
+                window.location.href = '../auth/login.html';
+                return;
+            }
+            
+            // Restrict access for Caissier
+            if (role === 'caissier') {
+                document.addEventListener('DOMContentLoaded', () => {
+                    if (window.showToast) {
+                        window.showToast('Accès refusé : Ce module est réservé aux gérants et administrateurs.');
+                    } else {
+                        alert('Accès refusé : Ce module est réservé aux gérants et administrateurs.');
+                    }
+                    setTimeout(() => { window.location.href = '../index.html'; }, 2000);
+                });
+            }
+        })();
+    </script>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>RetailSync ERP - Inventaire Physique</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Hanken+Grotesk:wght@400;600;700&amp;family=JetBrains+Mono:wght@500&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    "colors": {
+                        "on-tertiary": "#ffffff",
+                        "on-secondary-fixed": "#001a42",
+                        "secondary-fixed": "#d8e2ff",
+                        "on-surface": "#191c1e",
+                        "on-tertiary-container": "#8191a9",
+                        "inverse-surface": "#2d3133",
+                        "secondary-fixed-dim": "#adc6ff",
+                        "surface-tint": "#545f73",
+                        "outline": "#75777d",
+                        "surface-variant": "#e0e3e5",
+                        "primary-container": "#1e293b",
+                        "error": "#ba1a1a",
+                        "tertiary-fixed-dim": "#b7c8e1",
+                        "on-secondary-container": "#fefcff",
+                        "on-error-container": "#93000a",
+                        "surface-container-low": "#f2f4f6",
+                        "surface": "#f7f9fb",
+                        "inverse-primary": "#bcc7de",
+                        "surface-container": "#eceef0",
+                        "on-primary-container": "#8590a6",
+                        "on-surface-variant": "#45474c",
+                        "surface-container-highest": "#e0e3e5",
+                        "on-primary-fixed-variant": "#3c475a",
+                        "secondary-container": "#2170e4",
+                        "surface-bright": "#f7f9fb",
+                        "on-primary-fixed": "#111c2d",
+                        "on-primary": "#ffffff",
+                        "surface-dim": "#d8dadc",
+                        "primary": "#091426",
+                        "surface-container-lowest": "#ffffff",
+                        "on-secondary": "#ffffff",
+                        "inverse-on-surface": "#eff1f3",
+                        "tertiary": "#041528",
+                        "tertiary-fixed": "#d3e4fe",
+                        "outline-variant": "#c5c6cd",
+                        "surface-container-high": "#e6e8ea",
+                        "on-background": "#191c1e",
+                        "on-tertiary-fixed-variant": "#38485d",
+                        "tertiary-container": "#1a2a3e",
+                        "on-tertiary-fixed": "#0b1c30",
+                        "background": "#f7f9fb",
+                        "primary-fixed-dim": "#bcc7de",
+                        "on-secondary-fixed-variant": "#004395",
+                        "on-error": "#ffffff",
+                        "error-container": "#ffdad6",
+                        "secondary": "#0058be",
+                        "primary-fixed": "#d8e3fb"
+                    },
+                    "borderRadius": {
+                        "DEFAULT": "0.125rem",
+                        "lg": "0.25rem",
+                        "xl": "0.5rem",
+                        "full": "0.75rem"
+                    },
+                    "spacing": {
+                        "sm": "8px",
+                        "lg": "24px",
+                        "gutter": "16px",
+                        "xs": "4px",
+                        "md": "16px",
+                        "filter-panel-width": "280px",
+                        "xl": "32px",
+                        "sidebar-width": "240px",
+                        "base": "4px"
+                    },
+                    "fontFamily": {
+                        "label-md": ["JetBrains Mono"],
+                        "label-sm": ["JetBrains Mono"],
+                        "body-lg": ["Hanken Grotesk"],
+                        "headline-lg": ["Hanken Grotesk"],
+                        "headline-md": ["Hanken Grotesk"],
+                        "display-sm": ["Hanken Grotesk"],
+                        "body-sm": ["Hanken Grotesk"],
+                        "body-md": ["Hanken Grotesk"]
+                    },
+                    "fontSize": {
+                        "label-md": ["12px", {"lineHeight": "16px", "fontWeight": "500"}],
+                        "label-sm": ["10px", {"lineHeight": "14px", "fontWeight": "500"}],
+                        "body-lg": ["16px", {"lineHeight": "24px", "fontWeight": "400"}],
+                        "headline-lg": ["24px", {"lineHeight": "32px", "fontWeight": "600"}],
+                        "headline-md": ["20px", {"lineHeight": "28px", "fontWeight": "600"}],
+                        "display-sm": ["30px", {"lineHeight": "36px", "letterSpacing": "-0.02em", "fontWeight": "700"}],
+                        "body-sm": ["13px", {"lineHeight": "18px", "fontWeight": "400"}],
+                        "body-md": ["14px", {"lineHeight": "20px", "fontWeight": "400"}]
+                    }
+                },
+            },
+        }
+    </script>
+<style>
+        .material-symbols-outlined {
+            font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+            vertical-align: middle;
+        }
+        ::-webkit-scrollbar { width: 6px; height: 6px; }
+        ::-webkit-scrollbar-track { background: transparent; }
+        ::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 10px; }
+        ::-webkit-scrollbar-thumb:hover { background: #94a3b8; }
+        .tab-active { border-bottom: 2px solid #091426; color: #091426; font-weight: 700; }
+        .product-table-row:hover .row-actions { opacity: 1; }
+        .row-actions { opacity: 0; transition: opacity 0.2s; }
+    </style>
+</head>
+<body class="bg-background font-body-md text-on-background selection:bg-secondary-fixed">
+<div class="fixed top-4 right-4 z-[9999]">
+    <a href="../index.html" class="flex items-center gap-2 bg-white/90 backdrop-blur shadow-lg border border-slate-200 px-4 py-2 rounded-full text-slate-700 hover:bg-white hover:scale-105 transition-all font-bold text-sm">
+        <span class="material-symbols-outlined text-[20px]">grid_view</span>
+        Menu Principal
+    </a>
+</div>
+<!-- Sidebar Navigation -->
+<aside class="w-sidebar-width h-screen fixed left-0 top-0 bg-surface dark:bg-surface-dim border-r border-outline-variant dark:border-outline flex flex-col py-md px-sm z-50">
+<div class="px-md mb-xl">
+<span class="font-headline-md text-headline-md font-bold text-primary">RetailSync ERP</span>
+</div>
+<nav class="flex-1 flex flex-col gap-xs">
+<a class="flex items-center gap-md p-md rounded-lg bg-secondary-fixed text-on-secondary-fixed font-bold cursor-pointer group">
+<span class="material-symbols-outlined" style="font-variation-settings: 'FILL' 1;">inventory_2</span>
+<span class="font-body-md text-body-md">Inventaire</span>
+</a>
+<a class="flex items-center gap-md p-md rounded-lg text-on-surface-variant hover:bg-surface-container-high transition-colors cursor-pointer group">
+<span class="material-symbols-outlined">analytics</span>
+<span class="font-body-md text-body-md">Ventes</span>
+</a>
+<a class="flex items-center gap-md p-md rounded-lg text-on-surface-variant hover:bg-surface-container-high transition-colors cursor-pointer group">
+<span class="material-symbols-outlined">description</span>
+<span class="font-body-md text-body-md">Rapports</span>
+</a>
+</nav>
+<div class="mt-auto flex flex-col gap-xs">
+<a class="flex items-center gap-md p-md rounded-lg text-on-surface-variant hover:bg-surface-container-high transition-colors cursor-pointer group">
+<span class="material-symbols-outlined">settings</span>
+<span class="font-body-md text-body-md">Paramètres</span>
+</a>
+<div class="flex items-center gap-md p-md border-t border-outline-variant mt-sm">
+<img alt="Store Manager" class="w-8 h-8 rounded-full bg-surface-container-highest" src="https://lh3.googleusercontent.com/aida-public/AB6AXuAa1zyLUICXWJ4J1aKIHilaljI0YMNFQ_NYGo7DWir4d5lpD3BE_5ZRunzRqiEfRraX4XIKJj7Sq9pfo91mX8TCk9McFt2c0SuObmVLEsmwKF80yFgUW5-4d5IVovKov262tww07nywv6k52lqJJBbrPOQL0JDGCfGQ5gaLFx_yt6rLo2ZOe_xeWEb-RfJ65G63wJq1mMtPM5vBp67azx5BjKaqGfrhogNl3cnBlXwcREQYlukQ12_fThhzUcnIfQ7fcxzQvNnVLeU"/>
+<div class="flex flex-col">
+<span id="headerUserName" class="font-label-md text-label-md text-on-surface font-bold">Admin Panel</span>
+<span id="headerUserRole" class="font-label-sm text-label-sm text-on-surface-variant">Network Owner</span>
+</div>
+</div>
+</div>
+</aside>
+<!-- Main Content Area -->
+<main class="ml-sidebar-width min-h-screen flex flex-col">
+<!-- Top App Bar -->
+<header class="flex justify-between items-center px-lg w-full h-14 sticky top-0 z-40 bg-surface-lowest border-b border-outline-variant">
+<div class="flex items-center gap-xl">
+<div class="relative w-80">
+<span class="material-symbols-outlined absolute left-sm top-1/2 -translate-y-1/2 text-on-surface-variant">search</span>
+<input class="w-full bg-surface-container-low border-none rounded-lg pl-xl py-xs text-body-sm focus:ring-1 focus:ring-secondary" placeholder="Rechercher une session..." type="text"/>
+</div>
+</div>
+<div class="flex items-center gap-md">
+<button class="p-xs hover:bg-surface-container-low rounded-full transition-colors">
+<span class="material-symbols-outlined text-primary">notifications</span>
+</button>
+<button class="p-xs hover:bg-surface-container-low rounded-full transition-colors">
+<span class="material-symbols-outlined text-primary">help</span>
+</button>
+</div>
+</header>
+<!-- Dashboard Body -->
+<div class="p-lg flex flex-col gap-lg">
+<!-- Page Header & Tabs -->
+<div class="flex flex-col gap-md">
+<div class="flex justify-between items-end">
+<div>
+<h1 class="font-headline-lg text-headline-lg text-on-surface">Inventaire Physique</h1>
+<p class="font-body-md text-body-md text-on-surface-variant">Suivi et réconciliation des stocks du réseau.</p>
+</div>
+<button class="bg-primary text-on-primary px-lg py-sm rounded flex items-center gap-sm font-body-md hover:bg-opacity-90 transition-all">
+<span class="material-symbols-outlined">add</span>
+                        Nouvelle Session
+                    </button>
+</div>
+<div class="flex gap-xl border-b border-outline-variant">
+<button class="pb-sm px-xs font-body-md transition-all tab-active" id="tab-sessions" onclick="switchTab('sessions')">Sessions d'Inventaire</button>
+<button class="pb-sm px-xs font-body-md transition-all text-on-surface-variant" id="tab-details" onclick="switchTab('details')">Détails de la Session</button>
+</div>
+</div>
+<!-- Tab Content: Sessions List -->
+<div class="flex flex-col gap-md" id="content-sessions">
+<div class="bg-surface-container-lowest border border-outline-variant overflow-hidden rounded-lg">
+<table class="w-full text-left border-collapse">
+<thead>
+<tr class="bg-surface-container text-on-surface-variant font-label-md text-label-md">
+<th class="p-md font-semibold">DATE</th>
+<th class="p-md font-semibold">MAGASIN</th>
+<th class="p-md font-semibold">RESPONSABLE</th>
+<th class="p-md font-semibold text-center">STATUT</th>
+<th class="p-md font-semibold text-right">ACTIONS</th>
+</tr>
+</thead>
+<tbody class="font-body-md text-body-md">
+<tr class="border-b border-outline-variant hover:bg-surface-container-low cursor-pointer" onclick="switchTab('details')">
+<td class="p-md">24 Oct 2023</td>
+<td class="p-md font-semibold">Yaoundé - Mvan</td>
+<td class="p-md">Marc Durant</td>
+<td class="p-md text-center">
+<span class="px-sm py-1 rounded-full bg-blue-100 text-blue-800 text-label-sm font-bold">EN COURS</span>
+</td>
+<td class="p-md text-right">
+<span class="material-symbols-outlined text-on-surface-variant">chevron_right</span>
+</td>
+</tr>
+<tr class="border-b border-outline-variant hover:bg-surface-container-low">
+<td class="p-md">22 Oct 2023</td>
+<td class="p-md font-semibold">Lyon - Part Dieu</td>
+<td class="p-md">Amina B.</td>
+<td class="p-md text-center">
+<span class="px-sm py-1 rounded-full bg-orange-100 text-orange-800 text-label-sm font-bold uppercase">À Valider</span>
+</td>
+<td class="p-md text-right">
+<span class="material-symbols-outlined text-on-surface-variant">chevron_right</span>
+</td>
+</tr>
+<tr class="border-b border-outline-variant hover:bg-surface-container-low">
+<td class="p-md">15 Oct 2023</td>
+<td class="p-md font-semibold">Marseille - Vieux Port</td>
+<td class="p-md">Julien Roche</td>
+<td class="p-md text-center">
+<span class="px-sm py-1 rounded-full bg-green-100 text-green-800 text-label-sm font-bold">VALIDÉ</span>
+</td>
+<td class="p-md text-right">
+<span class="material-symbols-outlined text-on-surface-variant">chevron_right</span>
+</td>
+</tr>
+<tr class="hover:bg-surface-container-low">
+<td class="p-md">10 Oct 2023</td>
+<td class="p-md font-semibold">Bordeaux - Lac</td>
+<td class="p-md">Lea Morel</td>
+<td class="p-md text-center">
+<span class="px-sm py-1 rounded-full bg-gray-100 text-gray-800 text-label-sm font-bold">BROUILLON</span>
+</td>
+<td class="p-md text-right">
+<span class="material-symbols-outlined text-on-surface-variant">chevron_right</span>
+</td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
+<!-- Tab Content: Details -->
+<div class="hidden flex flex-col gap-lg" id="content-details">
+<!-- Session Summary Header -->
+<div class="flex justify-between items-center bg-surface-container-low p-md rounded-lg border border-outline-variant">
+<div class="flex items-center gap-lg">
+<div class="flex flex-col">
+<span class="text-label-sm text-on-surface-variant font-bold uppercase">Session ID</span>
+<span class="font-label-md text-on-surface">INV-2023-1024</span>
+</div>
+<div class="h-8 w-px bg-outline-variant"></div>
+<div class="flex flex-col">
+<span class="text-label-sm text-on-surface-variant font-bold uppercase">Magasin</span>
+<span class="font-body-md text-on-surface">Yaoundé - Mvan</span>
+</div>
+<div class="h-8 w-px bg-outline-variant"></div>
+<div class="flex flex-col">
+<span class="text-label-sm text-on-surface-variant font-bold uppercase">Statut</span>
+<span class="font-body-md text-secondary font-bold">En cours de saisie</span>
+</div>
+</div>
+<div class="flex gap-md">
+<button class="px-md py-sm border border-outline text-primary rounded font-body-md hover:bg-surface-container-high transition-all">Ajuster les Stocks</button>
+<button class="px-md py-sm bg-primary text-on-primary rounded font-body-md hover:bg-opacity-90 shadow-sm transition-all">Valider l'Inventaire</button>
+</div>
+</div>
+<!-- Stats Cards (Bento Grid Style) -->
+<div class="grid grid-cols-1 md:grid-cols-4 gap-md">
+<div class="bg-surface-container-lowest p-md border border-outline-variant rounded-lg">
+<div class="flex justify-between items-start mb-sm">
+<span class="text-label-sm text-on-surface-variant font-bold uppercase">Écarts Positifs</span>
+<span class="material-symbols-outlined text-green-600">trending_up</span>
+</div>
+<span class="font-label-md text-display-sm text-on-surface block">+12</span>
+<p class="text-label-sm text-on-surface-variant mt-xs">Unités excédentaires</p>
+</div>
+<div class="bg-surface-container-lowest p-md border border-outline-variant rounded-lg">
+<div class="flex justify-between items-start mb-sm">
+<span class="text-label-sm text-on-surface-variant font-bold uppercase">Écarts Négatifs</span>
+<span class="material-symbols-outlined text-error">trending_down</span>
+</div>
+<span class="font-label-md text-display-sm text-on-surface block">-45</span>
+<p class="text-label-sm text-on-surface-variant mt-xs">Unités manquantes</p>
+</div>
+<div class="bg-surface-container-lowest p-md border border-outline-variant rounded-lg">
+<div class="flex justify-between items-start mb-sm">
+<span class="text-label-sm text-on-surface-variant font-bold uppercase">Valeur des Pertes</span>
+<span class="material-symbols-outlined text-on-surface-variant">payments</span>
+</div>
+<span class="font-label-md text-display-sm text-on-surface block">1 240,50 FCFA</span>
+<p class="text-label-sm text-on-surface-variant mt-xs">Impact net théorique</p>
+</div>
+<div class="bg-surface-container-lowest p-md border border-outline-variant rounded-lg">
+<div class="flex justify-between items-start mb-sm">
+<span class="text-label-sm text-on-surface-variant font-bold uppercase">Non comptés</span>
+<span class="material-symbols-outlined text-on-surface-variant">pending</span>
+</div>
+<span class="font-label-md text-display-sm text-on-surface block">82</span>
+<p class="text-label-sm text-on-surface-variant mt-xs">Produits en attente</p>
+</div>
+</div>
+<!-- Dense Product List Table -->
+<div class="bg-surface-container-lowest border border-outline-variant rounded-lg overflow-hidden flex-1">
+<div class="p-md border-b border-outline-variant flex justify-between items-center bg-surface-container-lowest">
+<h2 class="font-headline-md text-headline-md">Articles à compter</h2>
+<div class="flex gap-sm">
+<button class="p-xs hover:bg-surface-container-low rounded"><span class="material-symbols-outlined">filter_list</span></button>
+<button class="p-xs hover:bg-surface-container-low rounded"><span class="material-symbols-outlined">download</span></button>
+</div>
+</div>
+<div class="overflow-auto max-h-[500px]">
+<table class="w-full text-left border-collapse">
+<thead class="sticky top-0 bg-surface-container text-on-surface-variant font-label-md text-label-md z-10">
+<tr>
+<th class="p-sm pl-md font-semibold w-16 text-center">ITEM</th>
+<th class="p-sm font-semibold">PRODUIT / SKU</th>
+<th class="p-sm font-semibold text-right">STOCK SYSTÈME</th>
+<th class="p-sm font-semibold text-right w-32">STOCK COMPTÉ</th>
+<th class="p-sm font-semibold text-right">ÉCART</th>
+<th class="p-sm font-semibold pl-md">COMMENTAIRE</th>
+</tr>
+</thead>
+<tbody class="font-body-sm text-body-sm">
+<!-- Product Row 1 -->
+<tr class="border-b border-outline-variant product-table-row hover:bg-surface-container-low transition-colors">
+<td class="p-sm pl-md text-center">
+<div class="w-10 h-10 bg-surface-container-high rounded overflow-hidden">
+<img class="w-full h-full object-cover" data-alt="A professional studio product shot of a sleek red athletic sneaker isolated on a clean, neutral gray background. The lighting is high-key and surgical, highlighting the fabric textures and synthetic overlays. The overall aesthetic is corporate, precise, and systematic, fitting for a retail enterprise resource planning dashboard." src="https://lh3.googleusercontent.com/aida-public/AB6AXuD4N7xwF7xdZRckYQhxYf0JTh3kLbrGzcFnwpmENl9cAc9hFknHFh7v8b89tlKDErMjurYSHRUq1U8ycb5n4A_VSJi3_HCBnG7dM618GwU1CFhl85hga2so1TtkN0a3WIfl0NXOe9mM6jL4FvQJBuPXa-s0NkMxcO2uXosWh14kQ63j8LKh1nY_P7uZBrt935g26lR2uy1QS0h4dVjlmdW12V0J2mbviBQq10k7SSj86Jl5Y4DMtCt_nmbPYaplmwXyugfIBCI5kC8"/>
+</div>
+</td>
+<td class="p-sm">
+<div class="flex flex-col">
+<span class="font-bold text-on-surface">Nike Air Zoom Rival</span>
+<span class="font-label-sm text-on-surface-variant">SKU-99281-RD</span>
+</div>
+</td>
+<td class="p-sm text-right font-label-md">24</td>
+<td class="p-sm text-right">
+<input class="w-20 text-right bg-surface-container-low border border-outline-variant rounded p-xs focus:ring-1 focus:ring-secondary font-label-md" type="number" value="22"/>
+</td>
+<td class="p-sm text-right font-label-md text-error">-2</td>
+<td class="p-sm pl-md">
+<input class="w-full bg-transparent border-none p-xs text-body-sm italic focus:ring-0" placeholder="Ajouter une note..." type="text"/>
+</td>
+</tr>
+<!-- Product Row 2 -->
+<tr class="border-b border-outline-variant product-table-row hover:bg-surface-container-low transition-colors">
+<td class="p-sm pl-md text-center">
+<div class="w-10 h-10 bg-surface-container-high rounded overflow-hidden">
+<img class="w-full h-full object-cover" data-alt="A high-resolution product photograph of a modern minimalist smartwatch with a white strap, displayed on a cool blue surface. The lighting is soft and diffuse, creating a premium and sober look. The image captures the essence of operational efficiency and data-driven technology, perfect for a retail stock management interface." src="https://lh3.googleusercontent.com/aida-public/AB6AXuAxmZ8mcekdhARNtpRNqQ2MALxlhPk8nyITyGoJSo_g6pkfX0wbZiBQqSTqkcQxWbwxNcbnmBnCoENiQUbvpH-yP7raI-q9X17ACWQIDB4YzgMJ7NmFhKHIU5tm98tbz8i2sDp7wnGlFX5ql7OxlNXo8cK_CZ-Rgxi65XGD3iQpG99jscSQ1Tv_sVtt8noURZyM1ODg7dhi0wRI-2sZTk1LM-uayNgGqZVmu_6e5t1jLnspbOHBsSkQDQwd9nCRXt2ctIyx_sWiGyY"/>
+</div>
+</td>
+<td class="p-sm">
+<div class="flex flex-col">
+<span class="font-bold text-on-surface">Smart Horizon Watch v2</span>
+<span class="font-label-sm text-on-surface-variant">SKU-88210-WT</span>
+</div>
+</td>
+<td class="p-sm text-right font-label-md">15</td>
+<td class="p-sm text-right">
+<input class="w-20 text-right bg-surface-container-low border border-outline-variant rounded p-xs focus:ring-1 focus:ring-secondary font-label-md" type="number" value="15"/>
+</td>
+<td class="p-sm text-right font-label-md text-on-surface-variant">0</td>
+<td class="p-sm pl-md">
+<input class="w-full bg-transparent border-none p-xs text-body-sm italic focus:ring-0" placeholder="Ajouter une note..." type="text"/>
+</td>
+</tr>
+<!-- Product Row 3 -->
+<tr class="border-b border-outline-variant product-table-row hover:bg-surface-container-low transition-colors">
+<td class="p-sm pl-md text-center">
+<div class="w-10 h-10 bg-surface-container-high rounded overflow-hidden">
+<img class="w-full h-full object-cover" data-alt="A professional product image of high-quality noise-canceling headphones in black. The setting is an analytical, tech-focused environment with subtle tonal shifts of gray and blue. The composition is structured and clean, emphasizing functional design and retail value, suitable for an ERP system's inventory tracking view." src="https://lh3.googleusercontent.com/aida-public/AB6AXuAAuxerUxh4skS3amsGTFGRZKRn_abaIz6FlpVS5Zn5nWUpmETDHtHncFe6W671RtpQoYX1pzb4NJsD_E2dvGflmSLm8nSMdn8d6VjI6e_7TTUM2jdam7RuLDm5L3XEr0QyPJwohP4Z45bgx_aRp0Op1P8L1Dt6ZNJlrabe5k-YjrqNUTF7hAUz9J_uyVE_k4bClJfAyeqppOtjFgKzOeajFUDNuC4PPGs5-3Ft__F1uArKdW2qgwTYv48Ytz9hObI9RC_l98HJ2zQ"/>
+</div>
+</td>
+<td class="p-sm">
+<div class="flex flex-col">
+<span class="font-bold text-on-surface">AudioPro Gen 3 Black</span>
+<span class="font-label-sm text-on-surface-variant">SKU-77123-BK</span>
+</div>
+</td>
+<td class="p-sm text-right font-label-md">8</td>
+<td class="p-sm text-right">
+<input class="w-20 text-right bg-surface-container-low border border-outline-variant rounded p-xs focus:ring-1 focus:ring-secondary font-label-md" type="number" value="10"/>
+</td>
+<td class="p-sm text-right font-label-md text-green-600 font-bold">+2</td>
+<td class="p-sm pl-md">
+<input class="w-full bg-transparent border-none p-xs text-body-sm italic focus:ring-0 text-secondary" type="text" value="Erreur de réception"/>
+</td>
+</tr>
+<!-- Product Row 4 -->
+<tr class="border-b border-outline-variant product-table-row hover:bg-surface-container-low transition-colors">
+<td class="p-sm pl-md text-center">
+<div class="w-10 h-10 bg-surface-container-high rounded overflow-hidden">
+<img class="w-full h-full object-cover" data-alt="A commercial product shot of designer sunglasses with a gold frame against a bright white background. The style is sharp, authoritative, and minimalistic, reflecting a premium retail ecosystem. Every detail is rendered with clarity to facilitate rapid identification in a high-density data interface." src="https://lh3.googleusercontent.com/aida-public/AB6AXuA2-l3GAtNyjH6rCYXwDRDkXYGLtTOEfqXsAAU4Mbp6vlDc9P8x79JoHbstJSz-RfKe1olLP-_olciLe3ummxgg_bI8e0aLZ31V8RpCDFYHayrVBoDFvSBsZeVq3HbAeDkEf85tOfr8MP-kWVazHffeTmnavDEV2em651r-lTm5QJImRYhIbtd7g5V7XM1isW4oPyBAzNvJYSrOLMuMOLwtUGwKDGhvGquI9wPPit40DcrPD186Hc0sBcmo4rrBijJoiROSu25-ptY"/>
+</div>
+</td>
+<td class="p-sm">
+<div class="flex flex-col">
+<span class="font-bold text-on-surface">Luxury Ray Shades</span>
+<span class="font-label-sm text-on-surface-variant">SKU-44502-GL</span>
+</div>
+</td>
+<td class="p-sm text-right font-label-md">32</td>
+<td class="p-sm text-right">
+<input class="w-20 text-right bg-surface-container-low border border-primary rounded p-xs focus:ring-1 focus:ring-secondary font-label-md" placeholder="Comptage" type="number"/>
+</td>
+<td class="p-sm text-right font-label-md text-on-surface-variant">-</td>
+<td class="p-sm pl-md">
+<span class="text-label-sm bg-surface-container-high px-xs rounded text-on-surface-variant">Non compté</span>
+</td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
+</div>
+</div>
+</main>
+<script>
+        // Update user name and role dynamically
+        const headerUserName = document.getElementById('headerUserName');
+        const headerUserRole = document.getElementById('headerUserRole');
+        if (headerUserName && headerUserRole) {
+            const username = sessionStorage.getItem('erp_username') || 'Utilisateur';
+            const role = sessionStorage.getItem('erp_role') || 'admin';
+            headerUserName.textContent = username;
+            headerUserRole.textContent = role.charAt(0).toUpperCase() + role.slice(1);
+        }
+
+        function switchTab(tab) {
+            const sessionsBtn = document.getElementById('tab-sessions');
+            const detailsBtn = document.getElementById('tab-details');
+            const sessionsContent = document.getElementById('content-sessions');
+            const detailsContent = document.getElementById('content-details');
+
+            if (tab === 'sessions') {
+                sessionsBtn.classList.add('tab-active');
+                sessionsBtn.classList.remove('text-on-surface-variant');
+                detailsBtn.classList.remove('tab-active');
+                detailsBtn.classList.add('text-on-surface-variant');
+                
+                sessionsContent.classList.remove('hidden');
+                detailsContent.classList.add('hidden');
+            } else {
+                detailsBtn.classList.add('tab-active');
+                detailsBtn.classList.remove('text-on-surface-variant');
+                sessionsBtn.classList.remove('tab-active');
+                sessionsBtn.classList.add('text-on-surface-variant');
+                
+                detailsContent.classList.remove('hidden');
+                sessionsContent.classList.add('hidden');
+            }
+        }
+
+        document.querySelectorAll('button').forEach(btn => {
+            btn.addEventListener('mousedown', () => {
+                btn.style.transform = 'scale(0.98)';
+            });
+            btn.addEventListener('mouseup', () => {
+                btn.style.transform = 'scale(1)';
+            });
+            btn.addEventListener('mouseleave', () => {
+                btn.style.transform = 'scale(1)';
+            });
+        });
+
+        document.querySelectorAll('input').forEach(input => {
+            input.addEventListener('focus', function() {
+                this.closest('tr')?.classList.add('bg-surface-container');
+            });
+        function switchTab(tab) {
+            const sessionsBtn = document.getElementById('tab-sessions');
+            const detailsBtn = document.getElementById('tab-details');
+            const sessionsContent = document.getElementById('content-sessions');
+            const detailsContent = document.getElementById('content-details');
+
+            if (tab === 'sessions') {
+                sessionsBtn.classList.add('tab-active');
+                sessionsBtn.classList.remove('text-on-surface-variant');
+                detailsBtn.classList.remove('tab-active');
+                detailsBtn.classList.add('text-on-surface-variant');
+                
+                sessionsContent.classList.remove('hidden');
+                detailsContent.classList.add('hidden');
+            } else {
+                detailsBtn.classList.add('tab-active');
+                detailsBtn.classList.remove('text-on-surface-variant');
+                sessionsBtn.classList.remove('tab-active');
+                sessionsBtn.classList.add('text-on-surface-variant');
+                
+                detailsContent.classList.remove('hidden');
+                sessionsContent.classList.add('hidden');
+            }
+        }
+
+        document.querySelectorAll('button').forEach(btn => {
+            btn.addEventListener('mousedown', () => {
+                btn.style.transform = 'scale(0.98)';
+            });
+            btn.addEventListener('mouseup', () => {
+                btn.style.transform = 'scale(1)';
+            });
+            btn.addEventListener('mouseleave', () => {
+                btn.style.transform = 'scale(1)';
+            });
+        });
+
+        document.querySelectorAll('input').forEach(input => {
+            input.addEventListener('focus', function() {
+                this.closest('tr')?.classList.add('bg-surface-container');
+            });
+            input.addEventListener('blur', function() {
+                this.closest('tr')?.classList.remove('bg-surface-container');
+            });
+        });
+
+        const searchInput = document.querySelector('input[type="text"]');
+        if (searchInput) {
+            searchInput.addEventListener('focus', function() {
+                this.closest('.relative')?.classList.add('ring-2', 'ring-secondary');
+            });
+            searchInput.addEventListener('blur', function() {
+                this.closest('.relative')?.classList.remove('ring-2', 'ring-secondary');
+            });
+        }
+
+        document.querySelectorAll('aside nav a').forEach(link => {
+            link.addEventListener('click', function(e) {
+                e.preventDefault();
+                document.querySelectorAll('aside nav a').forEach(l => {
+                    l.classList.remove('bg-secondary-fixed', 'text-on-secondary-fixed', 'font-bold');
+                });
+                this.classList.add('bg-secondary-fixed', 'text-on-secondary-fixed', 'font-bold');
+            });
+        });
+
+        document.querySelectorAll('main button').forEach(btn => {
+            btn.addEventListener('click', function(e) {
+                const text = this.textContent.trim().toLowerCase();
+                if (text.includes('nouvelle session') || text.includes('add')) {
+                    window.showToast('Création d\'une nouvelle session d\'inventaire.');
+                } else if (text.includes('ajuster')) {
+                    window.showToast('Ajustement des stocks en cours...');
+                } else if (text.includes('valider')) {
+                    if (confirm('Confirmer la validation de cet inventaire ?')) {
+                        window.showToast('Inventaire validé avec succès.');
+                    }
+                } else if (this.querySelector('.material-symbols-outlined')?.textContent.includes('filter_list')) {
+                    window.showToast('Ouverture du panneau de filtres.');
+                } else if (this.querySelector('.material-symbols-outlined')?.textContent.includes('download')) {
+                    window.showToast('Téléchargement des données d\'inventaire.');
+                }
+            });
+        });
+
+        document.querySelectorAll('table tbody tr').forEach(row => {
+            row.addEventListener('click', function(e) {
+                if (e.target.closest('button') || e.target.closest('input')) return;
+                const store = this.querySelector('.font-semibold')?.textContent?.trim() || 'Boutique';
+                const product = this.querySelector('.font-bold')?.textContent?.trim();
+                if (product) {
+                    window.showToast(`Détails du produit: ${product}`);
+                } else {
+                    window.showToast(`Détails de la session: ${store}`);
+                }
+            });
+        });
+
+        document.querySelectorAll('input[type="number"]').forEach(input => {
+            input.addEventListener('change', function() {
+                const row = this.closest('tr');
+                if (!row) return;
+                const sysQty = parseInt(row.querySelector('td:nth-child(3)')?.textContent?.trim() || '0');
+                const counted = parseInt(this.value || '0');
+                const gap = counted - sysQty;
+                const gapCell = row.querySelector('td:nth-child(5)');
+                if (gapCell) {
+                    gapCell.textContent = (gap > 0 ? '+' : '') + gap;
+                    gapCell.className = 'p-sm text-right font-label-md ' + (gap !== 0 ? (gap < 0 ? 'text-error' : 'text-green-600 font-bold') : 'text-on-surface-variant');
+                }
+            });
+        });
+
+        document.querySelectorAll('.flex.items-center.gap-xl.border-b button').forEach(tab => {
+            tab.addEventListener('click', function() {
+                document.querySelectorAll('.flex.items-center.gap-xl.border-b button').forEach(t => {
+                    t.classList.remove('tab-active');
+                    t.classList.add('text-on-surface-variant');
+                });
+                this.classList.add('tab-active');
+                this.classList.remove('text-on-surface-variant');
+            });
+        });
+    </script>
+</body></html>
