@@ -28,7 +28,7 @@
   ];
   const ICONS = {
     dashboard: "fa-gauge-high", pos: "fa-cash-register", operations: "fa-arrows-rotate",
-    stock: "fa-boxes-stacked", clients: "fa-users", reports: "fa-chart-simple",    settings: "fa-gear", ai: "fa-robot", orders: "fa-clipboard-list",
+    stock: "fa-boxes-stacked", clients: "fa-users", reports: "fa-chart-simple",    settings: "fa-gear", ai: "fa-robot", orders: "fa-clipboard-list", returns: "fa-arrow-left", transfers: "fa-arrows-left-right",
     expenses: "fa-money-bill-wave", promotions: "fa-tags", users: "fa-user-gear", search: "fa-magnifying-glass"
   };
   const nav = [
@@ -597,6 +597,9 @@ function notifyCount() {
       render();
     }
     if (action === "sync-now") { toast('Sync en cours...'); syncFromServer(true); }
+    if (action === "return-sale") { showReturnModal(document.activeElement?.dataset?.saleId); }
+    if (action === "new-transfer") { showTransferModal(); }
+    if (action === "do-inventory") { showInventoryModal(); }
     // toggle-widget unused — dashboard customization uses customize-dash modal
   }
 
@@ -642,8 +645,8 @@ function notifyCount() {
       <div class="charts-row"><div class="panel chart-panel"><h2><i class="fa-solid fa-chart-line"></i> Evolution ventes (30 jours)</h2><canvas id="salesChart"></canvas></div><div class="panel chart-panel"><h2><i class="fa-solid fa-chart-pie"></i> Par methode de paiement</h2><canvas id="methodChart"></canvas></div></div>
       <div class="charts-row"><div class="panel chart-panel"><h2><i class="fa-solid fa-ranking-star"></i> Top produits vendus</h2><canvas id="topProductsChart"></canvas></div><div class="panel chart-panel"><h2><i class="fa-solid fa-chart-simple"></i> Ventes par categorie</h2><canvas id="categoryChart"></canvas></div></div>
       <div class="charts-row"><div class="panel chart-panel"><h2><i class="fa-solid fa-chart-line"></i> Evolution par categorie (30 jours)</h2><canvas id="categoryTrendChart"></canvas></div></div>
-      <div class="grid two"><section class="panel"><h2><i class="fa-solid fa-clock-rotate-left"></i> Ventes recentes</h2>${paginate(state.sales, 6).map((s) => `<div class="row"><b>${esc(s.clientName)}</b><span>${money(s.total)}</span></div>`).join("") || empty("Aucune vente")}</section>
-      <section class="panel"><h2><i class="fa-solid fa-triangle-exclamation"></i> Alertes stock (${low.length})</h2>${low.map((p) => `<div class="row alert-row"><b>${esc(p.name)}</b><span class="badge-warn">${p.qty} unites</span></div>`).join("") || empty("Aucune alerte")}</section></div>`;
+      <div class="grid two"><section class="panel"><h2><i class="fa-solid fa-clock-rotate-left"></i> Ventes recentes</h2>${paginate(state.sales, 6).map((s) => `<div class="row"><b style="flex:1">${esc(s.clientName)}</b><span>${money(s.total)}</span><button class="btn-icon-sm" data-action="return-sale" data-sale-id="${esc(s.id)}" title="Retour"><i class="fa-solid fa-arrow-left" style="color:var(--bad)"></i></button></div>`).join("") || empty("Aucune vente")}</section>
+      <section class="panel"><h2><i class="fa-solid fa-triangle-exclamation"></i> Alertes stock (${low.length})</h2>${low.length ? low.map((p) => `<div class="row alert-row"><b>${esc(p.name)}</b><span class="badge-warn">${p.qty} unites</span><small style="color:var(--muted)">Réappro: +${Math.max(state.settings.lowStock*2 - p.qty, 1)}</small></div>`).join('') : empty("Aucune alerte")}</section></div>`;
   }
   function metric(label, value, sub) { return `<article class="metric"><span>${label}</span><strong>${value}</strong>${sub ? `<small class="metric-sub">${sub}</small>` : ''}</article>`; }
 
@@ -825,10 +828,13 @@ function notifyCount() {
     }));
     const totalProds = state.products.length;
     const catStats = getCategories().map(c => `<span class="cat-stat ${catFilter === c ? 'active' : ''}" data-cat-stat="${esc(c)}">${esc(c)}: <strong>${catCounts[c] || 0}</strong> <small class="sales-count">${catSalesQty[c]||0} vendus</small></span>`).join('');
-    return `<section class="panel"><div class="section-title"><h2><i class="fa-solid fa-boxes-stacked"></i> Stocks</h2><input placeholder="Recherche produit..." value="${esc(filter)}" data-filter><select class="cat-filter" data-cat-filter><option value="all">Toutes catégories</option>${cats}</select></div><div class="cat-stats"><span class="cat-stat ${catFilter === 'all' ? 'active' : ''}" data-cat-stat="all">Tous: <strong>${totalProds}</strong></span>${catStats}</div><form id="productForm" class="grid three"><input name="sku" placeholder="SKU" required><input name="name" placeholder="Produit" required><select name="category">${cats}</select><input name="qty" type="number" placeholder="Stock" required><input name="cost" type="number" placeholder="Cout" required><input name="price" type="number" placeholder="Prix" required><input name="photo" placeholder="URL photo" style="grid-column:span 2"><button class="btn primary">Ajouter</button></form><div class="table">${state.products.map((p) => `<div class="tr-stock" data-prod-id="${esc(p.id)}"><div class="stock-photo-thumb">${p.photo ? `<img src="${esc(p.photo)}">` : '<i class="fa-solid fa-image"></i>'}</div><b>${esc(p.name)}</b><span class="prod-cat">${esc(p.category||'')}</span><span>${esc(p.sku)}</span><span>${p.qty}</span><span>${money(p.price)}</span><div class="actions-row">
+    return `<section class="panel"><div class="section-title"><h2><i class="fa-solid fa-boxes-stacked"></i> Stocks</h2><input placeholder="Recherche produit..." value="${esc(filter)}" data-filter><select class="cat-filter" data-cat-filter><option value="all">Toutes catégories</option>${cats}</select><button class="btn sm" data-action="new-transfer" title="Transfert stock"><i class="fa-solid fa-arrows-left-right"></i></button><button class="btn sm" data-action="do-inventory" title="Inventaire"><i class="fa-solid fa-clipboard-list"></i></button></div><div class="cat-stats"><span class="cat-stat ${catFilter === 'all' ? 'active' : ''}" data-cat-stat="all">Tous: <strong>${totalProds}</strong></span>${catStats}</div><form id="productForm" class="grid three"><input name="sku" placeholder="SKU" required><input name="name" placeholder="Produit" required><select name="category">${cats}</select><input name="qty" type="number" placeholder="Stock" required><input name="cost" type="number" placeholder="Cout" required><input name="price" type="number" placeholder="Prix" required><input name="photo" placeholder="URL photo" style="grid-column:span 2"><button class="btn primary">Ajouter</button></form><div class="table">${state.products.map((p) => `<div class="tr-stock" data-prod-id="${esc(p.id)}"><div class="stock-photo-thumb">${p.photo ? `<img src="${esc(p.photo)}">` : '<i class="fa-solid fa-image"></i>'}</div><b>${esc(p.name)}</b><span class="prod-cat">${esc(p.category||'')}</span><span>${esc(p.sku)}</span><span>${p.qty}</span><span>${money(p.price)}</span><div class="actions-row">
         <button class="btn-icon-sm" data-edit-prod="${esc(p.id)}" title="Modifier"><i class="fa-solid fa-pen-to-square" style="color:var(--accent)"></i></button>
         <button class="btn-icon-sm" data-del-prod="${esc(p.id)}" title="Supprimer"><i class="fa-solid fa-trash-can" style="color:var(--bad)"></i></button>
-      </div></div>`).join("")}</div></section>`;
+      </div></div>`).join("")}</div></section>
+      <div class="section-title" style="margin-top:20px"><h2><i class="fa-solid fa-clock-rotate-left"></i> Transferts & inventaires</h2></div>
+      <div class="table">${(state.transferHistory||[]).slice(0,15).map(t => `<div class="tr"><b>${esc(t.product)}</b><span>${t.qty > 0 ? t.qty + " unites" : ""}</span><span>${esc(t.from)} <i class="fa-solid fa-arrow-right"></i> ${esc(t.to)}</span><small>${new Date(t.at).toLocaleDateString("fr-FR")}</small></div>`).join("") || empty("Aucun mouvement")}</div>
+    </section>`;
   }
   function bindStock() {
     document.querySelector("[data-cat-filter]")?.addEventListener("change", (e) => { catFilter = e.target.value; render(); });
@@ -992,7 +998,7 @@ function notifyCount() {
       <button class="btn" data-action="report-week"><i class="fa-solid fa-calendar-week"></i> Semaine</button>
       <button class="btn" data-action="report-month"><i class="fa-solid fa-calendar-alt"></i> Mois</button>
       <button class="btn" data-action="export-sales"><i class="fa-solid fa-download"></i> CSV</button>
-    </div><div class="table">${showSales.map((s) => `<div class="tr"><b>${new Date(s.at).toLocaleString("fr-FR")}</b><span>${esc(s.clientName)}</span><span>${esc(s.method)}</span><span>${money(s.total)}</span></div>`).join("") || empty("Aucune vente")}
+    </div><div class="table">${showSales.map((s) => `<div class="tr"><b>${new Date(s.at).toLocaleString("fr-FR")}</b><span>${esc(s.clientName)}</span><span>${esc(s.method)}</span><span>${money(s.total)}${s.returned?.length ? ` <span style="color:var(--bad);font-size:11px">(${s.returned.reduce((a,r) => a+r.qty,0)} retours)</span>` : ''}</span><span>${s.returned?.length ? `<button class="btn-icon-sm" data-action="return-sale" data-sale-id="${esc(s.id)}"><i class="fa-solid fa-rotate-left" style="color:var(--bad)"></i></button>` : `<button class="btn-icon-sm" data-action="return-sale" data-sale-id="${esc(s.id)}"><i class="fa-solid fa-arrow-left" style="color:var(--muted)"></i></button>`}</span></div>`).join("") || empty("Aucune vente")}
     </div>
     <div style="display:flex;gap:8px;margin-bottom:8px;align-items:center;flex-wrap:wrap">
       <label style="font-size:12px;font-weight:700;text-transform:uppercase;margin:0">Du <input type="date" id="dateFrom" value="${esc(dateFrom)}" style="width:auto;min-height:32px;padding:4px 8px;margin-left:4px"></label>
@@ -1097,6 +1103,20 @@ function notifyCount() {
         if (!po) return;
         po.status2 = b.dataset.poAction;
         po.status = SUPPLIER_STATUS[po.status2] || po.status;
+        // Auto-ajuster le stock quand la commande est re├ºue
+        if (po.status2 === 'received') {
+          const items = (po.items || '').split(',').map(s => s.trim());
+          items.forEach(item => {
+            const match = item.match(/^(\d+)x\s+(.+)/i);
+            if (match) {
+              const qty = Number(match[1]);
+              const name = match[2].toLowerCase();
+              const prod = state.products.find(p => p.name.toLowerCase().includes(name));
+              if (prod) prod.qty += qty;
+            }
+          });
+          addNotification('Commande re├ºue', `Stock mis ├  jour pour ${po.items}`);
+        }
         addNotification('Commande fournisseur', `${SUPPLIER_STATUS[po.status2]}: ${po.supplier}`);
         audit('Commande fournisseur', `${po.supplier}: ${SUPPLIER_STATUS[po.status2]}`);
         save(); render();
@@ -1231,6 +1251,51 @@ function notifyCount() {
   const ORDER_STATUS = { pending: 'En attente', confirmed: 'Confirmee', completed: 'Livree', cancelled: 'Annulee' };
   const ORDER_COLORS = { pending: '#F59E0B', confirmed: '#3B82F6', completed: '#22C55E', cancelled: '#EF4444' };
 
+
+  function showReturnModal(saleId) {
+    const sale = state.sales.find(s => s.id === saleId);
+    if (!sale) return toast("Vente introuvable");
+    const panel = document.createElement('div');
+    panel.className = 'modal-overlay';
+    panel.innerHTML = `<div class="modal-box" style="max-width:500px">
+      <h2><i class="fa-solid fa-arrow-left"></i> Retour / Remboursement</h2>
+      <p style="color:var(--muted);font-size:13px">Vente du ${new Date(sale.at).toLocaleDateString('fr-FR')} - ${esc(sale.clientName)} - ${money(sale.total)}</p>
+      <form id="returnForm">
+        <label>Articles retournés<select name="itemIndex" required>
+          ${(sale.items||[]).map((item, i) => `<option value="${i}">${esc(item.name)} x${item.qty} - ${money(item.price*item.qty)}</option>`).join('')}
+        </select></label>
+        <div class="grid two">
+          <label>Quantité à retourner<input name="qty" type="number" value="1" min="1" required></label>
+          <label>Type<select name="type"><option value="refund">Remboursement</option><option value="exchange">Échange</option><option value="return">Retour simple</option></select></label>
+        </div>
+        <label>Motif<textarea name="reason" rows="2" placeholder="Motif du retour..." required></textarea></label>
+        <div style="display:flex;gap:8px;margin-top:12px">
+          <button class="btn primary full"><i class="fa-solid fa-check"></i> Valider le retour</button>
+          <button type="button" class="btn full" data-close>Annuler</button>
+        </div>
+      </form>
+    </div>`;
+    document.body.appendChild(panel);
+    panel.querySelector('[data-close]')?.addEventListener('click', () => panel.remove());
+    panel.addEventListener('click', e => { if (e.target === panel) panel.remove(); });
+    panel.querySelector('#returnForm')?.addEventListener('submit', e => {
+      e.preventDefault();
+      const d = Object.fromEntries(new FormData(e.currentTarget));
+      const idx = Number(d.itemIndex);
+      const item = sale.items?.[idx];
+      if (!item) return toast("Article introuvable");
+      const qty = Math.min(Number(d.qty), item.qty);
+      const p = state.products.find(x => x.id === item.id);
+      if (p) p.qty += qty;
+      const refund = item.price * qty;
+      sale.total = Math.max(0, sale.total - refund);
+      sale.returned = (sale.returned || []).concat([{ itemIndex: idx, name: item.name, qty, type: d.type, reason: d.reason, at: new Date().toISOString(), refund }]);
+      save(`Retour: ${qty}x ${item.name} (${d.type})`);
+      audit('Retour', `${qty}x ${item.name} - ${d.type} - ${d.reason}`);
+      panel.remove(); render();
+    });
+  }
+
   function ordersView() {
     const list = state.orders || [];
     return `<section class="panel"><div class="section-title"><h2><i class="fa-solid fa-clipboard-list"></i> Commandes clients (${list.length})</h2><button class="btn primary" data-action="new-order"><i class="fa-solid fa-plus"></i> Nouvelle commande</button></div>
@@ -1297,7 +1362,96 @@ function notifyCount() {
     });
   }
 
-  /* ─────────── Feature 6: Dépenses ─────────── */
+  
+  function showTransferModal() {
+    const panel = document.createElement('div');
+    panel.className = 'modal-overlay';
+    panel.innerHTML = `<div class="modal-box">
+      <h2><i class="fa-solid fa-arrows-left-right"></i> Transfert de stock</h2>
+      <form id="transferForm">
+        <div class="grid two">
+          <label>Produit<select name="productId" required>${state.products.map(p => `<option value="${esc(p.id)}">${esc(p.name)} - Stock: ${p.qty}</option>`).join('')}</select></label>
+          <label>Quantite<input name="qty" type="number" value="1" min="1" required></label>
+        </div>
+        <div class="grid two">
+          <label>De<select name="from" required>${state.settings.shops.map(s => `<option>${esc(s)}</option>`).join('')}</select></label>
+          <label>Vers<select name="to" required>${state.settings.shops.map(s => `<option>${esc(s)}</option>`).join('')}</select></label>
+        </div>
+        <label>Note (optionnel)<input name="note" placeholder="Motif du transfert..."></label>
+        <div style="display:flex;gap:8px;margin-top:12px">
+          <button class="btn primary full"><i class="fa-solid fa-check"></i> Transferer</button>
+          <button type="button" class="btn full" data-close>Annuler</button>
+        </div>
+      </form>
+    </div>`;
+    document.body.appendChild(panel);
+    panel.querySelector('[data-close]')?.addEventListener('click', () => panel.remove());
+    panel.addEventListener('click', e => { if (e.target === panel) panel.remove(); });
+    panel.querySelector('#transferForm')?.addEventListener('submit', e => {
+      e.preventDefault();
+      const d = Object.fromEntries(new FormData(e.currentTarget));
+      if (d.from === d.to) return toast("Selectionnez deux boutiques differentes");
+      const qty = Number(d.qty);
+      const p = state.products.find(x => x.id === d.productId);
+      if (!p) return toast("Produit introuvable");
+      if (p.qty < qty) return toast("Stock insuffisant: " + p.name + " (" + p.qty + ")");
+      p.qty -= qty;
+      state.transferHistory.unshift({ id: uid('tr'), at: new Date().toISOString(), product: p.name, qty, from: d.from, to: d.to, note: d.note, user: state.auth.name });
+      audit('Transfert stock', qty + "x " + p.name + ": " + d.from + " -> " + d.to);
+      save("Transfert: " + qty + "x " + p.name);
+      active = 'stock'; panel.remove(); render();
+    });
+  }
+
+
+  function showInventoryModal() {
+    const panel = document.createElement('div');
+    panel.className = 'modal-overlay';
+    panel.innerHTML = `<div class="modal-box" style="max-width:600px">
+      <h2><i class="fa-solid fa-clipboard-list"></i> Inventaire physique</h2>
+      <p style="color:var(--muted);font-size:13px">Saisissez la quantite reelle pour chaque produit. L'ecart sera calcule automatiquement.</p>
+      <form id="inventoryForm">
+        <div class="table" style="max-height:400px;overflow-y:auto">${state.products.map(p => `
+          <div class="tr" style="grid-template-columns:1fr 60px 60px">
+            <b>${esc(p.name)} (${esc(p.sku)})</b>
+            <span style="text-align:center">${p.qty}</span>
+            <input type="number" data-inv-id="${esc(p.id)}" value="${p.qty}" min="0" style="width:60px;min-height:36px;padding:4px;text-align:center">
+          </div>`).join('')}</div>
+        <div style="display:flex;gap:8px;margin-top:12px">
+          <button class="btn primary full"><i class="fa-solid fa-check"></i> Valider l'inventaire</button>
+          <button type="button" class="btn full" data-close>Annuler</button>
+        </div>
+      </form>
+    </div>`;
+    document.body.appendChild(panel);
+    panel.querySelector('[data-close]')?.addEventListener('click', () => panel.remove());
+    panel.addEventListener('click', e => { if (e.target === panel) panel.remove(); });
+    panel.querySelector('#inventoryForm')?.addEventListener('submit', e => {
+      e.preventDefault();
+      const adjustments = [];
+      panel.querySelectorAll('[data-inv-id]').forEach(input => {
+        const id = input.dataset.invId;
+        const actual = Number(input.value);
+        const p = state.products.find(x => x.id === id);
+        if (!p) return;
+        const diff = actual - p.qty;
+        if (diff !== 0) {
+          p.qty = actual;
+          adjustments.push({ name: p.name, sku: p.sku, before: p.qty - diff, after: actual, diff });
+        }
+      });
+      if (adjustments.length) {
+        state.transferHistory.unshift({ id: uid('inv'), at: new Date().toISOString(), product: 'Inventaire', qty: adjustments.length, from: 'Ajustement', to: 'Stock', note: adjustments.map(a => a.name + ": " + a.before + "->" + a.after).join(', '), user: state.auth.name });
+        audit('Inventaire', adjustments.length + " produits ajustes");
+        save("Inventaire: " + adjustments.length + " produits modifies");
+      } else {
+        toast('Aucun ecart detecte');
+      }
+      panel.remove(); render();
+    });
+  }
+
+/* ─────────── Feature 6: Dépenses ─────────── */
   function expensesView() {
     const total = state.expenses.reduce((s,e) => s+e.amount, 0);
     const byCat = {};
