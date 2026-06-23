@@ -2,6 +2,7 @@
 node_modules/
 .pnp
 .pnp.js
+node-installer/
 
 # === Données sensibles / locales ===
 data/
