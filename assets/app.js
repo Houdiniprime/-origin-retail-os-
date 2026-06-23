@@ -777,7 +777,8 @@ function notifyCount() {
     });
   }
   function stockView() {
-    return `<section class="panel"><div class="section-title"><h2><i class="fa-solid fa-boxes-stacked"></i> Stocks</h2><input placeholder="Recherche produit..." value="${esc(filter)}" data-filter></div><form id="productForm" class="grid three"><input name="sku" placeholder="SKU" required><input name="name" placeholder="Produit" required><input name="qty" type="number" placeholder="Stock" required><input name="cost" type="number" placeholder="Cout" required><input name="price" type="number" placeholder="Prix" required><input name="photo" placeholder="URL photo"><button class="btn primary">Ajouter</button></form><div class="table">${state.products.map((p) => `<div class="tr" data-prod-id="${esc(p.id)}"><div class="stock-photo-thumb">${p.photo ? `<img src="${esc(p.photo)}">` : '<i class="fa-solid fa-image"></i>'}</div><b>${esc(p.name)}</b><span>${esc(p.sku)}</span><span>${p.qty}</span><span>${money(p.price)}</span><div class="actions-row">
+    const cats = getCategories().map(c => `<option value="${esc(c)}">${esc(c)}</option>`).join('');
+    return `<section class="panel"><div class="section-title"><h2><i class="fa-solid fa-boxes-stacked"></i> Stocks</h2><input placeholder="Recherche produit..." value="${esc(filter)}" data-filter></div><form id="productForm" class="grid three"><input name="sku" placeholder="SKU" required><input name="name" placeholder="Produit" required><select name="category">${cats}</select><input name="qty" type="number" placeholder="Stock" required><input name="cost" type="number" placeholder="Cout" required><input name="price" type="number" placeholder="Prix" required><input name="photo" placeholder="URL photo" style="grid-column:span 2"><button class="btn primary">Ajouter</button></form><div class="table">${state.products.map((p) => `<div class="tr-stock" data-prod-id="${esc(p.id)}"><div class="stock-photo-thumb">${p.photo ? `<img src="${esc(p.photo)}">` : '<i class="fa-solid fa-image"></i>'}</div><b>${esc(p.name)}</b><span class="prod-cat">${esc(p.category||'')}</span><span>${esc(p.sku)}</span><span>${p.qty}</span><span>${money(p.price)}</span><div class="actions-row">
         <button class="btn-icon-sm" data-edit-prod="${esc(p.id)}" title="Modifier"><i class="fa-solid fa-pen-to-square" style="color:var(--accent)"></i></button>
         <button class="btn-icon-sm" data-del-prod="${esc(p.id)}" title="Supprimer"><i class="fa-solid fa-trash-can" style="color:var(--bad)"></i></button>
       </div></div>`).join("")}</div></section>`;
@@ -786,7 +787,7 @@ function notifyCount() {
     document.getElementById("productForm")?.addEventListener("submit", (e) => {
       e.preventDefault();
       const d = Object.fromEntries(new FormData(e.currentTarget));
-      state.products.unshift({ id: uid("p"), sku: d.sku, name: d.name, category: getCategories()[0], shop: getShops()[0], qty: Number(d.qty), cost: Number(d.cost), price: Number(d.price), promoPrice: 0, photo: d.photo || "" });
+      state.products.unshift({ id: uid("p"), sku: d.sku, name: d.name, category: d.category || getCategories()[0], shop: getShops()[0], qty: Number(d.qty), cost: Number(d.cost), price: Number(d.price), promoPrice: 0, photo: d.photo || "" });
       save("Produit ajoute"); render();
     });
     /* Feature 3+14: CRUD produits */
@@ -817,6 +818,7 @@ function notifyCount() {
           <label>SKU<input name="sku" value="${esc(p.sku)}" required></label>
         </div>
         <div class="grid two">
+          <label>Categorie<select name="category">${getCategories().map(c => `<option value="${esc(c)}" ${p.category === c ? 'selected' : ''}>${esc(c)}</option>`).join('')}</select></label>
           <label>Quantite<input name="qty" type="number" value="${p.qty}" required></label>
         </div>
         <div class="grid two">
@@ -836,7 +838,7 @@ function notifyCount() {
     panel.querySelector('#editProdForm').addEventListener('submit', e => {
       e.preventDefault();
       const d = Object.fromEntries(new FormData(e.currentTarget));
-      p.name = d.name; p.sku = d.sku; p.qty = Number(d.qty);
+      p.name = d.name; p.sku = d.sku; p.category = d.category || p.category; p.qty = Number(d.qty);
       p.cost = Number(d.cost); p.price = Number(d.price); p.photo = d.photo || p.photo;
       audit('Produit modifie', p.name);
       save('Produit modifie'); panel.remove(); render();
