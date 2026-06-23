@@ -21,7 +21,7 @@
   <meta property="og:type" content="website">
   <meta property="og:locale" content="fr_FR">
   <title>Origin Retail OS</title>
-  <link rel="manifest" href="/manifest.json">
+  <link rel="manifest" href="manifest.json">
   <link rel="apple-touch-icon" sizes="180x180" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 180 180'%3E%3Crect width='180' height='180' rx='36' fill='%23131921'/%3E%3Ctext x='90' y='122' font-size='90' font-weight='900' text-anchor='middle' fill='%23ff9900'%3EOR%3C/text%3E%3C/svg%3E">
   <link rel="stylesheet" href="assets/app.css?v=20260623-p8">
   <script src="assets/lib/chart.umd.min.js"></script>
@@ -31,7 +31,7 @@
     // Enregistrement du Service Worker PWA
     if ('serviceWorker' in navigator) {
       window.addEventListener('load', function() {
-        navigator.serviceWorker.register('/sw.js').then(function(reg) {
+        navigator.serviceWorker.register('sw.js').then(function(reg) {
           console.log('[PWA] Service Worker enregistré, scope:', reg.scope);
           // Vérifier les mises à jour périodiquement
           reg.addEventListener('updatefound', function() {
