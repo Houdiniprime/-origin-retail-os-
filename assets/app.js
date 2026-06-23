@@ -2018,6 +2018,7 @@ function addNotification(title, message) {
 
   /* ─────────── Gestion boutiques (modal) ─────────── */
   function showShopManager() {
+    if (!["super","owner","manager"].includes(state.auth?.role)) return toast("Acces reserve aux gerants et proprietaires");
     var shops = getShops();
     var panel = document.createElement('div');
     panel.className = 'modal-overlay';
@@ -2081,6 +2082,7 @@ function addNotification(title, message) {
     });
   }
   function showCategoryManager() {
+    if (!["super","owner","manager"].includes(state.auth?.role)) return toast("Acces reserve aux gerants et proprietaires");
     var p = document.getElementById('panelOverlay');
     if (!p) { render(); p = document.getElementById('panelOverlay'); }
     if (!p) return toast('Erreur: panelOverlay introuvable');
