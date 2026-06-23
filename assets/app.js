@@ -596,6 +596,12 @@ function notifyCount() {
       dateTo = '';
       render();
     }
+    if (action === "set-dep-rate") {
+      const v = Number(document.getElementById('depRate')?.value) || 10;
+      state.settings.depreciationRate = Math.max(0, Math.min(100, v));
+      save("Taux d\u2019amortissement " + state.settings.depreciationRate + "%");
+      render();
+    }
     if (action === "sync-now") { toast('Sync en cours...'); syncFromServer(true); }
     if (action === "return-sale") { showReturnModal(document.activeElement?.dataset?.saleId); }
     if (action === "new-transfer") { showTransferModal(); }
@@ -1006,6 +1012,37 @@ function notifyCount() {
       <button class="btn sm" data-action="filter-dates"><i class="fa-solid fa-filter"></i> Filtrer</button>
     </div></div>
     ${dateFilteredSales.length > salesLimit ? `<button class="btn sm full" data-action="voir-plus-sales" style="margin-top:8px">Voir plus (${dateFilteredSales.length - salesLimit} cachees)</button>` : ''}
+    </section>
+    
+    <section class="panel"><h2><i class="fa-solid fa-chart-line"></i> Amortissement & valeur residuelle du stock</h2>
+      <p style="color:var(--muted);font-size:12px;margin-bottom:10px">Taux d'amortissement annuel: <input type="number" id="depRate" value="${state.settings.depreciationRate||10}" min="0" max="100" style="width:70px;min-height:32px;padding:4px 8px;display:inline-block;font-weight:700;text-align:center">% <button class="btn sm" data-action="set-dep-rate" style="min-height:32px"><i class="fa-solid fa-check"></i></button> Valeur calculee sur le cout de revient.</p>
+      <div class="table amort-table" style="margin-bottom:10px">
+        <div class="tr" style="grid-template-columns:1.5fr 80px 80px 80px 80px;font-weight:700;background:var(--bg);border-bottom:2px solid var(--accent)">
+          <b>Produit</b><b>Categorie</b><b style="text-align:right">Qte</b><b style="text-align:right">Cout unit.</b><b style="text-align:right">Val. residuelle</b>
+        </div>
+        ${state.products.filter(p => p.qty > 0).map(p => {
+          const unitCost = p.cost || 0;
+          const totalCost = unitCost * p.qty;
+          const rate = (state.settings.depreciationRate || 10) / 100;
+          const residual = Math.max(0, totalCost * (1 - rate));
+          return `<div class="tr" style="grid-template-columns:1.5fr 80px 80px 80px 80px;font-size:12px">
+            <b>${esc(p.name)}</b><span class="prod-cat">${esc(p.category||'')}</span><span style="text-align:right">${p.qty}</span><span style="text-align:right">${money(unitCost)}</span><span style="text-align:right;${residual < totalCost * 0.5 ? 'color:var(--bad);font-weight:700' : 'color:var(--good);font-weight:700'}">${money(Math.round(residual))}</span>
+          </div>`;
+        }).join('')}
+      </div>
+      <div class="row" style="font-weight:700;border-top:2px solid var(--accent);padding-top:10px">
+        <b>Total stock (cout)</b>
+        <span>${money(state.products.reduce((s,p) => s + (p.cost||0) * p.qty, 0))}</span>
+      </div>
+      <div class="row" style="font-weight:700">
+        <b>Valeur residuelle estimee</b>
+        <span style="color:var(--good);font-size:16px">${money(state.products.reduce((s,p) => s + Math.max(0, (p.cost||0) * p.qty * (1 - ((state.settings.depreciationRate||10)/100))), 0))}</span>
+      </div>
+      <div class="row" style="font-size:12px;color:var(--muted)">
+        <b>Perte de valeur annuelle</b>
+        <span style="color:var(--bad)">-${money(state.products.reduce((s,p) => s + (p.cost||0) * p.qty * ((state.settings.depreciationRate||10)/100), 0))}</span>
+      </div>
+      <p style="color:var(--muted);font-size:11px;margin-top:8px">* L'amortissement est calcule sur une base lineaire annuelle. Ajustez le taux dans Parametres.</p>
     </section>
     <section class="panel"><h2><i class="fa-solid fa-clock-rotate-left"></i> Audit horodate</h2>${showAudit.map((a) => `<div class="row"><b>${esc(a.action)}</b><span>${new Date(a.at).toLocaleString("fr-FR")}</span></div>`).join("")}
     ${state.audit.length > auditLimit ? `<button class="btn sm full" data-action="voir-plus-audit" style="margin-top:8px">Voir plus (${state.audit.length - auditLimit} cachees)</button>` : ''}
