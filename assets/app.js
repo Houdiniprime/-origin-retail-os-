@@ -605,6 +605,7 @@ function notifyCount() {
       }).join('')}</div>
       <div class="charts-row"><div class="panel chart-panel"><h2><i class="fa-solid fa-chart-line"></i> Evolution ventes (30 jours)</h2><canvas id="salesChart"></canvas></div><div class="panel chart-panel"><h2><i class="fa-solid fa-chart-pie"></i> Par methode de paiement</h2><canvas id="methodChart"></canvas></div></div>
       <div class="charts-row"><div class="panel chart-panel"><h2><i class="fa-solid fa-ranking-star"></i> Top produits vendus</h2><canvas id="topProductsChart"></canvas></div><div class="panel chart-panel"><h2><i class="fa-solid fa-chart-simple"></i> Ventes par categorie</h2><canvas id="categoryChart"></canvas></div></div>
+      <div class="charts-row"><div class="panel chart-panel"><h2><i class="fa-solid fa-chart-line"></i> Evolution par categorie (30 jours)</h2><canvas id="categoryTrendChart"></canvas></div></div>
       <div class="grid two"><section class="panel"><h2><i class="fa-solid fa-clock-rotate-left"></i> Ventes recentes</h2>${paginate(state.sales, 6).map((s) => `<div class="row"><b>${esc(s.clientName)}</b><span>${money(s.total)}</span></div>`).join("") || empty("Aucune vente")}</section>
       <section class="panel"><h2><i class="fa-solid fa-triangle-exclamation"></i> Alertes stock (${low.length})</h2>${low.map((p) => `<div class="row alert-row"><b>${esc(p.name)}</b><span class="badge-warn">${p.qty} unites</span></div>`).join("") || empty("Aucune alerte")}</section></div>`;
   }
@@ -1802,6 +1803,44 @@ function addNotification(title, message) {
         type: 'doughnut',
         data: { labels: Object.keys(catSales), datasets: [{ data: Object.values(catSales), backgroundColor: catColors }] },
         options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { position: 'bottom' } } }
+      }));
+    }
+    const c6 = document.getElementById('categoryTrendChart');
+    if (c6) {
+      const days = [];
+      for (let i = 29; i >= 0; i--) {
+        const d = new Date(); d.setDate(d.getDate() - i);
+        days.push(d.toLocaleDateString('fr-FR'));
+      }
+      const catData = {};
+      state.sales.forEach(s => {
+        const dayKey = new Date(s.at).toLocaleDateString('fr-FR');
+        (s.items||[]).forEach(item => {
+          const p = state.products.find(x => x.id === item.id);
+          const cat = p ? p.category : 'Sans categorie';
+          if (!catData[cat]) catData[cat] = {};
+          catData[cat][dayKey] = (catData[cat][dayKey]||0) + item.price * item.qty;
+        });
+      });
+      const sortedCats = Object.entries(catData).sort((a,b) => {
+        const sumA = Object.values(a[1]).reduce((s,v) => s+v, 0);
+        const sumB = Object.values(b[1]).reduce((s,v) => s+v, 0);
+        return sumB - sumA;
+      });
+      const topCats = sortedCats.slice(0, 5);
+      const colors = ['#ff9900','#0058be','#2E7D32','#ba1a1a','#8B5CF6'];
+      const datasets = topCats.map(([cat, dayMap], i) => ({
+        label: cat,
+        data: days.map(d => dayMap[d]||0),
+        borderColor: colors[i],
+        backgroundColor: colors[i]+'22',
+        fill: true,
+        tension: 0.3
+      }));
+      _chartInstances.push(new Chart(c6, {
+        type: 'line',
+        data: { labels: days, datasets },
+        options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { position: 'bottom', labels: { boxWidth: 12, padding: 8 } } }, scales: { y: { beginAtZero: true } } }
       }));
     }
   }
