@@ -12,9 +12,9 @@
   }
   const ROLE_LABELS = { super: "Super User", owner: "Proprietaire", manager: "Gerante", cashier: "Caissiere" };
   const ACCESS = {
-    super: ["dashboard", "pos", "operations", "stock", "suppliers", "clients", "reports", "settings", "ai", "orders", "expenses", "promotions", "users"],
-    owner: ["dashboard", "pos", "operations", "stock", "suppliers", "clients", "reports", "settings", "ai", "orders", "expenses", "promotions", "users"],
-    manager: ["dashboard", "pos", "operations", "stock", "suppliers", "clients", "reports", "ai", "orders", "expenses", "promotions"],
+    super: ["dashboard", "pos", "operations", "stock", "suppliers", "clients", "reports", "settings", "ai", "orders", "expenses", "promotions", "users", "calendar"],
+    owner: ["dashboard", "pos", "operations", "stock", "suppliers", "clients", "reports", "settings", "ai", "orders", "expenses", "promotions", "users", "calendar"],
+    manager: ["dashboard", "pos", "operations", "stock", "suppliers", "clients", "reports", "ai", "orders", "expenses", "promotions", "calendar"],
     cashier: ["pos", "operations", "stock", "clients", "ai", "expenses"]
   };
   const USERS = [
@@ -29,7 +29,7 @@
   const ICONS = {
     dashboard: "fa-gauge-high", pos: "fa-cash-register", operations: "fa-arrows-rotate",
     stock: "fa-boxes-stacked", clients: "fa-users", reports: "fa-chart-simple",    settings: "fa-gear", ai: "fa-robot", orders: "fa-clipboard-list", returns: "fa-arrow-left", transfers: "fa-arrows-left-right",
-    expenses: "fa-money-bill-wave", promotions: "fa-tags", users: "fa-user-gear", search: "fa-magnifying-glass"
+    expenses: "fa-money-bill-wave", promotions: "fa-tags", users: "fa-user-gear", search: "fa-magnifying-glass", calendar: "fa-calendar-alt"
   };
   const nav = [
     ["dashboard", "Dashboard"],
@@ -39,6 +39,7 @@
     ["suppliers", "Fournisseurs"],
     ["clients", "Clients & dettes"],
     ["reports", "Rapports"],
+    ["calendar", "Calendrier"],
     ["ai", "Assistant IA"],
     ["orders", "Commandes"],
     ["expenses", "Depenses"],
@@ -513,7 +514,7 @@ function notifyCount() {
   }
   function shell() {
     const mainNav = nav.filter(([k]) => can(k));
-    const mobileItems = ['pos','dashboard','stock','clients','settings'].filter(k => can(k));
+    const mobileItems = ['pos','dashboard','stock','clients','calendar','settings'].filter(k => can(k));
     return `<div class="app-shell" data-theme="${state.theme || 'light'}">
       <aside class="sidebar">
         <div class="brand"><div class="brand-mark">OR</div><div><strong>Origin Retail OS</strong><span>${esc(state.auth.name)} / ${esc(ROLE_LABELS[state.auth.role])}</span></div></div>
@@ -541,13 +542,14 @@ function notifyCount() {
   function title() { return nav.find(([k]) => k === active)?.[1] || "Dashboard"; }
   function subtitle() {
     return { dashboard: "Pilotage boutique", pos: "Vente cash, mobile money, credit, prix special", operations: "Ouverture et cloture caisse", stock: "Inventaire et photos produit", suppliers: "Fournisseurs et commandes", clients: "Dettes et relances", reports: "Exports et audit", ai: "Assistant intelligent pour votre boutique",    orders: "Precommandes et reservations clients",
+    calendar: "Calendrier des ventes et depenses",
     expenses: "Saisie et suivi des depenses",
     promotions: "Soldes, prix promo et offres",
     users: "Gestion des utilisateurs et acces",
     settings: "Comptes et configuration" }[active] || "";
   }
   function screen() {
-    return { dashboard: dashboardView, pos: posView, operations: operationsView, stock: stockView, suppliers: suppliersView, clients: clientsView, reports: reportsView, ai: aiView,    orders: ordersView, expenses: expensesView, promotions: promotionsView, users: usersView, settings: settingsView }[active]();
+    return { dashboard: dashboardView, pos: posView, operations: operationsView, stock: stockView, suppliers: suppliersView, clients: clientsView, reports: reportsView, ai: aiView, calendar: calendarView, orders: ordersView, expenses: expensesView, promotions: promotionsView, users: usersView, settings: settingsView }[active]();
   }
   function bindGlobal() {
     document.querySelectorAll("[data-nav]").forEach((b) => b.addEventListener("click", () => { active = b.dataset.nav; render(); }));
@@ -1499,6 +1501,127 @@ function notifyCount() {
   }
 
 /* ─────────── Feature 6: Dépenses ─────────── */
+
+  let _calMonth = new Date();
+  function calendarView() {
+    const year = _calMonth.getFullYear();
+    const month = _calMonth.getMonth();
+    const firstDay = new Date(year, month, 1);
+    const lastDay = new Date(year, month + 1, 0);
+    const startOffset = firstDay.getDay() === 0 ? 6 : firstDay.getDay() - 1;
+    const totalDays = lastDay.getDate();
+    const today = new Date();
+    const monthNames = ['Janvier','Fevrier','Mars','Avril','Mai','Juin','Juillet','Aout','Septembre','Octobre','Novembre','Decembre'];
+    const dayNames = ['Lun','Mar','Mer','Jeu','Ven','Sam','Dim'];
+
+    // Aggregate sales and expenses by day
+    const salesByDay = {};
+    const expByDay = {};
+    state.sales.forEach(s => {
+      const d = new Date(s.at);
+      if (d.getFullYear() === year && d.getMonth() === month) {
+        const key = d.getDate();
+        salesByDay[key] = (salesByDay[key]||0) + s.total;
+      }
+    });
+    state.expenses.forEach(e => {
+      const d = new Date(e.at);
+      if (d.getFullYear() === year && d.getMonth() === month) {
+        const key = d.getDate();
+        expByDay[key] = (expByDay[key]||0) + e.amount;
+      }
+    });
+
+    // Build day cells
+    let cells = '';
+    const dayTotals = { sales: 0, expenses: 0, count: 0 };
+    for (let i = 0; i < startOffset; i++) cells += '<div class="cal-day cal-empty"></div>';
+    for (let d = 1; d <= totalDays; d++) {
+      const saleAmt = salesByDay[d] || 0;
+      const expAmt = expByDay[d] || 0;
+      const isToday = d === today.getDate() && month === today.getMonth() && year === today.getFullYear();
+      const hasData = saleAmt > 0 || expAmt > 0;
+      dayTotals.sales += saleAmt;
+      dayTotals.expenses += expAmt;
+      if (saleAmt > 0 || expAmt > 0) dayTotals.count++;
+      cells += `<button class="cal-day ${isToday ? 'cal-today' : ''} ${hasData ? 'cal-has-data' : ''}" data-cal-day="${d}">
+        <span class="cal-day-num">${d}</span>
+        ${saleAmt > 0 ? `<span class="cal-sale">${money(saleAmt)}</span>` : ''}
+        ${expAmt > 0 ? `<span class="cal-exp">${money(expAmt)}</span>` : ''}
+      </button>`;
+    }
+
+    // Month total KPIs
+    const totalSales = Object.values(salesByDay).reduce((s,v) => s+v, 0);
+    const totalExp = Object.values(expByDay).reduce((s,v) => s+v, 0);
+    const totalSalesCount = state.sales.filter(s => { const d = new Date(s.at); return d.getFullYear() === year && d.getMonth() === month; }).length;
+
+    return `<section class="panel cal-panel">
+      <div class="cal-header">
+        <button class="btn sm" data-cal="prev"><i class="fa-solid fa-chevron-left"></i></button>
+        <h2 style="margin:0;font-size:20px">${monthNames[month]} ${year}</h2>
+        <button class="btn sm" data-cal="next"><i class="fa-solid fa-chevron-right"></i></button>
+        <button class="btn sm" data-cal="today" style="margin-left:8px"><i class="fa-solid fa-calendar-day"></i> Aujourd\'hui</button>
+      </div>
+      <div class="cal-kpis">
+        <div class="metric"><span>Ventes du mois</span><strong style="color:var(--good)">${money(totalSales)}</strong><small>${totalSalesCount} transactions</small></div>
+        <div class="metric"><span>Depenses du mois</span><strong style="color:var(--bad)">${money(totalExp)}</strong><small>${Object.keys(expByDay).length} jours</small></div>
+        <div class="metric"><span>Resultat net</span><strong style="color:${totalSales - totalExp >= 0 ? 'var(--good)' : 'var(--bad)'}">${money(totalSales - totalExp)}</strong><small>${dayTotals.count} jours avec activite</small></div>
+      </div>
+      <div class="cal-grid">
+        ${dayNames.map(n => `<div class="cal-day-header">${n}</div>`).join('')}
+        ${cells}
+      </div>
+    </section>`;
+  }
+
+  function bindCalendar() {
+    document.querySelectorAll("[data-cal]").forEach(b => b.addEventListener("click", () => {
+      const a = b.dataset.cal;
+      if (a === "prev") { _calMonth.setMonth(_calMonth.getMonth() - 1); render(); }
+      if (a === "next") { _calMonth.setMonth(_calMonth.getMonth() + 1); render(); }
+      if (a === "today") { _calMonth = new Date(); render(); }
+    }));
+    document.querySelectorAll("[data-cal-day]").forEach(b => b.addEventListener("click", () => {
+      const day = Number(b.dataset.calDay);
+      if (!day) return;
+      const date = new Date(_calMonth.getFullYear(), _calMonth.getMonth(), day);
+      const dateStr = date.toLocaleDateString('fr-FR');
+      const daySales = state.sales.filter(s => new Date(s.at).toDateString() === date.toDateString());
+      const dayExp = state.expenses.filter(e => new Date(e.at).toDateString() === date.toDateString());
+      const totalSales = daySales.reduce((s,v) => s+v.total, 0);
+      const totalExp = dayExp.reduce((s,e) => s+e.amount, 0);
+      const panel = document.createElement('div');
+      panel.className = 'modal-overlay';
+      panel.innerHTML = `<div class="modal-box" style="max-width:520px">
+        <h2><i class="fa-solid fa-calendar-day"></i> ${dateStr}</h2>
+        <div class="cal-day-kpis" style="display:flex;gap:12px;margin:12px 0">
+          <div style="flex:1;padding:12px;background:var(--bg);border-radius:6px;text-align:center">
+            <span style="display:block;font-size:11px;font-weight:700;text-transform:uppercase;color:var(--muted)">Ventes</span>
+            <strong style="display:block;font-size:22px;color:var(--good)">${money(totalSales)}</strong>
+            <small style="color:var(--muted)">${daySales.length} ventes</small>
+          </div>
+          <div style="flex:1;padding:12px;background:var(--bg);border-radius:6px;text-align:center">
+            <span style="display:block;font-size:11px;font-weight:700;text-transform:uppercase;color:var(--muted)">Depenses</span>
+            <strong style="display:block;font-size:22px;color:var(--bad)">${money(totalExp)}</strong>
+            <small style="color:var(--muted)">${dayExp.length} ecritures</small>
+          </div>
+          <div style="flex:1;padding:12px;background:var(--bg);border-radius:6px;text-align:center">
+            <span style="display:block;font-size:11px;font-weight:700;text-transform:uppercase;color:var(--muted)">Net</span>
+            <strong style="display:block;font-size:22px;color:${totalSales - totalExp >= 0 ? 'var(--good)' : 'var(--bad)'}">${money(totalSales - totalExp)}</strong>
+          </div>
+        </div>
+        ${daySales.length ? '<h3 style="font-size:14px;margin:0 0 8px"><i class="fa-solid fa-cash-register" style="color:var(--good)"></i> Ventes</h3><div class="table">' + daySales.map(s => '<div class="tr" style="grid-template-columns:1fr auto auto"><b>' + esc(s.clientName||'Client') + '</b><span>' + esc(s.method) + '</span><span style="color:var(--good);font-weight:700">' + money(s.total) + '</span></div>').join('') + '</div>' : ''}
+        ${dayExp.length ? '<h3 style="font-size:14px;margin:12px 0 8px"><i class="fa-solid fa-money-bill-wave" style="color:var(--bad)"></i> Depenses</h3><div class="table">' + dayExp.map(e => '<div class="tr" style="grid-template-columns:1fr auto"><b>' + esc(e.category) + '</b><span style="color:var(--bad);font-weight:700">' + money(e.amount) + '</span></div>').join('') + '</div>' : ''}
+        ${!daySales.length && !dayExp.length ? '<p style="color:var(--muted);text-align:center;padding:20px">Aucune activite ce jour</p>' : ''}
+        <div style="margin-top:12px;text-align:right"><button class="btn sm" data-close style="min-height:36px">Fermer</button></div>
+      </div>`;
+      document.body.appendChild(panel);
+      panel.querySelector('[data-close]')?.addEventListener('click', () => panel.remove());
+      panel.addEventListener('click', e => { if (e.target === panel) panel.remove(); });
+    }));
+  }
+
   function expensesView() {
     const total = state.expenses.reduce((s,e) => s+e.amount, 0);
     const byCat = {};
@@ -1872,7 +1995,7 @@ function notifyCount() {
     }
   }
   function bindScreen() {
-    bindPos(); bindOperations(); bindStock(); bindSuppliers(); bindClients(); bindAi(); bindOrders(); bindExpenses(); bindPromotions(); bindUsers();
+    bindPos(); bindOperations(); bindStock(); bindSuppliers(); bindClients(); bindAi(); bindOrders(); bindExpenses(); bindPromotions(); bindUsers(); bindCalendar();
     document.getElementById('saveTheme')?.addEventListener('click', saveSettingsTheme);
     document.getElementById('themeColor')?.addEventListener('input', (e) => {
       document.querySelector('.brand-mark')?.style.setProperty('background', e.target.value);
