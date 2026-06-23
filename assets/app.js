@@ -212,6 +212,20 @@
     const debt = state.clients.reduce((s, c) => s + Number(c.balance || 0), 0);
     return { salesTotal, margin, stockValue, debt };
   }
+  function getFilteredSales() {
+    let filtered = state.sales;
+    if (dateFrom) {
+      const from = new Date(dateFrom);
+      from.setHours(0,0,0,0);
+      filtered = filtered.filter(s => new Date(s.at) >= from);
+    }
+    if (dateTo) {
+      const to = new Date(dateTo);
+      to.setHours(23,59,59,999);
+      filtered = filtered.filter(s => new Date(s.at) <= to);
+    }
+    return filtered;
+  }
 
   let _startupDone = false;
   function render() {
@@ -572,6 +586,16 @@ function notifyCount() {
       dateTo = document.getElementById('dateTo')?.value || '';
       render();
     }
+    if (action === "filter-dash-dates") {
+      dateFrom = document.getElementById('dashDateFrom')?.value || '';
+      dateTo = document.getElementById('dashDateTo')?.value || '';
+      render();
+    }
+    if (action === "reset-dash-dates") {
+      dateFrom = '';
+      dateTo = '';
+      render();
+    }
     if (action === "sync-now") { toast('Sync en cours...'); syncFromServer(true); }
     // toggle-widget unused — dashboard customization uses customize-dash modal
   }
@@ -603,6 +627,18 @@ function notifyCount() {
         const pct = prev > 0 ? Math.round((cur - prev) / prev * 100) : 0;
         return `<div class="stat-evo ${pct >= 0 ? 'evo-up' : 'evo-down'}"><b>${k === 'ca' ? 'CA' : k === 'marge' ? 'Marge' : k === 'stock' ? 'Stock' : 'Credits'}</b><span>${pct >= 0 ? '▲' : '▼'} ${Math.abs(pct)}%</span></div>`;
       }).join('')}</div>
+      <div class="dash-date-filter">
+        <label style="font-size:12px;font-weight:700;text-transform:uppercase;margin:0;display:flex;align-items:center;gap:6px">
+          <i class="fa-solid fa-calendar"></i> Du
+          <input type="date" id="dashDateFrom" value="${esc(dateFrom)}" style="width:auto;min-height:36px;padding:4px 8px;margin-left:4px">
+        </label>
+        <label style="font-size:12px;font-weight:700;text-transform:uppercase;margin:0;display:flex;align-items:center;gap:6px">
+          Au
+          <input type="date" id="dashDateTo" value="${esc(dateTo)}" style="width:auto;min-height:36px;padding:4px 8px;margin-left:4px">
+        </label>
+        <button class="btn sm" data-action="filter-dash-dates"><i class="fa-solid fa-filter"></i> Filtrer graphiques</button>
+        ${dateFrom || dateTo ? '<button class="btn sm" data-action="reset-dash-dates" style="background:var(--bad);color:#fff;border-color:var(--bad)"><i class="fa-solid fa-xmark"></i> Effacer filtre</button>' : ''}
+      </div>
       <div class="charts-row"><div class="panel chart-panel"><h2><i class="fa-solid fa-chart-line"></i> Evolution ventes (30 jours)</h2><canvas id="salesChart"></canvas></div><div class="panel chart-panel"><h2><i class="fa-solid fa-chart-pie"></i> Par methode de paiement</h2><canvas id="methodChart"></canvas></div></div>
       <div class="charts-row"><div class="panel chart-panel"><h2><i class="fa-solid fa-ranking-star"></i> Top produits vendus</h2><canvas id="topProductsChart"></canvas></div><div class="panel chart-panel"><h2><i class="fa-solid fa-chart-simple"></i> Ventes par categorie</h2><canvas id="categoryChart"></canvas></div></div>
       <div class="charts-row"><div class="panel chart-panel"><h2><i class="fa-solid fa-chart-line"></i> Evolution par categorie (30 jours)</h2><canvas id="categoryTrendChart"></canvas></div></div>
@@ -1742,7 +1778,7 @@ function addNotification(title, message) {
         const d = new Date(); d.setDate(d.getDate() - i);
         const key = d.toLocaleDateString('fr-FR');
         days.push(key);
-        vals.push(state.sales.filter(s => new Date(s.at).toLocaleDateString('fr-FR') === key).reduce((s, v) => s + v.total, 0));
+        vals.push(getFilteredSales().filter(s => new Date(s.at).toLocaleDateString('fr-FR') === key).reduce((s, v) => s + v.total, 0));
       }
       _chartInstances.push(new Chart(canvas1, {
         type: 'line',
@@ -1752,7 +1788,7 @@ function addNotification(title, message) {
     }
     if (canvas2) {
       const methods = {};
-      state.sales.forEach(s => { methods[s.method] = (methods[s.method] || 0) + s.total; });
+      getFilteredSales().forEach(s => { methods[s.method] = (methods[s.method] || 0) + s.total; });
       const colors = ['#ff9900', '#0058be', '#2E7D32', '#ba1a1a'];
       _chartInstances.push(new Chart(canvas2, {
         type: 'doughnut',
@@ -1770,7 +1806,7 @@ function addNotification(title, message) {
     if (!c3 && !c4 && !c5) return;
     if (c3) {
       const pc = {};
-      state.sales.forEach(s => (s.items||[]).forEach(item => { pc[item.name] = (pc[item.name]||0) + item.qty; }));
+      getFilteredSales().forEach(s => (s.items||[]).forEach(item => { pc[item.name] = (pc[item.name]||0) + item.qty; }));
       const sorted = Object.entries(pc).sort((a,b) => b[1]-a[1]).slice(0,8);
       const cl = ['#ff9900','#0058be','#2E7D32','#ba1a1a','#8B5CF6','#EC4899','#14B8A6','#F59E0B'];
       _chartInstances.push(new Chart(c3, {
@@ -1781,7 +1817,7 @@ function addNotification(title, message) {
     }
     if (c4) {
       const sc = {};
-      state.sales.forEach(s => (s.items||[]).forEach(item => {
+      getFilteredSales().forEach(s => (s.items||[]).forEach(item => {
         const p = state.products.find(x => x.id === item.id);
         sc[p ? p.shop : 'Inconnue'] = (sc[p ? p.shop : 'Inconnue']||0) + item.price * item.qty;
       }));
@@ -1793,7 +1829,7 @@ function addNotification(title, message) {
     }
     if (c5) {
       const catSales = {};
-      state.sales.forEach(s => (s.items||[]).forEach(item => {
+      getFilteredSales().forEach(s => (s.items||[]).forEach(item => {
         const p = state.products.find(x => x.id === item.id);
         const cat = p ? p.category : 'Sans categorie';
         catSales[cat] = (catSales[cat]||0) + item.price * item.qty;
@@ -1813,7 +1849,7 @@ function addNotification(title, message) {
         days.push(d.toLocaleDateString('fr-FR'));
       }
       const catData = {};
-      state.sales.forEach(s => {
+      getFilteredSales().forEach(s => {
         const dayKey = new Date(s.at).toLocaleDateString('fr-FR');
         (s.items||[]).forEach(item => {
           const p = state.products.find(x => x.id === item.id);
