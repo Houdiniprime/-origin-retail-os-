@@ -1765,7 +1765,8 @@ function addNotification(title, message) {
     if (typeof Chart === 'undefined') return;
     const c3 = document.getElementById('topProductsChart');
     const c4 = document.getElementById('shopChart');
-    if (!c3 && !c4) return;
+    const c5 = document.getElementById('categoryChart');
+    if (!c3 && !c4 && !c5) return;
     if (c3) {
       const pc = {};
       state.sales.forEach(s => (s.items||[]).forEach(item => { pc[item.name] = (pc[item.name]||0) + item.qty; }));
@@ -1787,6 +1788,20 @@ function addNotification(title, message) {
         type: 'bar',
         data: { labels: Object.keys(sc), datasets: [{ label: 'CA (FCFA)', data: Object.values(sc), backgroundColor: ['#0058be','#ff9900','#2E7D32'] }] },
         options: { responsive:true, maintainAspectRatio:false, plugins:{ legend:{ display:false } }, scales:{ y:{ beginAtZero:true } } }
+      }));
+    }
+    if (c5) {
+      const catSales = {};
+      state.sales.forEach(s => (s.items||[]).forEach(item => {
+        const p = state.products.find(x => x.id === item.id);
+        const cat = p ? p.category : 'Sans categorie';
+        catSales[cat] = (catSales[cat]||0) + item.price * item.qty;
+      }));
+      const catColors = ['#ff9900','#0058be','#2E7D32','#ba1a1a','#8B5CF6','#EC4899','#14B8A6','#F59E0B','#6366F1','#F43F5E'];
+      _chartInstances.push(new Chart(c5, {
+        type: 'doughnut',
+        data: { labels: Object.keys(catSales), datasets: [{ data: Object.values(catSales), backgroundColor: catColors }] },
+        options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { position: 'bottom' } } }
       }));
     }
   }
