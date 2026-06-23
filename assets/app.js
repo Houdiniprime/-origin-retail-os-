@@ -779,13 +779,18 @@ function notifyCount() {
   }
   function stockView() {
     const cats = getCategories().map(c => `<option value="${esc(c)}" ${catFilter === c ? 'selected' : ''}>${esc(c)}</option>`).join('');
-    return `<section class="panel"><div class="section-title"><h2><i class="fa-solid fa-boxes-stacked"></i> Stocks</h2><input placeholder="Recherche produit..." value="${esc(filter)}" data-filter><select class="cat-filter" data-cat-filter><option value="all">Toutes catégories</option>${cats}</select></div><form id="productForm" class="grid three"><input name="sku" placeholder="SKU" required><input name="name" placeholder="Produit" required><select name="category">${cats}</select><input name="qty" type="number" placeholder="Stock" required><input name="cost" type="number" placeholder="Cout" required><input name="price" type="number" placeholder="Prix" required><input name="photo" placeholder="URL photo" style="grid-column:span 2"><button class="btn primary">Ajouter</button></form><div class="table">${state.products.map((p) => `<div class="tr-stock" data-prod-id="${esc(p.id)}"><div class="stock-photo-thumb">${p.photo ? `<img src="${esc(p.photo)}">` : '<i class="fa-solid fa-image"></i>'}</div><b>${esc(p.name)}</b><span class="prod-cat">${esc(p.category||'')}</span><span>${esc(p.sku)}</span><span>${p.qty}</span><span>${money(p.price)}</span><div class="actions-row">
+    const catCounts = {};
+    state.products.forEach(p => { catCounts[p.category] = (catCounts[p.category] || 0) + 1; });
+    const totalProds = state.products.length;
+    const catStats = getCategories().map(c => `<span class="cat-stat ${catFilter === c ? 'active' : ''}" data-cat-stat="${esc(c)}">${esc(c)}: <strong>${catCounts[c] || 0}</strong></span>`).join('');
+    return `<section class="panel"><div class="section-title"><h2><i class="fa-solid fa-boxes-stacked"></i> Stocks</h2><input placeholder="Recherche produit..." value="${esc(filter)}" data-filter><select class="cat-filter" data-cat-filter><option value="all">Toutes catégories</option>${cats}</select></div><div class="cat-stats"><span class="cat-stat ${catFilter === 'all' ? 'active' : ''}" data-cat-stat="all">Tous: <strong>${totalProds}</strong></span>${catStats}</div><form id="productForm" class="grid three"><input name="sku" placeholder="SKU" required><input name="name" placeholder="Produit" required><select name="category">${cats}</select><input name="qty" type="number" placeholder="Stock" required><input name="cost" type="number" placeholder="Cout" required><input name="price" type="number" placeholder="Prix" required><input name="photo" placeholder="URL photo" style="grid-column:span 2"><button class="btn primary">Ajouter</button></form><div class="table">${state.products.map((p) => `<div class="tr-stock" data-prod-id="${esc(p.id)}"><div class="stock-photo-thumb">${p.photo ? `<img src="${esc(p.photo)}">` : '<i class="fa-solid fa-image"></i>'}</div><b>${esc(p.name)}</b><span class="prod-cat">${esc(p.category||'')}</span><span>${esc(p.sku)}</span><span>${p.qty}</span><span>${money(p.price)}</span><div class="actions-row">
         <button class="btn-icon-sm" data-edit-prod="${esc(p.id)}" title="Modifier"><i class="fa-solid fa-pen-to-square" style="color:var(--accent)"></i></button>
         <button class="btn-icon-sm" data-del-prod="${esc(p.id)}" title="Supprimer"><i class="fa-solid fa-trash-can" style="color:var(--bad)"></i></button>
       </div></div>`).join("")}</div></section>`;
   }
   function bindStock() {
     document.querySelector("[data-cat-filter]")?.addEventListener("change", (e) => { catFilter = e.target.value; render(); });
+    document.querySelectorAll("[data-cat-stat]").forEach(b => b.addEventListener("click", () => { catFilter = b.dataset.catStat; render(); }));
     document.getElementById("productForm")?.addEventListener("submit", (e) => {
       e.preventDefault();
       const d = Object.fromEntries(new FormData(e.currentTarget));
